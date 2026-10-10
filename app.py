@@ -50,7 +50,7 @@ async def index():
 async def debug():
     """Quick health check — tests Groq directly and reports status."""
     import aiohttp as _aiohttp
-    result = {"groq_key_set": bool(GROQ_API_KEY), "groq_model": GROQ_MODEL, "apify_key_set": bool(APIFY_TOKEN)}
+    result = {"groq_key_set": bool(GROQ_API_KEY), "groq_model": GROQ_MODEL, "apify_key_set": bool(APIFY_TOKEN), "apify_token_prefix": (APIFY_TOKEN or "")[:12]}
     try:
         async with _aiohttp.ClientSession() as s:
             async with s.post(
@@ -64,6 +64,43 @@ async def debug():
                 result["groq_response"] = body[:300]
     except Exception as e:
         result["groq_error"] = str(e)
+    return result
+
+
+@app.get("/test-apify")
+async def test_apify():
+    """Test Apify actor start + result fetch directly."""
+    import aiohttp as _aiohttp
+    result = {"apify_token_set": bool(APIFY_TOKEN), "apify_token_prefix": (APIFY_TOKEN or "")[:12]}
+    actor = "supreme_coder/linkedin-profile-scraper"
+    url_to_scrape = "https://www.linkedin.com/in/amber-sahu/"
+    try:
+        async with _aiohttp.ClientSession() as s:
+            # Step 1: start run
+            start_url = f"{APIFY_BASE}/acts/{actor}/runs?token={APIFY_TOKEN}"
+            payload = {"urls": [{"url": url_to_scrape}]}
+            print(f"[test-apify] POST {start_url[:80]}")
+            async with s.post(start_url, json=payload, timeout=_aiohttp.ClientTimeout(total=30)) as r:
+                body = await r.text()
+                result["start_status"] = r.status
+                result["start_body"] = body[:500]
+                if r.status in (200, 201):
+                    data = json.loads(body)
+                    run_id = data.get("data", {}).get("id")
+                    result["run_id"] = run_id
+                    if run_id:
+                        # Step 2: wait 30s then fetch
+                        print(f"[test-apify] run_id={run_id}, waiting 30s...")
+                        await asyncio.sleep(30)
+                        items_url = f"{APIFY_BASE}/actor-runs/{run_id}/dataset/items?token={APIFY_TOKEN}"
+                        async with s.get(items_url, timeout=_aiohttp.ClientTimeout(total=30)) as r2:
+                            result["items_status"] = r2.status
+                            items_body = await r2.text()
+                            result["items_body"] = items_body[:1000]
+    except Exception as e:
+        import traceback
+        result["error"] = str(e)
+        result["traceback"] = traceback.format_exc()
     return result
 
 
