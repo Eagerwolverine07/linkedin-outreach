@@ -88,11 +88,16 @@ async def run_apify_actor(session, actor_slug, input_payload):
     try:
         async with session.post(url, json=input_payload,
                                 timeout=aiohttp.ClientTimeout(total=30)) as resp:
+            body = await resp.text()
             if resp.status in (200, 201):
-                data = await resp.json()
-                return data.get("data", {}).get("id")
+                data = json.loads(body)
+                run_id = data.get("data", {}).get("id")
+                print(f"[Apify] {actor_slug} started run={run_id}")
+                return run_id
+            else:
+                print(f"[Apify] {actor_slug} start failed status={resp.status} body={body[:200]}")
     except Exception as e:
-        print(f"[run_apify_actor] {actor_slug} failed to start: {e}")
+        print(f"[Apify] {actor_slug} failed to start: {e}")
     return None
 
 
@@ -106,9 +111,14 @@ async def get_apify_results(session, run_id):
     try:
         async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
             if resp.status == 200:
-                return await resp.json()
+                items = await resp.json()
+                print(f"[Apify] run={run_id} got {len(items)} items")
+                return items
+            else:
+                body = await resp.text()
+                print(f"[Apify] run={run_id} fetch failed status={resp.status} body={body[:200]}")
     except Exception as e:
-        print(f"[get_apify_results] run {run_id} fetch failed: {e}")
+        print(f"[Apify] run={run_id} fetch exception: {e}")
     return []
 
 
@@ -138,7 +148,28 @@ def normalize_atomus(raw):
 def normalize_supreme_coder(raw):
     if not raw:
         return None
-    exps = raw.get("positions", raw.get("experiences", []))[:3]
+    # supreme_coder returns positions as company-groups, each with a nested
+    # positions[] array of individual roles. Flatten to a list of role dicts.
+    raw_positions = raw.get("positions", raw.get("experiences", []))
+    exps = []
+    for group in raw_positions:
+        company_name = group.get("companyName") or group.get("company", {}).get("name", "")
+        inner_roles = group.get("positions", [])
+        if inner_roles:
+            for role in inner_roles:
+                exps.append({
+                    "title":       role.get("title", ""),
+                    "company":     company_name,
+                    "description": role.get("description", ""),
+                })
+        else:
+            # Flat entry (older actor version)
+            exps.append({
+                "title":       group.get("title", ""),
+                "company":     company_name,
+                "description": group.get("description", ""),
+            })
+    exps = exps[:3]
     current_co = raw.get("currentCompany", {})
     if isinstance(current_co, dict):
         current_co = current_co.get("name", "")
@@ -147,8 +178,8 @@ def normalize_supreme_coder(raw):
         "last_name":       raw.get("lastName", ""),
         "headline":        raw.get("headline", ""),
         "summary":         raw.get("about","") or raw.get("summary",""),
-        "experiences":     [{"title": e.get("title",""), "company": e.get("companyName", e.get("company",{}).get("name","")), "description": e.get("description","")} for e in exps],
-        "current_company": current_co or raw.get("companyName","") or (exps[0].get("companyName","") if exps else ""),
+        "experiences":     exps,
+        "current_company": current_co or raw.get("companyName","") or (exps[0].get("company","") if exps else ""),
         "education":       [{"school": e.get("schoolName",""), "degree": e.get("degreeName","")} for e in raw.get("educations", raw.get("education",[]))[:2]],
     }
 
