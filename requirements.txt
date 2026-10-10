@@ -1,0 +1,7 @@
+# Python packages this project needs.
+# Install them all at once with: pip install -r requirements.txt
+
+flask==3.0.3          # The web framework — handles HTTP requests and serves index.html
+aiohttp==3.9.5        # Async HTTP client — fires multiple Apify requests in parallel
+python-dotenv==1.0.1  # Reads your .env file so API keys don't get hardcoded in code
+gunicorn==22.0.0      # Production web server — Render uses this instead of Flask's dev server

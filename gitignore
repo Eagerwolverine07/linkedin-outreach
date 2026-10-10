@@ -1,0 +1,10 @@
+# This file tells Git what NOT to upload to GitHub.
+# Most importantly: .env contains your API keys — never upload that.
+
+.env
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+venv/
+.venv/

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LinkedIn Outreach Pipeline</title>
+  <style>
+    /* ── Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #f8fafc;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 0.875rem;
+      color: #64748b;
+      margin-bottom: 32px;
+    }
+
+    /* ── Form ── */
+    .form-section {
+      background: #1e2433;
+      border: 1px solid #2d3748;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: #94a3b8;
+      margin-bottom: 8px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: #0f1117;
+      border: 1px solid #2d3748;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #e2e8f0;
+      font-size: 0.9375rem;
+      outline: none;
+      transition: border-color 0.15s;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"]:focus {
+      border-color: #3b82f6;
+    }
+
+    textarea {
+      width: 100%;
+      background: #0f1117;
+      border: 1px solid #2d3748;
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: #e2e8f0;
+      font-size: 0.875rem;
+      font-family: "SF Mono", "Fira Code", monospace;
+      outline: none;
+      resize: vertical;
+      min-height: 140px;
+      transition: border-color 0.15s;
+      line-height: 1.6;
+    }
+
+    textarea:focus {
+      border-color: #3b82f6;
+    }
+
+    .url-hint {
+      font-size: 0.75rem;
+      color: #475569;
+      margin-top: 6px;
+      margin-bottom: 20px;
+    }
+
+    /* ── Button ── */
+    .btn-generate {
+      width: 100%;
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-generate:hover:not(:disabled) { background: #2563eb; }
+    .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Spinner ── */
+    .spinner-wrap {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 0;
+      gap: 16px;
+    }
+
+    .spinner-wrap.visible { display: flex; }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid #2d3748;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .spinner-label {
+      color: #64748b;
+      font-size: 0.875rem;
+    }
+
+    /* ── Error ── */
+    .error-box {
+      display: none;
+      background: #1f1315;
+      border: 1px solid #7f1d1d;
+      border-radius: 8px;
+      padding: 14px 16px;
+      color: #fca5a5;
+      font-size: 0.875rem;
+      margin-bottom: 16px;
+    }
+
+    .error-box.visible { display: block; }
+
+    /* ── Results ── */
+    .results-section { display: none; }
+    .results-section.visible { display: block; }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .results-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+
+    .results-count {
+      font-size: 0.8125rem;
+      color: #64748b;
+    }
+
+    /* ── Table ── */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid #2d3748;
+      border-radius: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    thead {
+      background: #1a2035;
+    }
+
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #64748b;
+      border-bottom: 1px solid #2d3748;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 14px 16px;
+      vertical-align: top;
+      border-bottom: 1px solid #1e2433;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #1a2035; }
+
+    .td-sr {
+      color: #475569;
+      font-size: 0.8125rem;
+      width: 40px;
+    }
+
+    .td-name {
+      font-weight: 500;
+      color: #e2e8f0;
+      white-space: nowrap;
+      min-width: 130px;
+    }
+
+    .td-pers {
+      width: 90px;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      white-space: nowrap;
+    }
+
+    .badge-yes {
+      background: #052e16;
+      color: #4ade80;
+      border: 1px solid #166534;
+    }
+
+    .badge-no {
+      background: #1c1917;
+      color: #a8a29e;
+      border: 1px solid #44403c;
+    }
+
+    .td-url a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-size: 0.8125rem;
+      white-space: nowrap;
+    }
+
+    .td-url a:hover { text-decoration: underline; }
+
+    .td-message {
+      min-width: 320px;
+      max-width: 480px;
+    }
+
+    .message-text {
+      color: #cbd5e1;
+      line-height: 1.55;
+      word-break: break-word;
+    }
+
+    .char-count {
+      font-size: 0.6875rem;
+      margin-top: 6px;
+    }
+
+    .char-ok   { color: #4ade80; }
+    .char-over { color: #f87171; }
+
+    .td-copy {
+      width: 80px;
+      text-align: center;
+    }
+
+    /* ── Copy button ── */
+    .btn-copy {
+      background: #1e2433;
+      border: 1px solid #2d3748;
+      border-radius: 6px;
+      color: #94a3b8;
+      padding: 5px 10px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-copy:hover {
+      background: #2d3748;
+      color: #e2e8f0;
+    }
+
+    .btn-copy.copied {
+      background: #052e16;
+      border-color: #166534;
+      color: #4ade80;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <h1>LinkedIn Outreach Pipeline</h1>
+    <p class="subtitle">Paste profile URLs → get personalized connection messages</p>
+
+    <!-- ── Input Form ── -->
+    <div class="form-section">
+
+      <label for="company-input">Company Name</label>
+      <input
+        type="text"
+        id="company-input"
+        placeholder="e.g. Snowflake"
+      />
+
+      <label for="url-input">LinkedIn Profile URLs</label>
+      <textarea
+        id="url-input"
+        placeholder="https://www.linkedin.com/in/john-doe&#10;https://www.linkedin.com/in/jane-smith&#10;https://www.linkedin.com/in/alex-jones"
+      ></textarea>
+      <p class="url-hint">One URL per line. Duplicates are removed automatically.</p>
+
+      <button class="btn-generate" id="generate-btn" onclick="runPipeline()">
+        Generate Messages
+      </button>
+
+    </div>
+
+    <!-- ── Error ── -->
+    <div class="error-box" id="error-box"></div>
+
+    <!-- ── Spinner ── -->
+    <div class="spinner-wrap" id="spinner">
+      <div class="spinner"></div>
+      <span class="spinner-label" id="spinner-label">Scraping profiles and writing messages…</span>
+    </div>
+
+    <!-- ── Results Table ── -->
+    <div class="results-section" id="results-section">
+      <div class="results-header">
+        <span class="results-title">Results</span>
+        <span class="results-count" id="results-count"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Personalized</th>
+              <th>LinkedIn</th>
+              <th>Message</th>
+              <th>Copy</th>
+            </tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /**
+     * What this script does in plain English:
+     *
+     * 1. When you click "Generate Messages":
+     *    - Reads the company name and URL list from the form
+     *    - Validates that both are filled in
+     *    - Sends a POST request to /generate on the Python backend
+     *    - Shows a spinner while waiting
+     *
+     * 2. When the backend responds:
+     *    - Hides the spinner
+     *    - Builds a table row for each result
+     *    - Displays the table
+     *
+     * 3. Copy button:
+     *    - Copies just the message text to your clipboard
+     *    - Button briefly turns green to confirm the copy
+     */
+
+    async function runPipeline() {
+      const companyInput = document.getElementById("company-input").value.trim();
+      const urlRaw       = document.getElementById("url-input").value.trim();
+      const errorBox     = document.getElementById("error-box");
+      const spinner      = document.getElementById("spinner");
+      const resultsSection = document.getElementById("results-section");
+      const btn          = document.getElementById("generate-btn");
+
+      // Reset UI state
+      errorBox.classList.remove("visible");
+      errorBox.textContent = "";
+      resultsSection.classList.remove("visible");
+
+      // Basic validation
+      if (!companyInput) {
+        showError("Please enter a company name.");
+        return;
+      }
+      if (!urlRaw) {
+        showError("Please paste at least one LinkedIn URL.");
+        return;
+      }
+
+      // Parse URLs: split on newlines, filter blanks
+      const urls = urlRaw
+        .split("\n")
+        .map(u => u.trim())
+        .filter(u => u.length > 0 && u.startsWith("https://www.linkedin.com/in/"));
+
+      if (urls.length === 0) {
+        showError("No valid LinkedIn profile URLs found. Each URL should start with https://www.linkedin.com/in/");
+        return;
+      }
+
+      // Show spinner, disable button
+      spinner.classList.add("visible");
+      btn.disabled = true;
+
+      // Update spinner label with count
+      document.getElementById("spinner-label").textContent =
+        `Processing ${urls.length} profile${urls.length > 1 ? "s" : ""}… this takes a few minutes`;
+
+      try {
+        const response = await fetch("/generate", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ urls, company: companyInput }),
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || `Server error ${response.status}`);
+        }
+
+        const results = await response.json();
+        renderResults(results);
+
+      } catch (err) {
+        showError("Something went wrong: " + err.message);
+      } finally {
+        spinner.classList.remove("visible");
+        btn.disabled = false;
+      }
+    }
+
+
+    function renderResults(results) {
+      const tbody   = document.getElementById("results-body");
+      const section = document.getElementById("results-section");
+      const count   = document.getElementById("results-count");
+
+      tbody.innerHTML = "";
+
+      if (results.length === 0) {
+        showError("No results returned. All profiles may have been filtered out (company mismatch) or scrapers returned no data.");
+        return;
+      }
+
+      count.textContent = `${results.length} message${results.length > 1 ? "s" : ""} generated`;
+
+      results.forEach(row => {
+        const charClass = row.char_count <= 300 ? "char-ok" : "char-over";
+        const charLabel = row.char_count <= 300
+          ? `${row.char_count} chars`
+          : `${row.char_count} chars — OVER by ${row.char_count - 300}`;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="td-sr">${row.sr}</td>
+          <td class="td-name">${escHtml(row.name)}</td>
+          <td class="td-pers">
+            <span class="badge ${row.personalized === 'Yes' ? 'badge-yes' : 'badge-no'}">
+              ${row.personalized}
+            </span>
+          </td>
+          <td class="td-url">
+            <a href="${escHtml(row.url)}" target="_blank" rel="noopener">View Profile</a>
+          </td>
+          <td class="td-message">
+            <div class="message-text">${escHtml(row.message)}</div>
+            <div class="char-count ${charClass}">${charLabel}</div>
+          </td>
+          <td class="td-copy">
+            <button
+              class="btn-copy"
+              onclick="copyMessage(this, ${JSON.stringify(row.message)})"
+            >Copy</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      section.classList.add("visible");
+
+      // Scroll down to results
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+
+    function copyMessage(btn, message) {
+      navigator.clipboard.writeText(message).then(() => {
+        btn.textContent = "Copied!";
+        btn.classList.add("copied");
+        setTimeout(() => {
+          btn.textContent = "Copy";
+          btn.classList.remove("copied");
+        }, 1800);
+      });
+    }
+
+
+    function showError(msg) {
+      const box = document.getElementById("error-box");
+      box.textContent = msg;
+      box.classList.add("visible");
+    }
+
+
+    // Escape HTML to prevent XSS when inserting scraped data into the DOM
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+  </script>
+</body>
+</html>
