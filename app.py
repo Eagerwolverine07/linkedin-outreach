@@ -452,20 +452,20 @@ def company_match(profile, company_name):
 GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "qwen/qwen3.8-27b"
 
-SYSTEM_PROMPT = """You write short LinkedIn connection request messages for Amber Sahu, a recent BU MS in Management graduate targeting sales roles at tech companies.
+SYSTEM_PROMPT = """You write short LinkedIn connection request messages for Amber Sahu, a recent BU MS in Management graduate targeting SDR and sales roles at tech companies.
 
 TEMPLATE:
-"Hey [First name], [specific observation]. I'm a BU MS grad exploring sales and would love your perspective on making an impact at [company]. Open to a quick 15-min chat?"
+"Hey [First name], [specific observation]. I'm a recent BU MS grad actively targeting SDR and sales roles at [company] and would love 15 minutes to hear your perspective on the team. Open to a quick chat?"
 
 RULES — follow every one of these:
 - Total message must be 300 characters or fewer (count carefully)
 - Opener (the [specific observation] part) must be 85 characters or fewer
-- End with the exact question: "Open to a quick 15-min chat?"
+- End with the exact phrase: "Open to a quick chat?"
+- The middle section must say: "I'm a recent BU MS grad actively targeting SDR and sales roles at [company] and would love 15 minutes to hear your perspective on the team."
 - No em dashes (— or --)
 - No filler: never start with "I came across your profile", "I'd love to connect", "Hope this finds you well"
 - No AI vocabulary: never use delve, leverage, seamless, robust, synergy, spearhead, dynamic
 - Natural sentence rhythm — write like a person, not a press release
-- Use "sales" not "GTM", "sales roles" not "GTM roles"
 
 OPENER PRIORITY (for personalized messages):
 1. Experience descriptions — if any role has specific achievements, deal types, territory built, team led, use that
