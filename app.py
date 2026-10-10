@@ -30,8 +30,10 @@ from dotenv import load_dotenv
 
 # Load API keys from the .env file
 load_dotenv()
-APIFY_TOKEN = os.getenv("APIFY_TOKEN")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+APIFY_TOKEN      = os.getenv("APIFY_TOKEN")
+GROQ_API_KEY     = os.getenv("GROQ_API_KEY")
+SUPABASE_URL     = os.getenv("SUPABASE_URL")       # e.g. https://xxxx.supabase.co
+SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")   # anon public key
 
 app = FastAPI()
 
@@ -561,6 +563,41 @@ async def generate_message(session, profile, company_name):
 
 
 # ─────────────────────────────────────────────
+# SECTION 5b: SUPABASE LOGGER
+# ─────────────────────────────────────────────
+
+async def log_run_to_supabase(run_data: dict):
+    """
+    Inserts one run record into the Supabase 'runs' table.
+    run_data keys: company, total, personalized, not_at_company,
+                   not_found, avg_char_count, messages (list of dicts)
+    Silently skips if SUPABASE_URL or SUPABASE_API_KEY are not set.
+    """
+    if not SUPABASE_URL or not SUPABASE_API_KEY:
+        print("[Supabase] env vars not set, skipping log")
+        return
+
+    url = f"{SUPABASE_URL}/rest/v1/runs"
+    headers = {
+        "apikey":        SUPABASE_API_KEY,
+        "Authorization": f"Bearer {SUPABASE_API_KEY}",
+        "Content-Type":  "application/json",
+        "Prefer":        "return=minimal",
+    }
+    try:
+        async with aiohttp.ClientSession() as s:
+            async with s.post(url, headers=headers, json=run_data,
+                              timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                if resp.status in (200, 201):
+                    print(f"[Supabase] run logged OK company={run_data.get('company')} total={run_data.get('total')}")
+                else:
+                    body = await resp.text()
+                    print(f"[Supabase] log failed status={resp.status} body={body[:300]}")
+    except Exception as e:
+        print(f"[Supabase] log exception: {e}")
+
+
+# ─────────────────────────────────────────────
 # SECTION 6: SSE STREAMING ENDPOINT
 # ─────────────────────────────────────────────
 # What SSE means in plain English:
@@ -621,9 +658,10 @@ async def _stream_pipeline(urls, company):
         """Formats a dict as an SSE data line."""
         return f"data: {json.dumps(obj)}\n\n"
 
-    BATCH_SIZE = 4
-    batches    = [urls[i:i+BATCH_SIZE] for i in range(0, len(urls), BATCH_SIZE)]
-    sr_no      = 1
+    BATCH_SIZE   = 4
+    batches      = [urls[i:i+BATCH_SIZE] for i in range(0, len(urls), BATCH_SIZE)]
+    sr_no        = 1
+    _run_results = []   # collect every result row for Supabase logging
 
     yield sse({"event": "status", "message": f"Starting pipeline for {len(urls)} profiles across {len(batches)} batch(es)..."})
 
@@ -665,7 +703,7 @@ async def _stream_pipeline(urls, company):
 
                 if profile == "NOT_AT_COMPANY":
                     name_label = url.rstrip("/").split("/")[-1]
-                    yield sse({
+                    row = {
                         "event":        "result",
                         "sr":           sr_no,
                         "name":         name_label,
@@ -673,7 +711,9 @@ async def _stream_pipeline(urls, company):
                         "url":          url,
                         "message":      f"⚠️ No longer at {company} (per LinkedIn)",
                         "char_count":   0,
-                    })
+                    }
+                    _run_results.append(row)
+                    yield sse(row)
                     sr_no += 1
                     continue
 
@@ -689,7 +729,7 @@ async def _stream_pipeline(urls, company):
                     name         = name_label
                     personalized = "No"
 
-                yield sse({
+                row = {
                     "event":        "result",
                     "sr":           sr_no,
                     "name":         name,
@@ -697,7 +737,9 @@ async def _stream_pipeline(urls, company):
                     "url":          url,          # always the original URL, never reconstructed
                     "message":      message,
                     "char_count":   len(message),
-                })
+                }
+                _run_results.append(row)
+                yield sse(row)
                 sr_no += 1
 
             # ── Wait between batches (skip after last) ──
@@ -705,11 +747,61 @@ async def _stream_pipeline(urls, company):
                 yield sse({"event": "status", "message": "Waiting 90 seconds before next batch..."})
                 await asyncio.sleep(90)
 
-    yield sse({"event": "done", "total": sr_no - 1})
+    total        = sr_no - 1
+    personalized = sum(1 for r in _run_results if r.get("personalized") == "Yes")
+    not_at_co    = sum(1 for r in _run_results if r.get("char_count") == 0 and "No longer at" in r.get("message",""))
+    not_found    = sum(1 for r in _run_results if r.get("personalized") == "No" and "No longer at" not in r.get("message",""))
+    char_counts  = [r["char_count"] for r in _run_results if r.get("char_count", 0) > 0]
+    avg_chars    = int(sum(char_counts) / len(char_counts)) if char_counts else 0
+
+    asyncio.create_task(log_run_to_supabase({
+        "company":        company,
+        "total":          total,
+        "personalized":   personalized,
+        "not_at_company": not_at_co,
+        "not_found":      not_found,
+        "avg_char_count": avg_chars,
+        "messages":       _run_results,
+    }))
+
+    yield sse({"event": "done", "total": total})
 
 
 # ─────────────────────────────────────────────
-# SECTION 7: START THE SERVER
+# SECTION 7: DASHBOARD ENDPOINTS
+# ─────────────────────────────────────────────
+
+@app.get("/history")
+async def history(limit: int = 50):
+    """Returns the last N runs from Supabase as JSON."""
+    if not SUPABASE_URL or not SUPABASE_API_KEY:
+        return {"error": "Supabase not configured"}
+    url = f"{SUPABASE_URL}/rest/v1/runs?order=created_at.desc&limit={limit}"
+    headers = {
+        "apikey":        SUPABASE_API_KEY,
+        "Authorization": f"Bearer {SUPABASE_API_KEY}",
+    }
+    try:
+        async with aiohttp.ClientSession() as s:
+            async with s.get(url, headers=headers,
+                             timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                if resp.status == 200:
+                    return await resp.json()
+                else:
+                    body = await resp.text()
+                    return {"error": f"Supabase {resp.status}", "detail": body[:300]}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard():
+    with open("dashboard.html", "r") as f:
+        return HTMLResponse(content=f.read())
+
+
+# ─────────────────────────────────────────────
+# SECTION 8: START THE SERVER
 # ─────────────────────────────────────────────
 # uvicorn is the server that runs FastAPI (like gunicorn for Flask).
 # Render sets PORT automatically; defaults to 8000 locally.

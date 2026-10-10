@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Outreach Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --grad:   linear-gradient(135deg, #ffb347 0%, #c471ed 55%, #7b6ef6 100%);
+      --grad2:  linear-gradient(135deg, #ffd580 0%, #e08fe8 55%, #a49cf8 100%);
+      --bg:     #fdf6f0;
+      --card:   #ffffff;
+      --border: #ede8f5;
+      --text:   #1a1035;
+      --muted:  #7b6fa0;
+      --green:  #22c55e;
+      --amber:  #f59e0b;
+      --red:    #ef4444;
+      --blue:   #6366f1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* blobs */
+    body::before, body::after {
+      content: "";
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: .18;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before { width: 520px; height: 520px; background: #c471ed; top: -120px; right: -120px; }
+    body::after  { width: 420px; height: 420px; background: #ffb347; bottom: -100px; left: -80px; }
+
+    .wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px 60px; }
+
+    /* ── header ── */
+    header {
+      padding: 40px 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .logo-group { display: flex; flex-direction: column; gap: 4px; }
+    .logo-group h1 { font-size: 28px; font-weight: 800; letter-spacing: -.5px; }
+    .logo-group h1 span {
+      background: var(--grad); -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .logo-group p { font-size: 14px; color: var(--muted); font-weight: 500; }
+
+    .btn-home {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: 12px; border: 1.5px solid var(--border);
+      background: var(--card); color: var(--text); font-size: 14px;
+      font-weight: 600; cursor: pointer; text-decoration: none;
+      transition: box-shadow .2s, border-color .2s;
+    }
+    .btn-home:hover { box-shadow: 0 4px 18px rgba(124,111,246,.15); border-color: #c471ed; }
+
+    /* ── stat cards ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 20px 22px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.04);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .stat-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+    .stat-value { font-size: 32px; font-weight: 800; letter-spacing: -1px; }
+    .stat-value.grad { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    /* ── run history table ── */
+    .section-title {
+      font-size: 18px; font-weight: 700; margin-bottom: 14px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .btn-export {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 10px;
+      background: var(--grad); color: #fff;
+      font-size: 13px; font-weight: 700; border: none; cursor: pointer;
+      transition: opacity .2s;
+    }
+    .btn-export:hover { opacity: .88; }
+
+    .table-card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 2px 20px rgba(0,0,0,.05);
+      margin-bottom: 32px;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: #f7f4fd;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+      color: var(--muted); padding: 13px 16px; text-align: left;
+      border-bottom: 1.5px solid var(--border);
+    }
+    tbody tr {
+      border-bottom: 1px solid #f3eff8;
+      transition: background .15s;
+      cursor: pointer;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #faf7ff; }
+    td { padding: 13px 16px; font-size: 14px; vertical-align: middle; }
+
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+    }
+    .badge-green { background: #dcfce7; color: #15803d; }
+    .badge-amber { background: #fef3c7; color: #92400e; }
+    .badge-purple { background: #ede9fe; color: #5b21b6; }
+
+    .mini-bar-wrap { width: 90px; height: 5px; background: #ede8f5; border-radius: 99px; overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 6px; }
+    .mini-bar-fill { height: 100%; border-radius: 99px; background: var(--grad); }
+
+    /* ── expandable messages panel ── */
+    .msg-panel {
+      display: none;
+      padding: 0 16px 16px;
+      background: #faf7ff;
+      border-top: 1px solid var(--border);
+    }
+    .msg-panel.open { display: block; }
+    .msg-panel h4 { font-size: 13px; font-weight: 700; color: var(--muted); margin: 14px 0 10px; text-transform: uppercase; letter-spacing: .06em; }
+    .msg-item {
+      background: #fff; border: 1.5px solid var(--border); border-radius: 12px;
+      padding: 12px 14px; margin-bottom: 10px; font-size: 13.5px; line-height: 1.55;
+      display: flex; gap: 12px; align-items: flex-start;
+    }
+    .msg-item .msg-name { font-weight: 700; min-width: 130px; color: var(--text); }
+    .msg-item .msg-text { flex: 1; color: #3d3460; }
+    .msg-item .msg-copy {
+      border: none; background: none; cursor: pointer; padding: 3px 6px; border-radius: 6px;
+      font-size: 15px; color: var(--muted); transition: color .15s;
+    }
+    .msg-item .msg-copy:hover { color: #c471ed; }
+    .msg-warn { color: #d97706; font-style: italic; }
+
+    .empty-state {
+      text-align: center; padding: 60px 24px; color: var(--muted);
+    }
+    .empty-state .icon { font-size: 42px; margin-bottom: 12px; }
+    .empty-state p { font-size: 15px; }
+
+    .loading-ring {
+      display: inline-block; width: 18px; height: 18px;
+      border: 3px solid var(--border); border-top-color: #c471ed;
+      border-radius: 50%; animation: spin .7s linear infinite; margin-right: 8px; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- header -->
+  <header>
+    <div class="logo-group">
+      <h1>Outreach <span>Dashboard</span></h1>
+      <p>Run history &amp; performance across all sessions</p>
+    </div>
+    <a href="/" class="btn-home">← Back to Pipeline</a>
+  </header>
+
+  <!-- summary stats -->
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card">
+      <div class="stat-label">Total Runs</div>
+      <div class="stat-value grad" id="statRuns">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Profiles Processed</div>
+      <div class="stat-value grad" id="statProfiles">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Personalized Msgs</div>
+      <div class="stat-value grad" id="statPersonalized">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg Char Count</div>
+      <div class="stat-value grad" id="statAvgChars">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Companies Targeted</div>
+      <div class="stat-value grad" id="statCompanies">—</div>
+    </div>
+  </div>
+
+  <!-- run history -->
+  <div class="section-title">
+    <span>Run History</span>
+    <button class="btn-export" onclick="exportCSV()">⬇ Export CSV</button>
+  </div>
+
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Date</th>
+          <th>Company</th>
+          <th>Total</th>
+          <th>Personalized</th>
+          <th>⚠ Not at Co.</th>
+          <th>Not Found</th>
+          <th>Avg Chars</th>
+        </tr>
+      </thead>
+      <tbody id="runTableBody">
+        <tr><td colspan="8" style="text-align:center;padding:30px;color:#7b6fa0">
+          <span class="loading-ring"></span>Loading runs…
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  let allRuns = [];
+
+  async function loadHistory() {
+    try {
+      const res = await fetch('/history?limit=100');
+      allRuns = await res.json();
+      if (!Array.isArray(allRuns)) throw new Error('Bad response');
+      renderStats(allRuns);
+      renderTable(allRuns);
+    } catch (e) {
+      document.getElementById('runTableBody').innerHTML =
+        `<tr><td colspan="8" style="text-align:center;padding:30px;color:#ef4444">
+          Failed to load history. Is Supabase configured?
+        </td></tr>`;
+    }
+  }
+
+  function renderStats(runs) {
+    const totalRuns      = runs.length;
+    const totalProfiles  = runs.reduce((s, r) => s + (r.total || 0), 0);
+    const totalPers      = runs.reduce((s, r) => s + (r.personalized || 0), 0);
+    const chars          = runs.filter(r => r.avg_char_count > 0).map(r => r.avg_char_count);
+    const avgChars       = chars.length ? Math.round(chars.reduce((a,b)=>a+b,0)/chars.length) : 0;
+    const companies      = new Set(runs.map(r => r.company?.toLowerCase())).size;
+
+    document.getElementById('statRuns').textContent        = totalRuns;
+    document.getElementById('statProfiles').textContent    = totalProfiles;
+    document.getElementById('statPersonalized').textContent= totalPers;
+    document.getElementById('statAvgChars').textContent    = avgChars ? avgChars + ' ch' : '—';
+    document.getElementById('statCompanies').textContent   = companies;
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+      + ' ' + d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+  }
+
+  function renderTable(runs) {
+    const tbody = document.getElementById('runTableBody');
+    if (!runs.length) {
+      tbody.innerHTML = `<tr><td colspan="8">
+        <div class="empty-state"><div class="icon">📭</div>
+        <p>No runs yet. Go generate some messages!</p></div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = runs.map((run, i) => {
+      const pct = run.total ? Math.round((run.personalized / run.total) * 100) : 0;
+      const msgs = Array.isArray(run.messages) ? run.messages : [];
+      const msgsJson = JSON.stringify(msgs).replace(/'/g, "\\'");
+      return `
+        <tr onclick="toggleMessages(${run.id}, ${i})">
+          <td style="color:var(--muted);font-size:12px">${runs.length - i}</td>
+          <td style="font-size:13px;color:var(--muted)">${fmtDate(run.created_at)}</td>
+          <td><strong>${run.company || '—'}</strong></td>
+          <td><span class="badge badge-purple">${run.total || 0}</span></td>
+          <td>
+            <div class="mini-bar-wrap"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
+            ${run.personalized || 0} <span style="color:var(--muted);font-size:12px">(${pct}%)</span>
+          </td>
+          <td>${run.not_at_company > 0 ? `<span class="badge badge-amber">${run.not_at_company}</span>` : '<span style="color:var(--muted)">0</span>'}</td>
+          <td style="color:var(--muted)">${run.not_found || 0}</td>
+          <td>${run.avg_char_count ? run.avg_char_count + ' ch' : '—'}</td>
+        </tr>
+        <tr id="panel-${run.id}" style="display:none">
+          <td colspan="8" style="padding:0">
+            <div class="msg-panel open" id="msgs-${run.id}">
+              <h4>Messages — ${run.company}</h4>
+              ${msgs.length ? msgs.map(m => `
+                <div class="msg-item">
+                  <div class="msg-name">${m.name || m.url || '?'}</div>
+                  <div class="msg-text ${m.char_count === 0 ? 'msg-warn' : ''}">${escapeHtml(m.message || '')}</div>
+                  ${m.char_count > 0 ? `<button class="msg-copy" onclick="copyMsg(event, '${escapeJs(m.message || '')}')">📋</button>` : ''}
+                </div>`).join('') : '<p style="color:var(--muted);font-size:13px">No messages logged.</p>'}
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  function toggleMessages(id, i) {
+    const row = document.getElementById(`panel-${id}`);
+    if (!row) return;
+    row.style.display = row.style.display === 'none' ? '' : 'none';
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function escapeJs(s) {
+    return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
+  }
+
+  function copyMsg(e, text) {
+    e.stopPropagation();
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = e.currentTarget;
+      btn.textContent = '✅';
+      setTimeout(() => btn.textContent = '📋', 1500);
+    });
+  }
+
+  function exportCSV() {
+    if (!allRuns.length) return;
+    const rows = [['Run #','Date','Company','Total','Personalized','Not At Company','Not Found','Avg Chars']];
+    allRuns.forEach((r, i) => {
+      rows.push([
+        allRuns.length - i,
+        r.created_at || '',
+        r.company || '',
+        r.total || 0,
+        r.personalized || 0,
+        r.not_at_company || 0,
+        r.not_found || 0,
+        r.avg_char_count || 0,
+      ]);
+    });
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = `outreach_runs_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+  }
+
+  loadHistory();
+</script>
+</body>
+</html>
