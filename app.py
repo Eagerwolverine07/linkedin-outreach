@@ -642,9 +642,8 @@ async def _stream_pipeline(urls, company):
                 if profile and company_match(profile, company):
                     batch_profiles[url] = profile
                 elif profile:
-                    # Scraped but company doesn't match — keep as FILTERED placeholder
-                    # so we can restore the profile data after Tier 2 runs
-                    batch_profiles[url] = "FILTERED"
+                    # Scraped but company doesn't match — mark so we can surface it
+                    batch_profiles[url] = "NOT_AT_COMPANY"
                 else:
                     batch_profiles[url] = None  # Tier 1 missed
 
@@ -657,22 +656,26 @@ async def _stream_pipeline(urls, company):
                     if profile and company_match(profile, company):
                         batch_profiles[url] = profile
                     elif profile:
-                        # Scraped data exists but company doesn't match — use profile
-                        # for personalization anyway (person likely works there; LinkedIn
-                        # data can lag or use a slightly different company name)
-                        yield sse({"event": "status", "message": f"Company mismatch but using profile data for: {url.split('/')[-1]}"})
-                        batch_profiles[url] = profile
+                        batch_profiles[url] = "NOT_AT_COMPANY"
                     # else: stays None → company-angle opener
-
-            # ── Resolve any Tier 1 company-mismatch profiles ──
-            # If Tier 1 scraped a profile but company didn't match, use the data anyway
-            # rather than dropping the row — company fields on LinkedIn often lag reality.
-            for url in batch:
-                if batch_profiles.get(url) == "FILTERED":
-                    batch_profiles[url] = tier1_results[batch.index(url)]
 
             # ── Generate messages for this batch ──
             for url in batch:
+                profile = batch_profiles.get(url)
+
+                if profile == "NOT_AT_COMPANY":
+                    name_label = url.rstrip("/").split("/")[-1]
+                    yield sse({
+                        "event":        "result",
+                        "sr":           sr_no,
+                        "name":         name_label,
+                        "personalized": "No",
+                        "url":          url,
+                        "message":      f"⚠️ No longer at {company} (per LinkedIn)",
+                        "char_count":   0,
+                    })
+                    sr_no += 1
+                    continue
 
                 name_label = url.rstrip("/").split("/")[-1]  # slug as placeholder
                 yield sse({"event": "status", "message": f"Writing message for {name_label}..."})
