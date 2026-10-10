@@ -1,4 +1,3 @@
-"""
 LinkedIn Cold Outreach Pipeline — Backend
 ==========================================
 What this file does in plain English:
@@ -45,6 +44,28 @@ app = FastAPI()
 async def index():
     with open("index.html", "r") as f:
         return HTMLResponse(content=f.read())
+
+@app.get("/debug")
+async def debug():
+    """Quick health check — tests Groq directly and reports status."""
+    import aiohttp as _aiohttp
+    result = {"groq_key_set": bool(GROQ_API_KEY), "groq_model": GROQ_MODEL, "apify_key_set": bool(APIFY_TOKEN)}
+    try:
+        async with _aiohttp.ClientSession() as s:
+            async with s.post(
+                GROQ_URL,
+                headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
+                json={"model": GROQ_MODEL, "messages": [{"role": "user", "content": "Say hi."}], "max_tokens": 10},
+                timeout=_aiohttp.ClientTimeout(total=15)
+            ) as r:
+                body = await r.text()
+                result["groq_status"] = r.status
+                result["groq_response"] = body[:300]
+    except Exception as e:
+        result["groq_error"] = str(e)
+    return result
+
+
 
 
 # ─────────────────────────────────────────────
@@ -422,20 +443,25 @@ async def generate_message(session, profile, company_name):
         "max_tokens":  150,
     }
 
+    key_set = bool(GROQ_API_KEY)
+    print(f"[Groq] Calling model={GROQ_MODEL} key_set={key_set}")
     try:
         async with session.post(GROQ_URL, headers=headers, json=payload,
                                 timeout=aiohttp.ClientTimeout(total=30)) as resp:
+            raw = await resp.text()
+            print(f"[Groq] status={resp.status} body_preview={raw[:200]}")
             if resp.status == 200:
-                data    = await resp.json()
+                data    = json.loads(raw)
                 message = data["choices"][0]["message"]["content"].strip()
                 if len(message) > 300:
                     message = message[:297] + "..."
+                print(f"[Groq] OK len={len(message)}")
                 return message
             else:
-                err = await resp.text()
-                print(f"[Groq] Error {resp.status}: {err}")
+                print(f"[Groq] Error {resp.status}: {raw}")
     except Exception as e:
-        print(f"[Groq] Exception: {e}")
+        import traceback
+        print(f"[Groq] Exception: {e}\n{traceback.format_exc()}")
 
     return f"Hey {first_name}, [message generation failed — retry]"
 
@@ -588,3 +614,4 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
+
