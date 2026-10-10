@@ -1,7 +1,8 @@
 # Python packages this project needs.
 # Install them all at once with: pip install -r requirements.txt
-
-flask==3.0.3          # The web framework — handles HTTP requests and serves index.html
-aiohttp==3.9.5        # Async HTTP client — fires multiple Apify requests in parallel
-python-dotenv==1.0.1  # Reads your .env file so API keys don't get hardcoded in code
-gunicorn==22.0.0      # Production web server — Render uses this instead of Flask's dev server
+ 
+fastapi==0.111.0       # The web framework — handles HTTP requests, serves index.html, streams SSE
+uvicorn==0.30.1        # The server that runs FastAPI (Render uses this via the Procfile)
+aiohttp==3.9.5         # Async HTTP client — fires multiple Apify requests in parallel
+python-dotenv==1.0.1   # Reads your .env file so API keys don't get hardcoded in code
+python-multipart==0.0.9  # Required by FastAPI to handle form data
