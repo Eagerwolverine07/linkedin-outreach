@@ -642,8 +642,8 @@ async def _stream_pipeline(urls, company):
                 if profile and company_match(profile, company):
                     batch_profiles[url] = profile
                 elif profile:
-                    # scraper returned data but company doesn't match — filtered
-                    yield sse({"event": "status", "message": f"Filtered (company mismatch): {url.split('/')[-1]}"})
+                    # Scraped but company doesn't match — keep as FILTERED placeholder
+                    # so we can restore the profile data after Tier 2 runs
                     batch_profiles[url] = "FILTERED"
                 else:
                     batch_profiles[url] = None  # Tier 1 missed
@@ -657,15 +657,22 @@ async def _stream_pipeline(urls, company):
                     if profile and company_match(profile, company):
                         batch_profiles[url] = profile
                     elif profile:
-                        yield sse({"event": "status", "message": f"Filtered after Tier 2 (company mismatch): {url.split('/')[-1]}"})
-                        batch_profiles[url] = "FILTERED"
+                        # Scraped data exists but company doesn't match — use profile
+                        # for personalization anyway (person likely works there; LinkedIn
+                        # data can lag or use a slightly different company name)
+                        yield sse({"event": "status", "message": f"Company mismatch but using profile data for: {url.split('/')[-1]}"})
+                        batch_profiles[url] = profile
                     # else: stays None → company-angle opener
+
+            # ── Resolve any Tier 1 company-mismatch profiles ──
+            # If Tier 1 scraped a profile but company didn't match, use the data anyway
+            # rather than dropping the row — company fields on LinkedIn often lag reality.
+            for url in batch:
+                if batch_profiles.get(url) == "FILTERED":
+                    batch_profiles[url] = tier1_results[batch.index(url)]
 
             # ── Generate messages for this batch ──
             for url in batch:
-                profile = batch_profiles.get(url)
-                if profile == "FILTERED":
-                    continue
 
                 name_label = url.rstrip("/").split("/")[-1]  # slug as placeholder
                 yield sse({"event": "status", "message": f"Writing message for {name_label}..."})
