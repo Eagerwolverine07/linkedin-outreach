@@ -357,7 +357,7 @@ def company_match(profile, company_name):
 # ─────────────────────────────────────────────
 
 GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL = "openai/gpt-oss-120b"
+GROQ_MODEL = "openai/gpt-oss-20b"
 
 SYSTEM_PROMPT = """You write short LinkedIn connection request messages for Amber Sahu, a recent BU MS in Management graduate targeting sales roles at tech companies.
 
@@ -453,7 +453,8 @@ async def generate_message(session, profile, company_name):
             print(f"[Groq] status={resp.status} body_preview={raw[:200]}")
             if resp.status == 200:
                 data    = json.loads(raw)
-                message = data["choices"][0]["message"]["content"].strip()
+                msg_obj = data["choices"][0]["message"]
+                message = (msg_obj.get("content") or msg_obj.get("reasoning") or "").strip()
                 if len(message) > 300:
                     message = message[:297] + "..."
                 print(f"[Groq] OK len={len(message)}")
