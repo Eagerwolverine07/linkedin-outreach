@@ -76,8 +76,9 @@ async def test_apify():
     url_to_scrape = "https://www.linkedin.com/in/amber-sahu/"
     try:
         async with _aiohttp.ClientSession() as s:
-            # Step 1: start run
-            start_url = f"{APIFY_BASE}/acts/{actor}/runs?token={APIFY_TOKEN}"
+            # Step 1: start run (Apify uses ~ not / in actor slugs)
+            actor_url_slug = actor.replace("/", "~")
+            start_url = f"{APIFY_BASE}/acts/{actor_url_slug}/runs?token={APIFY_TOKEN}"
             payload = {"urls": [{"url": url_to_scrape}]}
             print(f"[test-apify] POST {start_url[:80]}")
             async with s.post(start_url, json=payload, timeout=_aiohttp.ClientTimeout(total=30)) as r:
@@ -121,7 +122,9 @@ async def run_apify_actor(session, actor_slug, input_payload):
     Starts one Apify actor run.
     Returns the run ID string, or None if it failed to start.
     """
-    url = f"{APIFY_BASE}/acts/{actor_slug}/runs?token={APIFY_TOKEN}"
+    # Apify API uses username~actor-name format, not username/actor-name
+    slug_for_url = actor_slug.replace("/", "~")
+    url = f"{APIFY_BASE}/acts/{slug_for_url}/runs?token={APIFY_TOKEN}"
     try:
         async with session.post(url, json=input_payload,
                                 timeout=aiohttp.ClientTimeout(total=30)) as resp:
