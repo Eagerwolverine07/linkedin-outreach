@@ -116,15 +116,18 @@ def normalize_atomus(raw):
 def normalize_supreme_coder(raw):
     if not raw:
         return None
-    exps = raw.get("experiences", [])[:3]
+    exps = raw.get("positions", raw.get("experiences", []))[:3]
+    current_co = raw.get("currentCompany", {})
+    if isinstance(current_co, dict):
+        current_co = current_co.get("name", "")
     return {
         "first_name":      raw.get("firstName", ""),
         "last_name":       raw.get("lastName", ""),
         "headline":        raw.get("headline", ""),
         "summary":         raw.get("about","") or raw.get("summary",""),
-        "experiences":     [{"title": e.get("title",""), "company": e.get("companyName",""), "description": e.get("description","")} for e in exps],
-        "current_company": raw.get("currentCompany","") or (exps[0].get("companyName","") if exps else ""),
-        "education":       [{"school": e.get("schoolName",""), "degree": e.get("degreeName","")} for e in raw.get("education",[])[:2]],
+        "experiences":     [{"title": e.get("title",""), "company": e.get("companyName", e.get("company",{}).get("name","")), "description": e.get("description","")} for e in exps],
+        "current_company": current_co or raw.get("companyName","") or (exps[0].get("companyName","") if exps else ""),
+        "education":       [{"school": e.get("schoolName",""), "degree": e.get("degreeName","")} for e in raw.get("educations", raw.get("education",[]))[:2]],
     }
 
 
@@ -217,7 +220,7 @@ SCRAPERS = {
     },
     "supreme_coder/linkedin-profile-scraper": {
         "normalize": normalize_supreme_coder,
-        "input_fn":  lambda url: {"profileUrl": url},
+                "input_fn":  lambda url: {"urls": [{"url": url}]},
     },
     "apimaestro/linkedin-profile-detail": {
         "normalize": normalize_apimaestro,
@@ -225,11 +228,11 @@ SCRAPERS = {
     },
     "harvestapi/linkedin-profile-scraper": {
         "normalize": normalize_harvestapi,
-        "input_fn":  lambda url: {"profileUrl": url},
+                "input_fn":  lambda url: {"urls": [{"url": url}]},
     },
     "datadoping/linkedin-profile-scraper": {
         "normalize": normalize_datadoping,
-        "input_fn":  lambda url: {"profileUrl": url},
+                "input_fn":  lambda url: {"urls": [{"url": url}]},
     },
     "sabania/linkedin-scraper": {
         "normalize": normalize_sabania,
@@ -237,7 +240,7 @@ SCRAPERS = {
     },
     "automation-lab/linkedin-profile-scraper": {
         "normalize": normalize_automation_lab,
-        "input_fn":  lambda url: {"profileUrl": url},
+                "input_fn":  lambda url: {"urls": [{"url": url}]},
         # TODO: confirm input key — may be "url" instead of "profileUrl"
     },
 }
@@ -256,7 +259,7 @@ async def scrape_profile_tier1(session, url):
     Fires atomus and supreme_coder simultaneously for one URL.
     Returns normalized profile data from whichever returns data, or None.
     """
-    tier1 = ["atomus/linkedin-profile-scraper", "supreme_coder/linkedin-profile-scraper"]
+    tier1 = ["supreme_coder/linkedin-profile-scraper"]
 
     # Start both runs at the same time
     run_ids = {}
