@@ -26,7 +26,6 @@ import asyncio
 import aiohttp
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, StreamingResponse
-from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
 # Load API keys from the .env file
@@ -49,15 +48,14 @@ async def index():
 @app.get("/debug")
 async def debug():
     """Quick health check — tests Groq directly and reports status."""
-    import aiohttp as _aiohttp
     result = {"groq_key_set": bool(GROQ_API_KEY), "groq_model": GROQ_MODEL, "apify_key_set": bool(APIFY_TOKEN), "apify_token_prefix": (APIFY_TOKEN or "")[:12]}
     try:
-        async with _aiohttp.ClientSession() as s:
+        async with aiohttp.ClientSession() as s:
             async with s.post(
                 GROQ_URL,
                 headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
                 json={"model": GROQ_MODEL, "messages": [{"role": "user", "content": "Say hi."}], "max_tokens": 10},
-                timeout=_aiohttp.ClientTimeout(total=15)
+                timeout=aiohttp.ClientTimeout(total=15)
             ) as r:
                 body = await r.text()
                 result["groq_status"] = r.status
@@ -70,36 +68,32 @@ async def debug():
 @app.get("/test-apify")
 async def test_apify():
     """Test Apify actor start + result fetch directly."""
-    import aiohttp as _aiohttp
+    import traceback
     result = {"apify_token_set": bool(APIFY_TOKEN), "apify_token_prefix": (APIFY_TOKEN or "")[:12]}
     actor = "supreme_coder/linkedin-profile-scraper"
     url_to_scrape = "https://www.linkedin.com/in/amber-sahu/"
     try:
-        async with _aiohttp.ClientSession() as s:
-            # Step 1: start run (Apify uses ~ not / in actor slugs)
-            actor_url_slug = actor.replace("/", "~")
-            start_url = f"{APIFY_BASE}/acts/{actor_url_slug}/runs?token={APIFY_TOKEN}"
+        async with aiohttp.ClientSession() as s:
+            slug = actor.replace("/", "~")
+            start_url = f"{APIFY_BASE}/acts/{slug}/runs?token={APIFY_TOKEN}"
             payload = {"urls": [{"url": url_to_scrape}]}
             print(f"[test-apify] POST {start_url[:80]}")
-            async with s.post(start_url, json=payload, timeout=_aiohttp.ClientTimeout(total=30)) as r:
+            async with s.post(start_url, json=payload, timeout=aiohttp.ClientTimeout(total=30)) as r:
                 body = await r.text()
                 result["start_status"] = r.status
                 result["start_body"] = body[:500]
                 if r.status in (200, 201):
-                    data = json.loads(body)
-                    run_id = data.get("data", {}).get("id")
+                    run_id = json.loads(body).get("data", {}).get("id")
                     result["run_id"] = run_id
                     if run_id:
-                        # Step 2: wait 30s then fetch
-                        print(f"[test-apify] run_id={run_id}, waiting 30s...")
-                        await asyncio.sleep(30)
-                        items_url = f"{APIFY_BASE}/actor-runs/{run_id}/dataset/items?token={APIFY_TOKEN}"
-                        async with s.get(items_url, timeout=_aiohttp.ClientTimeout(total=30)) as r2:
-                            result["items_status"] = r2.status
-                            items_body = await r2.text()
-                            result["items_body"] = items_body[:1000]
+                        succeeded = await wait_for_apify_run(s, run_id)
+                        result["run_succeeded"] = succeeded
+                        if succeeded:
+                            items_url = f"{APIFY_BASE}/actor-runs/{run_id}/dataset/items?token={APIFY_TOKEN}"
+                            async with s.get(items_url, timeout=aiohttp.ClientTimeout(total=30)) as r2:
+                                result["items_status"] = r2.status
+                                result["items_body"] = (await r2.text())[:1000]
     except Exception as e:
-        import traceback
         result["error"] = str(e)
         result["traceback"] = traceback.format_exc()
     return result
@@ -269,8 +263,7 @@ def normalize_apimaestro(raw):
 def normalize_harvestapi(raw):
     if not raw:
         return None
-    pos  = raw.get("currentPosition", [{}])
-    exps = pos[:3]
+    exps = raw.get("currentPosition", [{}])[:3]
     return {
         "first_name":      raw.get("firstName",""),
         "last_name":       raw.get("lastName",""),
@@ -375,12 +368,10 @@ APIMAESTRO_DAILY_CAP  = 20
 
 async def scrape_profile_tier1(session, url):
     """
-    Fires atomus and supreme_coder simultaneously for one URL.
+    Fires Tier 1 scrapers for one URL.
     Returns normalized profile data from whichever returns data, or None.
     """
     tier1 = ["supreme_coder/linkedin-profile-scraper"]
-
-    # Start both runs at the same time
     run_ids = {}
     for actor in tier1:
         run_id = await run_apify_actor(session, actor, SCRAPERS[actor]["input_fn"](url))
@@ -546,8 +537,7 @@ async def generate_message(session, profile, company_name):
         "max_tokens":  300,
     }
 
-    key_set = bool(GROQ_API_KEY)
-    print(f"[Groq] Calling model={GROQ_MODEL} key_set={key_set}")
+    print(f"[Groq] Calling model={GROQ_MODEL} key_set={bool(GROQ_API_KEY)}")
     try:
         async with session.post(GROQ_URL, headers=headers, json=payload,
                                 timeout=aiohttp.ClientTimeout(total=30)) as resp:
@@ -643,7 +633,7 @@ async def _stream_pipeline(urls, company):
 
             yield sse({"event": "status", "message": f"Batch {batch_index+1}/{len(batches)}: scraping {len(batch)} profiles with Tier 1..."})
 
-            # ── Tier 1: fire atomus + supreme_coder in parallel for all profiles in batch ──
+            # ── Tier 1: fire scrapers in parallel for all profiles in batch ──
             tier1_tasks  = [scrape_profile_tier1(session, url) for url in batch]
             tier1_results = await asyncio.gather(*tier1_tasks)
 
