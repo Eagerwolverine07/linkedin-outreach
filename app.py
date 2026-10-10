@@ -1,4 +1,5 @@
-LinkedIn Cold Outreach Pipeline — Backend
+"""
+LinkedIn Cold Outreach Pipeline - Backend
 ==========================================
 What this file does in plain English:
   1. Serves index.html when you open the site in a browser
@@ -356,7 +357,7 @@ def company_match(profile, company_name):
 # ─────────────────────────────────────────────
 
 GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL = "llama3-70b-8192"
+GROQ_MODEL = "openai/gpt-oss-120b"
 
 SYSTEM_PROMPT = """You write short LinkedIn connection request messages for Amber Sahu, a recent BU MS in Management graduate targeting sales roles at tech companies.
 
