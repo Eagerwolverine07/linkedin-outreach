@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +8,7 @@
   <style>
     /* ── Base ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+ 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #0f1117;
@@ -15,25 +16,25 @@
       min-height: 100vh;
       padding: 40px 20px;
     }
-
+ 
     .container {
       max-width: 900px;
       margin: 0 auto;
     }
-
+ 
     h1 {
       font-size: 1.5rem;
       font-weight: 600;
       color: #f8fafc;
       margin-bottom: 4px;
     }
-
+ 
     .subtitle {
       font-size: 0.875rem;
       color: #64748b;
       margin-bottom: 32px;
     }
-
+ 
     /* ── Form ── */
     .form-section {
       background: #1e2433;
@@ -42,7 +43,7 @@
       padding: 24px;
       margin-bottom: 24px;
     }
-
+ 
     label {
       display: block;
       font-size: 0.8125rem;
@@ -52,7 +53,7 @@
       letter-spacing: 0.03em;
       text-transform: uppercase;
     }
-
+ 
     input[type="text"] {
       width: 100%;
       background: #0f1117;
@@ -65,11 +66,11 @@
       transition: border-color 0.15s;
       margin-bottom: 20px;
     }
-
+ 
     input[type="text"]:focus {
       border-color: #3b82f6;
     }
-
+ 
     textarea {
       width: 100%;
       background: #0f1117;
@@ -85,18 +86,18 @@
       transition: border-color 0.15s;
       line-height: 1.6;
     }
-
+ 
     textarea:focus {
       border-color: #3b82f6;
     }
-
+ 
     .url-hint {
       font-size: 0.75rem;
       color: #475569;
       margin-top: 6px;
       margin-bottom: 20px;
     }
-
+ 
     /* ── Button ── */
     .btn-generate {
       width: 100%;
@@ -114,10 +115,10 @@
       justify-content: center;
       gap: 8px;
     }
-
+ 
     .btn-generate:hover:not(:disabled) { background: #2563eb; }
     .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
-
+ 
     /* ── Spinner ── */
     .spinner-wrap {
       display: none;
@@ -126,9 +127,9 @@
       padding: 48px 0;
       gap: 16px;
     }
-
+ 
     .spinner-wrap.visible { display: flex; }
-
+ 
     .spinner {
       width: 36px;
       height: 36px;
@@ -137,14 +138,14 @@
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
-
+ 
     @keyframes spin { to { transform: rotate(360deg); } }
-
+ 
     .spinner-label {
       color: #64748b;
       font-size: 0.875rem;
     }
-
+ 
     /* ── Error ── */
     .error-box {
       display: none;
@@ -156,48 +157,48 @@
       font-size: 0.875rem;
       margin-bottom: 16px;
     }
-
+ 
     .error-box.visible { display: block; }
-
+ 
     /* ── Results ── */
     .results-section { display: none; }
     .results-section.visible { display: block; }
-
+ 
     .results-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 16px;
     }
-
+ 
     .results-title {
       font-size: 1rem;
       font-weight: 600;
       color: #f8fafc;
     }
-
+ 
     .results-count {
       font-size: 0.8125rem;
       color: #64748b;
     }
-
+ 
     /* ── Table ── */
     .table-wrap {
       overflow-x: auto;
       border: 1px solid #2d3748;
       border-radius: 12px;
     }
-
+ 
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 0.875rem;
     }
-
+ 
     thead {
       background: #1a2035;
     }
-
+ 
     th {
       padding: 12px 16px;
       text-align: left;
@@ -209,33 +210,33 @@
       border-bottom: 1px solid #2d3748;
       white-space: nowrap;
     }
-
+ 
     td {
       padding: 14px 16px;
       vertical-align: top;
       border-bottom: 1px solid #1e2433;
     }
-
+ 
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: #1a2035; }
-
+ 
     .td-sr {
       color: #475569;
       font-size: 0.8125rem;
       width: 40px;
     }
-
+ 
     .td-name {
       font-weight: 500;
       color: #e2e8f0;
       white-space: nowrap;
       min-width: 130px;
     }
-
+ 
     .td-pers {
       width: 90px;
     }
-
+ 
     .badge {
       display: inline-block;
       font-size: 0.6875rem;
@@ -244,52 +245,52 @@
       border-radius: 9999px;
       white-space: nowrap;
     }
-
+ 
     .badge-yes {
       background: #052e16;
       color: #4ade80;
       border: 1px solid #166534;
     }
-
+ 
     .badge-no {
       background: #1c1917;
       color: #a8a29e;
       border: 1px solid #44403c;
     }
-
+ 
     .td-url a {
       color: #3b82f6;
       text-decoration: none;
       font-size: 0.8125rem;
       white-space: nowrap;
     }
-
+ 
     .td-url a:hover { text-decoration: underline; }
-
+ 
     .td-message {
       min-width: 320px;
       max-width: 480px;
     }
-
+ 
     .message-text {
       color: #cbd5e1;
       line-height: 1.55;
       word-break: break-word;
     }
-
+ 
     .char-count {
       font-size: 0.6875rem;
       margin-top: 6px;
     }
-
+ 
     .char-ok   { color: #4ade80; }
     .char-over { color: #f87171; }
-
+ 
     .td-copy {
       width: 80px;
       text-align: center;
     }
-
+ 
     /* ── Copy button ── */
     .btn-copy {
       background: #1e2433;
@@ -302,12 +303,12 @@
       transition: all 0.15s;
       white-space: nowrap;
     }
-
+ 
     .btn-copy:hover {
       background: #2d3748;
       color: #e2e8f0;
     }
-
+ 
     .btn-copy.copied {
       background: #052e16;
       border-color: #166534;
@@ -317,42 +318,42 @@
 </head>
 <body>
   <div class="container">
-
+ 
     <h1>LinkedIn Outreach Pipeline</h1>
     <p class="subtitle">Paste profile URLs → get personalized connection messages</p>
-
+ 
     <!-- ── Input Form ── -->
     <div class="form-section">
-
+ 
       <label for="company-input">Company Name</label>
       <input
         type="text"
         id="company-input"
         placeholder="e.g. Snowflake"
       />
-
+ 
       <label for="url-input">LinkedIn Profile URLs</label>
       <textarea
         id="url-input"
         placeholder="https://www.linkedin.com/in/john-doe&#10;https://www.linkedin.com/in/jane-smith&#10;https://www.linkedin.com/in/alex-jones"
       ></textarea>
       <p class="url-hint">One URL per line. Duplicates are removed automatically.</p>
-
+ 
       <button class="btn-generate" id="generate-btn" onclick="runPipeline()">
         Generate Messages
       </button>
-
+ 
     </div>
-
+ 
     <!-- ── Error ── -->
     <div class="error-box" id="error-box"></div>
-
+ 
     <!-- ── Spinner ── -->
     <div class="spinner-wrap" id="spinner">
       <div class="spinner"></div>
       <span class="spinner-label" id="spinner-label">Scraping profiles and writing messages…</span>
     </div>
-
+ 
     <!-- ── Results Table ── -->
     <div class="results-section" id="results-section">
       <div class="results-header">
@@ -375,86 +376,147 @@
         </table>
       </div>
     </div>
-
+ 
   </div>
-
+ 
   <script>
     /**
      * What this script does in plain English:
      *
-     * 1. When you click "Generate Messages":
-     *    - Reads the company name and URL list from the form
-     *    - Validates that both are filled in
-     *    - Sends a POST request to /generate on the Python backend
-     *    - Shows a spinner while waiting
+     * OLD approach (broken): one big fetch() call that waited for everything,
+     *   then got back all results at once. This crashed because the server-side
+     *   asyncio conflicted with Flask, and Render would time it out anyway.
      *
-     * 2. When the backend responds:
-     *    - Hides the spinner
-     *    - Builds a table row for each result
-     *    - Displays the table
+     * NEW approach (SSE streaming):
+     *   1. We open a streaming connection to /generate using fetch() with a
+     *      ReadableStream reader.
+     *   2. The backend sends us one JSON object at a time, as each profile
+     *      finishes. Each chunk is prefixed with "data: " (SSE format).
+     *   3. We parse each chunk as it arrives:
+     *      - "status" events → update the spinner label
+     *      - "result" events → add a row to the table immediately
+     *      - "done" event   → hide the spinner, show final count
+     *      - "error" event  → show the error box
+     *   4. Rows appear one by one as the pipeline runs — no waiting for the
+     *      full batch to finish.
      *
-     * 3. Copy button:
-     *    - Copies just the message text to your clipboard
-     *    - Button briefly turns green to confirm the copy
+     * Copy button: copies just the message text to clipboard, turns green briefly.
      */
-
+ 
+    let resultCount = 0;  // track how many rows have been added
+ 
     async function runPipeline() {
-      const companyInput = document.getElementById("company-input").value.trim();
-      const urlRaw       = document.getElementById("url-input").value.trim();
-      const errorBox     = document.getElementById("error-box");
-      const spinner      = document.getElementById("spinner");
+      const companyInput   = document.getElementById("company-input").value.trim();
+      const urlRaw         = document.getElementById("url-input").value.trim();
+      const errorBox       = document.getElementById("error-box");
+      const spinner        = document.getElementById("spinner");
       const resultsSection = document.getElementById("results-section");
-      const btn          = document.getElementById("generate-btn");
-
-      // Reset UI state
+      const tbody          = document.getElementById("results-body");
+      const btn            = document.getElementById("generate-btn");
+ 
+      // Reset UI
       errorBox.classList.remove("visible");
       errorBox.textContent = "";
       resultsSection.classList.remove("visible");
-
-      // Basic validation
-      if (!companyInput) {
-        showError("Please enter a company name.");
-        return;
-      }
-      if (!urlRaw) {
-        showError("Please paste at least one LinkedIn URL.");
-        return;
-      }
-
-      // Parse URLs: split on newlines, filter blanks
+      tbody.innerHTML = "";
+      resultCount = 0;
+ 
+      if (!companyInput) { showError("Please enter a company name."); return; }
+      if (!urlRaw)        { showError("Please paste at least one LinkedIn URL."); return; }
+ 
       const urls = urlRaw
         .split("\n")
         .map(u => u.trim())
-        .filter(u => u.length > 0 && u.startsWith("https://www.linkedin.com/in/"));
-
+        .filter(u => u.startsWith("https://www.linkedin.com/in/"));
+ 
       if (urls.length === 0) {
         showError("No valid LinkedIn profile URLs found. Each URL should start with https://www.linkedin.com/in/");
         return;
       }
-
-      // Show spinner, disable button
+ 
       spinner.classList.add("visible");
-      btn.disabled = true;
-
-      // Update spinner label with count
       document.getElementById("spinner-label").textContent =
-        `Processing ${urls.length} profile${urls.length > 1 ? "s" : ""}… this takes a few minutes`;
-
+        `Starting pipeline for ${urls.length} profile${urls.length !== 1 ? "s" : ""}…`;
+      btn.disabled = true;
+ 
       try {
+        // Open the streaming connection to the backend
         const response = await fetch("/generate", {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
           body:    JSON.stringify({ urls, company: companyInput }),
         });
-
+ 
         if (!response.ok) {
-          const err = await response.json();
-          throw new Error(err.error || `Server error ${response.status}`);
+          throw new Error(`Server error ${response.status}`);
         }
-
-        const results = await response.json();
-        renderResults(results);
-
+ 
+        // ReadableStream lets us process the response body chunk by chunk
+        // as it arrives, without waiting for it to finish.
+        const reader  = response.body.getReader();
+        const decoder = new TextDecoder();
+        let   buffer  = "";
+ 
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+ 
+          // Decode the binary chunk into text and add to buffer
+          buffer += decoder.decode(value, { stream: true });
+ 
+          // SSE messages are separated by double newlines (\n\n).
+          // We split on that to handle multiple messages arriving in one chunk.
+          const parts = buffer.split("\n\n");
+ 
+          // The last part may be incomplete — keep it in the buffer
+          buffer = parts.pop();
+ 
+          for (const part of parts) {
+            // Each SSE line looks like:  data: {"event": "result", ...}
+            const line = part.trim();
+            if (!line.startsWith("data: ")) continue;
+ 
+            try {
+              const msg = JSON.parse(line.slice(6));  // strip "data: " prefix
+ 
+              if (msg.event === "status") {
+                // Update the spinner text with the current pipeline step
+                document.getElementById("spinner-label").textContent = msg.message;
+ 
+              } else if (msg.event === "result") {
+                // A profile is done — add it to the table immediately
+                appendRow(msg);
+                resultCount++;
+                document.getElementById("results-count").textContent =
+                  `${resultCount} message${resultCount !== 1 ? "s" : ""} generated`;
+ 
+                // Show the table on the first result
+                if (resultCount === 1) {
+                  resultsSection.classList.add("visible");
+                  resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+ 
+              } else if (msg.event === "done") {
+                // Pipeline finished
+                spinner.classList.remove("visible");
+                btn.disabled = false;
+                if (resultCount === 0) {
+                  showError("No results returned. All profiles may have been filtered (company mismatch) or scrapers returned no data.");
+                }
+ 
+              } else if (msg.event === "error") {
+                showError("Pipeline error: " + msg.message);
+                spinner.classList.remove("visible");
+                btn.disabled = false;
+              }
+ 
+            } catch (e) {
+              // Malformed JSON in one chunk — skip it, keep going
+              console.warn("Could not parse SSE chunk:", line, e);
+            }
+          }
+        }
+ 
       } catch (err) {
         showError("Something went wrong: " + err.message);
       } finally {
@@ -462,61 +524,45 @@
         btn.disabled = false;
       }
     }
-
-
-    function renderResults(results) {
-      const tbody   = document.getElementById("results-body");
-      const section = document.getElementById("results-section");
-      const count   = document.getElementById("results-count");
-
-      tbody.innerHTML = "";
-
-      if (results.length === 0) {
-        showError("No results returned. All profiles may have been filtered out (company mismatch) or scrapers returned no data.");
-        return;
-      }
-
-      count.textContent = `${results.length} message${results.length > 1 ? "s" : ""} generated`;
-
-      results.forEach(row => {
-        const charClass = row.char_count <= 300 ? "char-ok" : "char-over";
-        const charLabel = row.char_count <= 300
-          ? `${row.char_count} chars`
-          : `${row.char_count} chars — OVER by ${row.char_count - 300}`;
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="td-sr">${row.sr}</td>
-          <td class="td-name">${escHtml(row.name)}</td>
-          <td class="td-pers">
-            <span class="badge ${row.personalized === 'Yes' ? 'badge-yes' : 'badge-no'}">
-              ${row.personalized}
-            </span>
-          </td>
-          <td class="td-url">
-            <a href="${escHtml(row.url)}" target="_blank" rel="noopener">View Profile</a>
-          </td>
-          <td class="td-message">
-            <div class="message-text">${escHtml(row.message)}</div>
-            <div class="char-count ${charClass}">${charLabel}</div>
-          </td>
-          <td class="td-copy">
-            <button
-              class="btn-copy"
-              onclick="copyMessage(this, ${JSON.stringify(row.message)})"
-            >Copy</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      section.classList.add("visible");
-
-      // Scroll down to results
-      section.scrollIntoView({ behavior: "smooth", block: "start" });
+ 
+ 
+    function appendRow(row) {
+      /**
+       * Adds one row to the results table.
+       * Called as each "result" SSE event arrives.
+       */
+      const tbody     = document.getElementById("results-body");
+      const charClass = row.char_count <= 300 ? "char-ok" : "char-over";
+      const charLabel = row.char_count <= 300
+        ? `${row.char_count} chars`
+        : `${row.char_count} chars — OVER by ${row.char_count - 300}`;
+ 
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="td-sr">${row.sr}</td>
+        <td class="td-name">${escHtml(row.name)}</td>
+        <td class="td-pers">
+          <span class="badge ${row.personalized === 'Yes' ? 'badge-yes' : 'badge-no'}">
+            ${row.personalized}
+          </span>
+        </td>
+        <td class="td-url">
+          <a href="${escHtml(row.url)}" target="_blank" rel="noopener">View Profile</a>
+        </td>
+        <td class="td-message">
+          <div class="message-text">${escHtml(row.message)}</div>
+          <div class="char-count ${charClass}">${charLabel}</div>
+        </td>
+        <td class="td-copy">
+          <button class="btn-copy" onclick="copyMessage(this, ${JSON.stringify(row.message)})">
+            Copy
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
     }
-
-
+ 
+ 
     function copyMessage(btn, message) {
       navigator.clipboard.writeText(message).then(() => {
         btn.textContent = "Copied!";
@@ -527,17 +573,17 @@
         }, 1800);
       });
     }
-
-
+ 
+ 
     function showError(msg) {
       const box = document.getElementById("error-box");
       box.textContent = msg;
       box.classList.add("visible");
     }
-
-
-    // Escape HTML to prevent XSS when inserting scraped data into the DOM
+ 
+ 
     function escHtml(str) {
+      // Prevents scraped data from being interpreted as HTML
       return String(str)
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
