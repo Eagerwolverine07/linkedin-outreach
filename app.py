@@ -441,7 +441,7 @@ async def generate_message(session, profile, company_name):
             {"role": "user",   "content": user_content},
         ],
         "temperature": 0.7,
-        "max_tokens":  150,
+        "max_tokens":  1024,
     }
 
     key_set = bool(GROQ_API_KEY)
