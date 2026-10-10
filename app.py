@@ -324,8 +324,8 @@ async def scrape_profile_tier1(session, url):
     if not run_ids:
         return None
 
-    # Wait 25 seconds for scrapers to finish, then fetch results
-    await asyncio.sleep(25)
+    # Wait 50 seconds for scrapers to finish (cold starts can take 30-40s)
+    await asyncio.sleep(50)
 
     for actor, run_id in run_ids.items():
         results = await get_apify_results(session, run_id)
