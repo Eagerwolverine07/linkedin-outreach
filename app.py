@@ -141,10 +141,36 @@ async def run_apify_actor(session, actor_slug, input_payload):
     return None
 
 
+async def wait_for_apify_run(session, run_id, max_wait=90, poll_interval=5):
+    """
+    Polls Apify every poll_interval seconds until the run reaches a terminal
+    state (SUCCEEDED, FAILED, ABORTED, TIMED-OUT) or max_wait is exceeded.
+    Returns True if succeeded, False otherwise.
+    """
+    url = f"{APIFY_BASE}/actor-runs/{run_id}?token={APIFY_TOKEN}"
+    elapsed = 0
+    while elapsed < max_wait:
+        await asyncio.sleep(poll_interval)
+        elapsed += poll_interval
+        try:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    status = data.get("data", {}).get("status", "")
+                    print(f"[Apify] run={run_id} status={status} elapsed={elapsed}s")
+                    if status == "SUCCEEDED":
+                        return True
+                    if status in ("FAILED", "ABORTED", "TIMED-OUT"):
+                        return False
+        except Exception as e:
+            print(f"[Apify] poll error run={run_id}: {e}")
+    print(f"[Apify] run={run_id} timed out after {max_wait}s")
+    return False
+
+
 async def get_apify_results(session, run_id):
     """
     Fetches the dataset items for a completed Apify run.
-    Call this after you've already waited for the scraper to finish.
     Returns a list of result dicts, or [] if nothing came back.
     """
     url = f"{APIFY_BASE}/actor-runs/{run_id}/dataset/items?token={APIFY_TOKEN}"
@@ -364,10 +390,12 @@ async def scrape_profile_tier1(session, url):
     if not run_ids:
         return None
 
-    # Wait 50 seconds for scrapers to finish (cold starts can take 30-40s)
-    await asyncio.sleep(50)
-
+    # Poll each run until it completes (typically 15-20s, max 90s)
     for actor, run_id in run_ids.items():
+        succeeded = await wait_for_apify_run(session, run_id)
+        if not succeeded:
+            print(f"[Tier1] {actor} run={run_id} did not succeed, skipping")
+            continue
         results = await get_apify_results(session, run_id)
         if results:
             normalized = SCRAPERS[actor]["normalize"](results[0])
@@ -402,7 +430,10 @@ async def scrape_profile_tier2(session, url):
         if actor == "apimaestro/linkedin-profile-detail":
             apimaestro_used_today += 1
 
-        await asyncio.sleep(25)
+        succeeded = await wait_for_apify_run(session, run_id, max_wait=60)
+        if not succeeded:
+            print(f"[Tier2] {actor} run={run_id} did not succeed, trying next")
+            continue
         results = await get_apify_results(session, run_id)
 
         if results:
