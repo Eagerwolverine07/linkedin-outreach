@@ -10,19 +10,19 @@
   <style>
     :root {
       --grad:    linear-gradient(135deg, #ffb347 0%, #c471ed 55%, #7b6ef6 100%);
-      --bg:      #0f0f13;
-      --surface: #18181f;
-      --card:    #1e1e28;
-      --border:  rgba(255,255,255,.08);
-      --text:    #f0f0f5;
-      --muted:   #8888a8;
+      --bg:      #fdf6f0;
+      --surface: #ffffff;
+      --card:    #ffffff;
+      --border:  #ede8f5;
+      --text:    #1a1035;
+      --muted:   #9090aa;
       --radius:  14px;
       --font:    'Plus Jakarta Sans', sans-serif;
       --c-sent:        #a0a0c0;
       --c-accepted:    #7b6ef6;
       --c-replied:     #c471ed;
       --c-call:        #ffb347;
-      --c-noresp:      #444458;
+      --c-noresp:      #c8c8d8;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -30,6 +30,9 @@
     body {
       font-family: var(--font);
       background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(255,179,71,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 80% 110%, rgba(123,110,246,0.15) 0%, transparent 60%);
       color: var(--text);
       min-height: 100vh;
       font-size: 14px;
@@ -68,7 +71,7 @@
       transition: all .2s;
       white-space: nowrap;
     }
-    .nav-link:hover { color: var(--text); border-color: rgba(255,255,255,.18); background: var(--card); }
+    .nav-link:hover { color: var(--text); border-color: #c471ed; background: var(--card); }
 
     /* ── page ── */
     .page { padding: 28px 28px 60px; max-width: 1280px; margin: 0 auto; }
@@ -79,7 +82,7 @@
       100% { background-position:  600px 0; }
     }
     .skel {
-      background: linear-gradient(90deg, #1e1e28 25%, #2a2a3a 50%, #1e1e28 75%);
+      background: linear-gradient(90deg, #ede8f5 25%, #f5f0fc 50%, #ede8f5 75%);
       background-size: 600px 100%;
       animation: shimmer 1.4s infinite linear;
       border-radius: 8px;
@@ -200,7 +203,7 @@
     .funnel-bars { display: flex; flex-direction: column; gap: 10px; }
     .f-row { display: flex; align-items: center; gap: 12px; }
     .f-label { font-size: 12px; font-weight: 600; color: var(--text); min-width: 96px; }
-    .f-track { flex: 1; height: 28px; background: rgba(255,255,255,.05); border-radius: 6px; overflow: hidden; }
+    .f-track { flex: 1; height: 28px; background: rgba(0,0,0,.05); border-radius: 6px; overflow: hidden; }
     .f-fill  { height: 100%; border-radius: 6px; transition: width .6s ease; }
     .f-count { font-size: 13px; font-weight: 700; min-width: 32px; text-align: right; }
     .f-pct   { font-size: 11px; color: var(--muted); min-width: 40px; text-align: right; }
@@ -221,7 +224,7 @@
     .co-table td {
       padding: 10px 0;
       font-size: 13px;
-      border-bottom: 1px solid rgba(255,255,255,.04);
+      border-bottom: 1px solid var(--border);
       vertical-align: middle;
     }
     .co-table tr:last-child td { border-bottom: none; }
@@ -230,7 +233,7 @@
     .co-inline-track {
       display: inline-block;
       width: 80px; height: 4px;
-      background: rgba(255,255,255,.08);
+      background: rgba(0,0,0,.08);
       border-radius: 3px;
       vertical-align: middle;
     }
@@ -282,7 +285,7 @@
 <script>
   const GRAD_COLORS = {
     sent: '#a0a0c0', accepted: '#7b6ef6', replied: '#c471ed',
-    call_booked: '#ffb347', no_response: '#444458',
+    call_booked: '#ffb347', no_response: '#c8c8d8',
   };
   const STATUS_LABELS = {
     sent: 'Sent', accepted: 'Accepted', replied: 'Replied',
@@ -290,8 +293,8 @@
   };
   const STATUS_ORDER = ['sent','accepted','replied','call_booked','no_response'];
 
-  Chart.defaults.color = '#8888a8';
-  Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+  Chart.defaults.color = '#9090aa';
+  Chart.defaults.borderColor = 'rgba(0,0,0,0.06)';
   Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
 
   async function init() {
@@ -404,8 +407,8 @@
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-          x: { grid: { color: 'rgba(255,255,255,0.04)' } },
-          y: { grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true, ticks: { precision: 0 } },
+          x: { grid: { color: 'rgba(0,0,0,0.06)' } },
+          y: { grid: { color: 'rgba(0,0,0,0.06)' }, beginAtZero: true, ticks: { precision: 0 } },
         },
       },
     });
@@ -483,8 +486,8 @@
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { position: 'top', labels: { boxWidth: 10, padding: 14, font: { size: 12 } } } },
         scales: {
-          x: { stacked: true, grid: { color: 'rgba(255,255,255,0.04)' } },
-          y: { stacked: true, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true, ticks: { precision: 0 } },
+          x: { stacked: true, grid: { color: 'rgba(0,0,0,0.06)' } },
+          y: { stacked: true, grid: { color: 'rgba(0,0,0,0.06)' }, beginAtZero: true, ticks: { precision: 0 } },
         },
       },
     });

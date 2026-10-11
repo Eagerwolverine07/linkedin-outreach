@@ -10,12 +10,12 @@
     /* ── tokens ── */
     :root {
       --grad:   linear-gradient(135deg, #ffb347 0%, #c471ed 55%, #7b6ef6 100%);
-      --bg:     #0f0f13;
-      --surface:#18181f;
-      --card:   #1e1e28;
-      --border: rgba(255,255,255,.08);
-      --text:   #f0f0f5;
-      --muted:  #8888a8;
+      --bg:     #fdf6f0;
+      --surface:#ffffff;
+      --card:   #ffffff;
+      --border: #ede8f5;
+      --text:   #1a1035;
+      --muted:  #9090aa;
       --radius: 14px;
       --font:   'Plus Jakarta Sans', sans-serif;
     }
@@ -25,6 +25,9 @@
     body {
       font-family: var(--font);
       background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(255,179,71,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 80% 110%, rgba(123,110,246,0.15) 0%, transparent 60%);
       color: var(--text);
       min-height: 100vh;
       font-size: 14px;
@@ -73,7 +76,7 @@
       color: var(--text);
       transition: all .2s;
     }
-    .nav-btn:hover { border-color: rgba(255,255,255,.2); background: #2a2a38; }
+    .nav-btn:hover { border-color: #c471ed; background: #f5f0fc; }
     .nav-btn.active {
       background: var(--grad);
       border-color: transparent;
@@ -114,7 +117,7 @@
     .s-accepted    { color: #7b6ef6; }
     .s-replied     { color: #c471ed; }
     .s-call_booked { color: #ffb347; }
-    .s-no_response { color: #5a5a70; }
+    .s-no_response { color: #b0adc0; }
 
     /* ─── BY COMPANY view ─── */
     .company-grid {
@@ -210,7 +213,7 @@
     }
     tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
     tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: rgba(255,255,255,.03); }
+    tbody tr:hover { background: #fdfaff; }
     td { padding: 11px 14px; vertical-align: top; }
 
     td.name-cell a { color: var(--text); text-decoration: none; font-weight: 600; }
