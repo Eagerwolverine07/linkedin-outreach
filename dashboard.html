@@ -3,24 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Outreach CRM</title>
+  <title>Outreach Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
-    /* ── tokens ── */
     :root {
-      --grad:   linear-gradient(135deg, #ffb347 0%, #c471ed 55%, #7b6ef6 100%);
-      --bg:     #0f0f13;
-      --surface:#18181f;
-      --card:   #1e1e28;
-      --border: rgba(255,255,255,.08);
-      --text:   #f0f0f5;
-      --muted:  #8888a8;
-      --radius: 14px;
-      --font:   'Plus Jakarta Sans', sans-serif;
+      --grad:    linear-gradient(135deg, #ffb347 0%, #c471ed 55%, #7b6ef6 100%);
+      --bg:      #0f0f13;
+      --surface: #18181f;
+      --card:    #1e1e28;
+      --border:  rgba(255,255,255,.08);
+      --text:    #f0f0f5;
+      --muted:   #8888a8;
+      --radius:  14px;
+      --font:    'Plus Jakarta Sans', sans-serif;
+
+      /* status palette */
+      --c-sent:        #a0a0c0;
+      --c-accepted:    #7b6ef6;
+      --c-replied:     #c471ed;
+      --c-call:        #ffb347;
+      --c-noresp:      #444458;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: var(--font);
@@ -30,296 +37,186 @@
       font-size: 14px;
     }
 
-    .grad-text {
+    /* ── nav ── */
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 28px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .nav-link {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      transition: all .2s;
+    }
+    .nav-link:hover { color: var(--text); border-color: rgba(255,255,255,.15); background: var(--card); }
+    .nav-title {
+      font-size: 16px;
+      font-weight: 800;
+      flex: 1;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .nav-crm {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      transition: all .2s;
+    }
+    .nav-crm:hover { color: var(--text); border-color: rgba(255,255,255,.15); background: var(--card); }
+
+    /* ── page ── */
+    .page { padding: 28px 28px 60px; max-width: 1280px; margin: 0 auto; }
+
+    /* ── KPI strip ── */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .kpi {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+    }
+    .kpi .kpi-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .kpi .kpi-val {
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .kpi .kpi-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .kpi-val.grad {
       background: var(--grad);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
 
-    /* ── nav ── */
-    .nav {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 16px 32px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-    }
-    .nav-back {
-      text-decoration: none;
-      color: var(--muted);
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: color .2s;
-    }
-    .nav-back:hover { color: var(--text); }
-    .nav-title {
-      font-size: 16px;
-      font-weight: 700;
-      flex: 1;
-    }
-    .nav-btn {
-      padding: 7px 16px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-family: var(--font);
-      font-weight: 600;
-      cursor: pointer;
-      border: 1px solid var(--border);
-      background: var(--card);
-      color: var(--text);
-      transition: all .2s;
-    }
-    .nav-btn:hover { border-color: rgba(255,255,255,.2); background: #2a2a38; }
-    .nav-btn.active {
-      background: var(--grad);
-      border-color: transparent;
-      color: #fff;
-    }
-
-    /* ── header ── */
-    .header {
-      padding: 36px 32px 24px;
-      border-bottom: 1px solid var(--border);
-    }
-    .header h1 { font-size: 28px; font-weight: 700; }
-    .header p  { color: var(--muted); margin-top: 6px; font-size: 13px; }
-
-    /* ── stats strip ── */
-    .stats {
-      display: flex;
-      gap: 16px;
-      padding: 20px 32px;
-      flex-wrap: wrap;
-    }
-    .stat-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px 20px;
-      min-width: 130px;
-      flex: 1;
-    }
-    .stat-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-    .stat-card .value { font-size: 28px; font-weight: 700; margin-top: 4px; }
-
-    /* ── view container ── */
-    #view-container { padding: 0 32px 48px; }
-
-    /* ── status colours ── */
-    .s-sent        { color: #a0a0c0; }
-    .s-accepted    { color: #7b6ef6; }
-    .s-replied     { color: #c471ed; }
-    .s-call_booked { color: #ffb347; }
-    .s-no_response { color: #5a5a70; }
-
-    /* ─── BY COMPANY view ─── */
-    .company-grid {
+    /* ── grid layout ── */
+    .charts-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 20px;
-      padding-top: 24px;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
     }
-    .co-card {
+    .charts-grid .span-2 { grid-column: span 2; }
+
+    @media (max-width: 820px) {
+      .charts-grid { grid-template-columns: 1fr; }
+      .charts-grid .span-2 { grid-column: span 1; }
+    }
+
+    /* ── chart card ── */
+    .chart-card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      overflow: hidden;
+      padding: 22px 24px;
     }
-    .co-card-head {
-      padding: 18px 20px 14px;
-      border-bottom: 1px solid var(--border);
-    }
-    .co-card-head h3 { font-size: 15px; font-weight: 700; }
-    .co-card-head .co-meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
-
-    .funnel {
-      display: flex;
-      padding: 14px 20px 16px;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .funnel-step {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      flex: 1;
-      min-width: 56px;
-    }
-    .funnel-count  { font-size: 22px; font-weight: 700; }
-    .funnel-label  { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); text-align:center; }
-
-    /* ─── BY CONTACT view ─── */
-    .contact-toolbar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding-top: 20px;
-      padding-bottom: 12px;
-      flex-wrap: wrap;
-    }
-    .filter-select, .filter-input {
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 8px;
-      padding: 7px 12px;
-      font-family: var(--font);
+    .chart-card h3 {
       font-size: 13px;
-      cursor: pointer;
-      outline: none;
-      transition: border-color .2s;
-    }
-    .filter-select:focus, .filter-input:focus { border-color: #7b6ef6; }
-    .filter-input { min-width: 220px; }
-
-    .csv-btn {
-      margin-left: auto;
-      padding: 7px 16px;
-      background: var(--grad);
-      border: none;
-      border-radius: 8px;
-      color: #fff;
-      font-family: var(--font);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .table-wrap {
-      overflow-x: auto;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-    }
-    table { width: 100%; border-collapse: collapse; }
-    thead th {
-      background: var(--surface);
-      padding: 12px 14px;
-      text-align: left;
-      font-size: 11px;
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: .06em;
+      letter-spacing: .07em;
       color: var(--muted);
+      margin-bottom: 18px;
+    }
+    .chart-wrap { position: relative; }
+    .chart-wrap canvas { width: 100% !important; }
+
+    /* ── funnel bar ── */
+    .funnel-bars { display: flex; flex-direction: column; gap: 10px; }
+    .f-row { display: flex; align-items: center; gap: 12px; }
+    .f-label { font-size: 12px; font-weight: 600; color: var(--text); min-width: 96px; }
+    .f-track { flex: 1; height: 28px; background: rgba(255,255,255,.05); border-radius: 6px; overflow: hidden; position: relative; }
+    .f-fill  { height: 100%; border-radius: 6px; transition: width .6s ease; }
+    .f-count { font-size: 13px; font-weight: 700; min-width: 32px; text-align: right; }
+    .f-pct   { font-size: 11px; color: var(--muted); min-width: 40px; text-align: right; }
+
+    /* ── top companies table ── */
+    .co-table { width: 100%; border-collapse: collapse; }
+    .co-table th {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--muted);
+      padding: 0 0 10px;
+      text-align: left;
       border-bottom: 1px solid var(--border);
-      white-space: nowrap;
     }
-    tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
-    tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: rgba(255,255,255,.03); }
-    td { padding: 11px 14px; vertical-align: top; }
-
-    td.name-cell a { color: var(--text); text-decoration: none; font-weight: 600; }
-    td.name-cell a:hover { text-decoration: underline; }
-    td.name-cell .co { color: var(--muted); font-size: 12px; margin-top: 2px; }
-
-    .status-select {
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 8px;
-      padding: 4px 8px;
-      font-family: var(--font);
-      font-size: 12px;
-      cursor: pointer;
-      outline: none;
-    }
-    .status-select:focus { border-color: #7b6ef6; }
-
-    .msg-preview {
-      color: var(--muted);
-      font-size: 12px;
-      max-width: 280px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      cursor: pointer;
-    }
-    .msg-preview:hover { color: var(--text); }
-    .msg-full {
-      display: none;
-      font-size: 12px;
-      color: var(--text);
-      max-width: 340px;
-      white-space: pre-wrap;
-      line-height: 1.5;
-    }
-    .msg-expanded .msg-preview { display: none; }
-    .msg-expanded .msg-full    { display: block; }
-
-    .notes-cell { min-width: 160px; }
-    .notes-view {
-      color: var(--muted);
-      font-size: 12px;
-      cursor: pointer;
-      min-height: 18px;
-    }
-    .notes-view:empty::before { content: '+ add note'; opacity: .4; }
-    .notes-view:hover { color: var(--text); }
-    .notes-input {
-      display: none;
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid #7b6ef6;
-      color: var(--text);
-      border-radius: 6px;
-      padding: 5px 8px;
-      font-family: var(--font);
-      font-size: 12px;
-      resize: vertical;
-      min-height: 60px;
-      outline: none;
-    }
-
-    .date-input {
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 6px;
-      padding: 4px 8px;
-      font-family: var(--font);
-      font-size: 12px;
-      outline: none;
-      width: 130px;
-      cursor: pointer;
-    }
-    .date-input:focus { border-color: #7b6ef6; }
-    .date-input::-webkit-calendar-picker-indicator { filter: invert(1) opacity(.4); }
-    .overdue { color: #ff6b6b !important; border-color: rgba(255,107,107,.3) !important; }
-
-    /* toast */
-    #toast {
-      position: fixed;
-      bottom: 28px; right: 28px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 18px;
+    .co-table th:not(:first-child) { text-align: right; }
+    .co-table td {
+      padding: 10px 0;
       font-size: 13px;
-      font-weight: 500;
-      box-shadow: 0 8px 32px rgba(0,0,0,.5);
-      opacity: 0;
-      transform: translateY(10px);
-      transition: all .25s;
-      pointer-events: none;
-      z-index: 999;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      vertical-align: middle;
     }
-    #toast.show { opacity: 1; transform: translateY(0); }
+    .co-table tr:last-child td { border-bottom: none; }
+    .co-table td:not(:first-child) { text-align: right; }
+    .co-bar-cell { padding-right: 16px; }
+    .co-inline-track {
+      display: inline-block;
+      width: 80px;
+      height: 4px;
+      background: rgba(255,255,255,.08);
+      border-radius: 3px;
+      vertical-align: middle;
+    }
+    .co-inline-fill {
+      display: block;
+      height: 100%;
+      border-radius: 3px;
+      background: var(--grad);
+    }
 
-    /* empty / loader */
-    .empty { text-align: center; padding: 64px 32px; color: var(--muted); }
-    .empty h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-    .loader { display: flex; align-items: center; gap: 10px; padding: 48px 0; justify-content: center; color: var(--muted); }
+    /* ── empty / loader ── */
+    .loading-msg, .empty-msg {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
     .spinner {
-      width: 20px; height: 20px;
+      display: inline-block;
+      width: 22px; height: 22px;
       border: 2px solid var(--border);
       border-top-color: #7b6ef6;
       border-radius: 50%;
       animation: spin .7s linear infinite;
+      margin-bottom: 12px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
@@ -327,288 +224,268 @@
 <body>
 
 <nav class="nav">
-  <a href="/" class="nav-back">← Pipeline</a>
-  <span class="nav-title grad-text">Outreach CRM</span>
-  <button class="nav-btn active" id="btn-company" onclick="switchView('company')">By Company</button>
-  <button class="nav-btn"        id="btn-contact" onclick="switchView('contact')">By Contact</button>
+  <a href="/" class="nav-link">← Pipeline</a>
+  <span class="nav-title">Outreach Analytics</span>
+  <a href="/crm" class="nav-crm">📋 CRM</a>
 </nav>
 
-<div class="header">
-  <h1>Contact Tracker</h1>
-  <p>Track every outreach conversation from sent → call booked.</p>
+<div class="page" id="page">
+  <div class="loading-msg">
+    <div class="spinner"></div><br>Loading analytics…
+  </div>
 </div>
-
-<div class="stats" id="stats">
-  <div class="stat-card"><div class="label">Total Contacts</div><div class="value grad-text" id="s-total">—</div></div>
-  <div class="stat-card"><div class="label">Sent</div><div class="value s-sent" id="s-sent">—</div></div>
-  <div class="stat-card"><div class="label">Accepted</div><div class="value s-accepted" id="s-accepted">—</div></div>
-  <div class="stat-card"><div class="label">Replied</div><div class="value s-replied" id="s-replied">—</div></div>
-  <div class="stat-card"><div class="label">Call Booked</div><div class="value s-call_booked" id="s-call_booked">—</div></div>
-  <div class="stat-card"><div class="label">No Response</div><div class="value s-no_response" id="s-no_response">—</div></div>
-</div>
-
-<div id="view-container">
-  <div id="loader" class="loader"><div class="spinner"></div>Loading contacts…</div>
-</div>
-
-<div id="toast"></div>
 
 <script>
-  let ALL_CONTACTS  = [];
-  let CURRENT_VIEW  = 'company';
-  let _search = '', _filterStatus = '', _filterCompany = '';
+  const GRAD_COLORS = {
+    sent:        '#a0a0c0',
+    accepted:    '#7b6ef6',
+    replied:     '#c471ed',
+    call_booked: '#ffb347',
+    no_response: '#444458',
+  };
+  const STATUS_LABELS = {
+    sent: 'Sent', accepted: 'Accepted', replied: 'Replied',
+    call_booked: 'Call Booked', no_response: 'No Response',
+  };
+  const STATUS_ORDER = ['sent','accepted','replied','call_booked','no_response'];
 
-  const STATUS_LABELS = { sent:'Sent', accepted:'Accepted', replied:'Replied', call_booked:'Call Booked', no_response:'No Response' };
-  const STATUS_ORDER  = ['sent','accepted','replied','call_booked','no_response'];
+  // Chart.js global defaults
+  Chart.defaults.color = '#8888a8';
+  Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+  Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
 
-  document.addEventListener('DOMContentLoaded', loadContacts);
+  async function init() {
+    const [contacts, runs] = await Promise.all([
+      fetch('/contacts?limit=1000').then(r => r.json()).catch(() => []),
+      fetch('/history?limit=100').then(r => r.json()).catch(() => []),
+    ]);
 
-  async function loadContacts() {
-    try {
-      const res  = await fetch('/contacts?limit=500');
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      ALL_CONTACTS = Array.isArray(data) ? data : [];
-      renderStats();
-      renderView();
-    } catch (e) {
-      document.getElementById('view-container').innerHTML =
-        `<div class="empty"><h3>Could not load contacts</h3><p>${e.message}</p></div>`;
-    }
-  }
-
-  function renderStats() {
-    const c = ALL_CONTACTS;
-    document.getElementById('s-total').textContent       = c.length;
-    document.getElementById('s-sent').textContent        = c.filter(x => x.status==='sent').length;
-    document.getElementById('s-accepted').textContent    = c.filter(x => x.status==='accepted').length;
-    document.getElementById('s-replied').textContent     = c.filter(x => x.status==='replied').length;
-    document.getElementById('s-call_booked').textContent = c.filter(x => x.status==='call_booked').length;
-    document.getElementById('s-no_response').textContent = c.filter(x => x.status==='no_response').length;
-  }
-
-  function switchView(v) {
-    CURRENT_VIEW = v;
-    document.getElementById('btn-company').classList.toggle('active', v==='company');
-    document.getElementById('btn-contact').classList.toggle('active', v==='contact');
-    renderView();
-  }
-
-  function renderView() {
-    CURRENT_VIEW === 'company' ? renderCompanyView() : renderContactView();
-  }
-
-  /* ── BY COMPANY ── */
-  function renderCompanyView() {
-    const vc = document.getElementById('view-container');
-    if (!ALL_CONTACTS.length) {
-      vc.innerHTML = `<div class="empty"><h3>No contacts yet</h3><p>Run the pipeline to generate outreach messages.</p></div>`;
+    if (!Array.isArray(contacts) || contacts.length === 0) {
+      document.getElementById('page').innerHTML =
+        `<div class="empty-msg">No outreach data yet. Run the pipeline to see analytics.</div>`;
       return;
     }
-    const groups = {};
-    for (const c of ALL_CONTACTS) {
-      const key = c.company || 'Unknown';
-      (groups[key] = groups[key] || []).push(c);
+
+    // ── Derived metrics ──
+    const total   = contacts.length;
+    const byStatus = {};
+    STATUS_ORDER.forEach(s => byStatus[s] = contacts.filter(c => c.status === s).length);
+
+    const acceptRate = total > 0 ? ((byStatus.accepted + byStatus.replied + byStatus.call_booked) / total * 100).toFixed(1) : 0;
+    const replyRate  = total > 0 ? ((byStatus.replied  + byStatus.call_booked) / total * 100).toFixed(1) : 0;
+    const callRate   = total > 0 ? (byStatus.call_booked / total * 100).toFixed(1) : 0;
+
+    // By company
+    const byCompany = {};
+    for (const c of contacts) {
+      const co = c.company || 'Unknown';
+      if (!byCompany[co]) byCompany[co] = { total: 0, ...Object.fromEntries(STATUS_ORDER.map(s => [s, 0])) };
+      byCompany[co].total++;
+      byCompany[co][c.status] = (byCompany[co][c.status] || 0) + 1;
     }
-    const sorted = Object.entries(groups).sort((a,b) => {
-      const la = Math.max(...a[1].map(x => +new Date(x.created_at)));
-      const lb = Math.max(...b[1].map(x => +new Date(x.created_at)));
-      return lb - la;
+    const companiesSorted = Object.entries(byCompany).sort((a, b) => b[1].total - a[1].total);
+
+    // Volume over time (by week)
+    const weekMap = {};
+    for (const c of contacts) {
+      const d  = new Date(c.created_at);
+      const mon = new Date(d); mon.setDate(d.getDate() - d.getDay() + 1); // Monday
+      const key = mon.toISOString().slice(0, 10);
+      weekMap[key] = (weekMap[key] || 0) + 1;
+    }
+    const weeks = Object.keys(weekMap).sort();
+    const weekLabels = weeks.map(w => {
+      const d = new Date(w + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     });
-    const cards = sorted.map(([company, contacts]) => {
-      const counts = {};
-      STATUS_ORDER.forEach(s => counts[s] = contacts.filter(c => c.status===s).length);
-      const date = new Date(Math.max(...contacts.map(c => +new Date(c.created_at))));
-      const ds = date.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
-      const steps = STATUS_ORDER.map(s => `
-        <div class="funnel-step">
-          <span class="funnel-count s-${s}">${counts[s]}</span>
-          <span class="funnel-label">${STATUS_LABELS[s].replace(' ','<br>')}</span>
-        </div>`).join('');
-      return `
-        <div class="co-card">
-          <div class="co-card-head">
-            <h3>${esc(company)}</h3>
-            <div class="co-meta">${contacts.length} contact${contacts.length!==1?'s':''} · Last run ${ds}</div>
+
+    // ── Render page ──
+    document.getElementById('page').innerHTML = `
+      <div class="kpi-row">
+        <div class="kpi"><div class="kpi-label">Total Contacts</div><div class="kpi-val grad">${total}</div><div class="kpi-sub">${Array.isArray(runs) ? runs.length : 0} run${runs.length !== 1 ? 's' : ''}</div></div>
+        <div class="kpi"><div class="kpi-label">Accepted</div><div class="kpi-val" style="color:#7b6ef6">${byStatus.accepted}</div><div class="kpi-sub">${acceptRate}% rate</div></div>
+        <div class="kpi"><div class="kpi-label">Replied</div><div class="kpi-val" style="color:#c471ed">${byStatus.replied}</div><div class="kpi-sub">${replyRate}% rate</div></div>
+        <div class="kpi"><div class="kpi-label">Call Booked</div><div class="kpi-val" style="color:#ffb347">${byStatus.call_booked}</div><div class="kpi-sub">${callRate}% rate</div></div>
+        <div class="kpi"><div class="kpi-label">No Response</div><div class="kpi-val" style="color:#555570">${byStatus.no_response}</div><div class="kpi-sub">${total > 0 ? (byStatus.no_response/total*100).toFixed(1) : 0}%</div></div>
+      </div>
+
+      <div class="charts-grid">
+
+        <!-- Volume over time -->
+        <div class="chart-card span-2">
+          <h3>Outreach Volume by Week</h3>
+          <div class="chart-wrap" style="height:220px">
+            <canvas id="chart-volume"></canvas>
           </div>
-          <div class="funnel">${steps}</div>
+        </div>
+
+        <!-- Funnel -->
+        <div class="chart-card">
+          <h3>Conversion Funnel</h3>
+          <div class="funnel-bars" id="funnel-bars"></div>
+        </div>
+
+        <!-- Status donut -->
+        <div class="chart-card">
+          <h3>Status Breakdown</h3>
+          <div class="chart-wrap" style="height:220px">
+            <canvas id="chart-donut"></canvas>
+          </div>
+        </div>
+
+        <!-- Company breakdown -->
+        <div class="chart-card span-2">
+          <h3>By Company</h3>
+          <table class="co-table">
+            <thead>
+              <tr><th>Company</th><th>Contacts</th><th>Accepted</th><th>Replied</th><th>Call Booked</th><th class="co-bar-cell">Volume</th></tr>
+            </thead>
+            <tbody id="co-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- Status over time (stacked) -->
+        <div class="chart-card span-2">
+          <h3>Status Mix over Time</h3>
+          <div class="chart-wrap" style="height:240px">
+            <canvas id="chart-stacked"></canvas>
+          </div>
+        </div>
+
+      </div>
+    `;
+
+    // ── 1. Volume bar chart ──
+    new Chart(document.getElementById('chart-volume'), {
+      type: 'bar',
+      data: {
+        labels: weekLabels,
+        datasets: [{
+          label: 'Contacts',
+          data: weeks.map(w => weekMap[w]),
+          backgroundColor: 'rgba(123,110,246,0.6)',
+          borderColor: '#7b6ef6',
+          borderWidth: 1,
+          borderRadius: 5,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.04)' } },
+          y: { grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true, ticks: { stepSize: 1 } },
+        },
+      },
+    });
+
+    // ── 2. Funnel bars ──
+    const funnelEl = document.getElementById('funnel-bars');
+    const funnelStages = [
+      { key: 'sent',        label: 'Sent' },
+      { key: 'accepted',    label: 'Accepted' },
+      { key: 'replied',     label: 'Replied' },
+      { key: 'call_booked', label: 'Call Booked' },
+    ];
+    funnelEl.innerHTML = funnelStages.map(({ key, label }) => {
+      const n   = byStatus[key] || 0;
+      const pct = total > 0 ? (n / total * 100).toFixed(0) : 0;
+      const w   = total > 0 ? Math.max(2, n / total * 100) : 0;
+      return `
+        <div class="f-row">
+          <span class="f-label">${label}</span>
+          <div class="f-track">
+            <div class="f-fill" style="width:${w}%;background:${GRAD_COLORS[key]}"></div>
+          </div>
+          <span class="f-count" style="color:${GRAD_COLORS[key]}">${n}</span>
+          <span class="f-pct">${pct}%</span>
         </div>`;
     }).join('');
-    vc.innerHTML = `<div class="company-grid">${cards}</div>`;
-  }
 
-  /* ── BY CONTACT ── */
-  function renderContactView() {
-    const vc = document.getElementById('view-container');
-    if (!ALL_CONTACTS.length) {
-      vc.innerHTML = `<div class="empty"><h3>No contacts yet</h3><p>Run the pipeline to start tracking.</p></div>`;
-      return;
-    }
-    const companies = [...new Set(ALL_CONTACTS.map(c => c.company).filter(Boolean))].sort();
-    const coOpts = companies.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
-    const stOpts = STATUS_ORDER.map(s => `<option value="${s}">${STATUS_LABELS[s]}</option>`).join('');
-
-    vc.innerHTML = `
-      <div class="contact-toolbar">
-        <input class="filter-input" id="f-search" type="text" placeholder="Search name or company…" oninput="applyFilters()">
-        <select class="filter-select" id="f-company" onchange="applyFilters()"><option value="">All companies</option>${coOpts}</select>
-        <select class="filter-select" id="f-status"  onchange="applyFilters()"><option value="">All statuses</option>${stOpts}</select>
-        <button class="csv-btn" onclick="exportCSV()">Export CSV</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th>#</th><th>Contact</th><th>Status</th><th>Message</th><th>Notes</th><th>Follow-up</th><th>Added</th>
-          </tr></thead>
-          <tbody id="contact-tbody"></tbody>
-        </table>
-      </div>`;
-
-    document.getElementById('f-search').value  = _search;
-    document.getElementById('f-company').value = _filterCompany;
-    document.getElementById('f-status').value  = _filterStatus;
-    applyFilters();
-  }
-
-  function applyFilters() {
-    _search        = (document.getElementById('f-search')?.value  || '').toLowerCase();
-    _filterCompany =  document.getElementById('f-company')?.value || '';
-    _filterStatus  =  document.getElementById('f-status')?.value  || '';
-
-    const today = new Date(); today.setHours(0,0,0,0);
-    const filtered = ALL_CONTACTS.filter(c => {
-      if (_filterStatus  && c.status  !== _filterStatus)  return false;
-      if (_filterCompany && c.company !== _filterCompany) return false;
-      if (_search && !`${c.name} ${c.company}`.toLowerCase().includes(_search)) return false;
-      return true;
+    // ── 3. Donut chart ──
+    new Chart(document.getElementById('chart-donut'), {
+      type: 'doughnut',
+      data: {
+        labels: STATUS_ORDER.map(s => STATUS_LABELS[s]),
+        datasets: [{
+          data: STATUS_ORDER.map(s => byStatus[s]),
+          backgroundColor: STATUS_ORDER.map(s => GRAD_COLORS[s]),
+          borderWidth: 0,
+          hoverOffset: 6,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { boxWidth: 10, padding: 14, font: { size: 12 } },
+          },
+        },
+      },
     });
 
-    const tbody = document.getElementById('contact-tbody');
-    if (!tbody) return;
-    if (!filtered.length) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">No contacts match.</td></tr>`;
-      return;
-    }
-    tbody.innerHTML = filtered.map((c, i) => {
-      const added    = new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-      const preview  = (c.message||'').substring(0,80)+((c.message||'').length>80?'…':'');
-      const overdue  = c.follow_up_date && new Date(c.follow_up_date) < today;
-      const stSelect = STATUS_ORDER.map(s =>
-        `<option value="${s}"${c.status===s?' selected':''}>${STATUS_LABELS[s]}</option>`).join('');
+    // ── 4. Company table ──
+    const maxTotal = companiesSorted[0]?.[1].total || 1;
+    document.getElementById('co-tbody').innerHTML = companiesSorted.slice(0, 12).map(([co, d]) => {
+      const barW = Math.round(d.total / maxTotal * 100);
       return `
-        <tr id="row-${c.id}">
-          <td style="color:var(--muted);font-size:12px">${i+1}</td>
-          <td class="name-cell">
-            ${c.url ? `<a href="${esc(c.url)}" target="_blank">${esc(c.name||c.url)}</a>` : esc(c.name||'—')}
-            <div class="co">${esc(c.company||'')}</div>
+        <tr>
+          <td style="font-weight:600">${esc(co)}</td>
+          <td>${d.total}</td>
+          <td style="color:#7b6ef6">${d.accepted || 0}</td>
+          <td style="color:#c471ed">${d.replied  || 0}</td>
+          <td style="color:#ffb347">${d.call_booked || 0}</td>
+          <td class="co-bar-cell">
+            <span class="co-inline-track"><span class="co-inline-fill" style="width:${barW}%"></span></span>
           </td>
-          <td><select class="status-select" onchange="updateStatus(${c.id},this.value)">${stSelect}</select></td>
-          <td>
-            <div class="msg-preview" onclick="toggleMsg(this)">${esc(preview)}</div>
-            <div class="msg-full">${esc(c.message||'')}</div>
-          </td>
-          <td class="notes-cell">
-            <div class="notes-view" onclick="startEditNotes(${c.id})" id="nv-${c.id}">${esc(c.notes||'')}</div>
-            <textarea class="notes-input" id="ni-${c.id}"
-              onblur="saveNotes(${c.id})"
-              onkeydown="if(event.key==='Escape')cancelNotes(${c.id})"
-            >${esc(c.notes||'')}</textarea>
-          </td>
-          <td>
-            <input type="date" class="date-input${overdue?' overdue':''}" id="dt-${c.id}"
-              value="${c.follow_up_date||''}" onchange="updateDate(${c.id},this.value)">
-          </td>
-          <td style="color:var(--muted);font-size:12px;white-space:nowrap">${added}</td>
         </tr>`;
     }).join('');
-  }
 
-  function toggleMsg(el) { el.parentElement.classList.toggle('msg-expanded'); }
-
-  function startEditNotes(id) {
-    document.getElementById(`nv-${id}`).style.display = 'none';
-    const inp = document.getElementById(`ni-${id}`);
-    inp.style.display = 'block';
-    inp.focus();
-  }
-  function cancelNotes(id) {
-    const c = ALL_CONTACTS.find(x => x.id===id);
-    document.getElementById(`ni-${id}`).value = c?.notes||'';
-    document.getElementById(`ni-${id}`).style.display = 'none';
-    document.getElementById(`nv-${id}`).style.display = '';
-  }
-  async function saveNotes(id) {
-    const inp = document.getElementById(`ni-${id}`);
-    const val = inp.value.trim();
-    const c   = ALL_CONTACTS.find(x => x.id===id);
-    if (!c || val === (c.notes||'')) { cancelNotes(id); return; }
-    await patchContact(id, {notes: val});
-    c.notes = val;
-    const nv = document.getElementById(`nv-${id}`);
-    nv.textContent = val;
-    inp.style.display = 'none';
-    nv.style.display  = '';
-    renderStats();
-  }
-
-  async function updateStatus(id, status) {
-    const c = ALL_CONTACTS.find(x => x.id===id);
-    if (!c) return;
-    await patchContact(id, {status});
-    c.status = status;
-    renderStats();
-  }
-
-  async function updateDate(id, date) {
-    const c = ALL_CONTACTS.find(x => x.id===id);
-    if (!c) return;
-    await patchContact(id, {follow_up_date: date||null});
-    c.follow_up_date = date||null;
-    const today = new Date(); today.setHours(0,0,0,0);
-    const el = document.getElementById(`dt-${id}`);
-    if (el) el.classList.toggle('overdue', !!date && new Date(date) < today);
-  }
-
-  async function patchContact(id, fields) {
-    try {
-      const res  = await fetch(`/contacts/${id}`, {
-        method: 'PATCH',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(fields),
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      showToast('Saved ✓');
-    } catch(e) {
-      showToast('Save failed: ' + e.message, true);
+    // ── 5. Stacked status by week ──
+    // Group contacts by week + status
+    const weekStatusMap = {};
+    for (const c of contacts) {
+      const d  = new Date(c.created_at);
+      const mon = new Date(d); mon.setDate(d.getDate() - d.getDay() + 1);
+      const key = mon.toISOString().slice(0, 10);
+      if (!weekStatusMap[key]) weekStatusMap[key] = {};
+      weekStatusMap[key][c.status] = (weekStatusMap[key][c.status] || 0) + 1;
     }
-  }
-
-  function exportCSV() {
-    const cols = ['id','name','company','status','notes','follow_up_date','url','message','created_at'];
-    const rows = [cols.join(',')];
-    for (const c of ALL_CONTACTS) {
-      rows.push(cols.map(k => `"${(c[k]??'').toString().replace(/"/g,'""')}"`).join(','));
-    }
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([rows.join('\n')], {type:'text/csv'}));
-    a.download = `outreach-crm-${new Date().toISOString().slice(0,10)}.csv`;
-    a.click();
-  }
-
-  let _tt;
-  function showToast(msg, isError=false) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.style.borderColor = isError ? '#ff6b6b' : 'rgba(123,110,246,.5)';
-    t.classList.add('show');
-    clearTimeout(_tt);
-    _tt = setTimeout(() => t.classList.remove('show'), 2200);
+    new Chart(document.getElementById('chart-stacked'), {
+      type: 'bar',
+      data: {
+        labels: weekLabels,
+        datasets: STATUS_ORDER.map(s => ({
+          label: STATUS_LABELS[s],
+          data: weeks.map(w => (weekStatusMap[w]?.[s] || 0)),
+          backgroundColor: GRAD_COLORS[s],
+          borderWidth: 0,
+          borderRadius: s === 'no_response' ? 5 : 0,
+        })),
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 10, padding: 14, font: { size: 12 } } },
+        },
+        scales: {
+          x: { stacked: true, grid: { color: 'rgba(255,255,255,0.04)' } },
+          y: { stacked: true, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true, ticks: { stepSize: 1 } },
+        },
+      },
+    });
   }
 
   function esc(s) {
-    return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
+
+  init();
 </script>
 </body>
 </html>

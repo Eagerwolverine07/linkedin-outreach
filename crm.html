@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Outreach CRM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── tokens ── */
+    :root {
+      --grad:   linear-gradient(135deg, #ffb347 0%, #c471ed 55%, #7b6ef6 100%);
+      --bg:     #0f0f13;
+      --surface:#18181f;
+      --card:   #1e1e28;
+      --border: rgba(255,255,255,.08);
+      --text:   #f0f0f5;
+      --muted:  #8888a8;
+      --radius: 14px;
+      --font:   'Plus Jakarta Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    .grad-text {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── nav ── */
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .nav-back {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color .2s;
+    }
+    .nav-back:hover { color: var(--text); }
+    .nav-title {
+      font-size: 16px;
+      font-weight: 700;
+      flex: 1;
+    }
+    .nav-btn {
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: var(--font);
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      transition: all .2s;
+    }
+    .nav-btn:hover { border-color: rgba(255,255,255,.2); background: #2a2a38; }
+    .nav-btn.active {
+      background: var(--grad);
+      border-color: transparent;
+      color: #fff;
+    }
+
+    /* ── header ── */
+    .header {
+      padding: 36px 32px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .header h1 { font-size: 28px; font-weight: 700; }
+    .header p  { color: var(--muted); margin-top: 6px; font-size: 13px; }
+
+    /* ── stats strip ── */
+    .stats {
+      display: flex;
+      gap: 16px;
+      padding: 20px 32px;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      min-width: 130px;
+      flex: 1;
+    }
+    .stat-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+    .stat-card .value { font-size: 28px; font-weight: 700; margin-top: 4px; }
+
+    /* ── view container ── */
+    #view-container { padding: 0 32px 48px; }
+
+    /* ── status colours ── */
+    .s-sent        { color: #a0a0c0; }
+    .s-accepted    { color: #7b6ef6; }
+    .s-replied     { color: #c471ed; }
+    .s-call_booked { color: #ffb347; }
+    .s-no_response { color: #5a5a70; }
+
+    /* ─── BY COMPANY view ─── */
+    .company-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+      padding-top: 24px;
+    }
+    .co-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .co-card-head {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .co-card-head h3 { font-size: 15px; font-weight: 700; }
+    .co-card-head .co-meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+    .funnel {
+      display: flex;
+      padding: 14px 20px 16px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .funnel-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+      min-width: 56px;
+    }
+    .funnel-count  { font-size: 22px; font-weight: 700; }
+    .funnel-label  { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); text-align:center; }
+
+    /* ─── BY CONTACT view ─── */
+    .contact-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-top: 20px;
+      padding-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .filter-select, .filter-input {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-family: var(--font);
+      font-size: 13px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .filter-select:focus, .filter-input:focus { border-color: #7b6ef6; }
+    .filter-input { min-width: 220px; }
+
+    .csv-btn {
+      margin-left: auto;
+      padding: 7px 16px;
+      background: var(--grad);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: var(--surface);
+      padding: 12px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,.03); }
+    td { padding: 11px 14px; vertical-align: top; }
+
+    td.name-cell a { color: var(--text); text-decoration: none; font-weight: 600; }
+    td.name-cell a:hover { text-decoration: underline; }
+    td.name-cell .co { color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+    .status-select {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-family: var(--font);
+      font-size: 12px;
+      cursor: pointer;
+      outline: none;
+    }
+    .status-select:focus { border-color: #7b6ef6; }
+
+    .msg-preview {
+      color: var(--muted);
+      font-size: 12px;
+      max-width: 280px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .msg-preview:hover { color: var(--text); }
+    .msg-full {
+      display: none;
+      font-size: 12px;
+      color: var(--text);
+      max-width: 340px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+    .msg-expanded .msg-preview { display: none; }
+    .msg-expanded .msg-full    { display: block; }
+
+    .notes-cell { min-width: 160px; }
+    .notes-view {
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+      min-height: 18px;
+    }
+    .notes-view:empty::before { content: '+ add note'; opacity: .4; }
+    .notes-view:hover { color: var(--text); }
+    .notes-input {
+      display: none;
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid #7b6ef6;
+      color: var(--text);
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-family: var(--font);
+      font-size: 12px;
+      resize: vertical;
+      min-height: 60px;
+      outline: none;
+    }
+
+    .date-input {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-family: var(--font);
+      font-size: 12px;
+      outline: none;
+      width: 130px;
+      cursor: pointer;
+    }
+    .date-input:focus { border-color: #7b6ef6; }
+    .date-input::-webkit-calendar-picker-indicator { filter: invert(1) opacity(.4); }
+    .overdue { color: #ff6b6b !important; border-color: rgba(255,107,107,.3) !important; }
+
+    /* toast */
+    #toast {
+      position: fixed;
+      bottom: 28px; right: 28px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all .25s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* empty / loader */
+    .empty { text-align: center; padding: 64px 32px; color: var(--muted); }
+    .empty h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .loader { display: flex; align-items: center; gap: 10px; padding: 48px 0; justify-content: center; color: var(--muted); }
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: #7b6ef6;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-back">← Pipeline</a>
+  <span class="nav-title grad-text">Outreach CRM</span>
+  <a href="/dashboard" class="nav-btn" style="text-decoration:none">📊 Dashboard</a>
+  <button class="nav-btn active" id="btn-company" onclick="switchView('company')">By Company</button>
+  <button class="nav-btn"        id="btn-contact" onclick="switchView('contact')">By Contact</button>
+</nav>
+
+<div class="header">
+  <h1>Contact Tracker</h1>
+  <p>Track every outreach conversation from sent → call booked.</p>
+</div>
+
+<div class="stats" id="stats">
+  <div class="stat-card"><div class="label">Total Contacts</div><div class="value grad-text" id="s-total">—</div></div>
+  <div class="stat-card"><div class="label">Sent</div><div class="value s-sent" id="s-sent">—</div></div>
+  <div class="stat-card"><div class="label">Accepted</div><div class="value s-accepted" id="s-accepted">—</div></div>
+  <div class="stat-card"><div class="label">Replied</div><div class="value s-replied" id="s-replied">—</div></div>
+  <div class="stat-card"><div class="label">Call Booked</div><div class="value s-call_booked" id="s-call_booked">—</div></div>
+  <div class="stat-card"><div class="label">No Response</div><div class="value s-no_response" id="s-no_response">—</div></div>
+</div>
+
+<div id="view-container">
+  <div id="loader" class="loader"><div class="spinner"></div>Loading contacts…</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  let ALL_CONTACTS  = [];
+  let CURRENT_VIEW  = 'company';
+  let _search = '', _filterStatus = '', _filterCompany = '';
+
+  const STATUS_LABELS = { sent:'Sent', accepted:'Accepted', replied:'Replied', call_booked:'Call Booked', no_response:'No Response' };
+  const STATUS_ORDER  = ['sent','accepted','replied','call_booked','no_response'];
+
+  document.addEventListener('DOMContentLoaded', loadContacts);
+
+  async function loadContacts() {
+    try {
+      const res  = await fetch('/contacts?limit=500');
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      ALL_CONTACTS = Array.isArray(data) ? data : [];
+      renderStats();
+      renderView();
+    } catch (e) {
+      document.getElementById('view-container').innerHTML =
+        `<div class="empty"><h3>Could not load contacts</h3><p>${e.message}</p></div>`;
+    }
+  }
+
+  function renderStats() {
+    const c = ALL_CONTACTS;
+    document.getElementById('s-total').textContent       = c.length;
+    document.getElementById('s-sent').textContent        = c.filter(x => x.status==='sent').length;
+    document.getElementById('s-accepted').textContent    = c.filter(x => x.status==='accepted').length;
+    document.getElementById('s-replied').textContent     = c.filter(x => x.status==='replied').length;
+    document.getElementById('s-call_booked').textContent = c.filter(x => x.status==='call_booked').length;
+    document.getElementById('s-no_response').textContent = c.filter(x => x.status==='no_response').length;
+  }
+
+  function switchView(v) {
+    CURRENT_VIEW = v;
+    document.getElementById('btn-company').classList.toggle('active', v==='company');
+    document.getElementById('btn-contact').classList.toggle('active', v==='contact');
+    renderView();
+  }
+
+  function renderView() {
+    CURRENT_VIEW === 'company' ? renderCompanyView() : renderContactView();
+  }
+
+  /* ── BY COMPANY ── */
+  function renderCompanyView() {
+    const vc = document.getElementById('view-container');
+    if (!ALL_CONTACTS.length) {
+      vc.innerHTML = `<div class="empty"><h3>No contacts yet</h3><p>Run the pipeline to generate outreach messages.</p></div>`;
+      return;
+    }
+    const groups = {};
+    for (const c of ALL_CONTACTS) {
+      const key = c.company || 'Unknown';
+      (groups[key] = groups[key] || []).push(c);
+    }
+    const sorted = Object.entries(groups).sort((a,b) => {
+      const la = Math.max(...a[1].map(x => +new Date(x.created_at)));
+      const lb = Math.max(...b[1].map(x => +new Date(x.created_at)));
+      return lb - la;
+    });
+    const cards = sorted.map(([company, contacts]) => {
+      const counts = {};
+      STATUS_ORDER.forEach(s => counts[s] = contacts.filter(c => c.status===s).length);
+      const date = new Date(Math.max(...contacts.map(c => +new Date(c.created_at))));
+      const ds = date.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+      const steps = STATUS_ORDER.map(s => `
+        <div class="funnel-step">
+          <span class="funnel-count s-${s}">${counts[s]}</span>
+          <span class="funnel-label">${STATUS_LABELS[s].replace(' ','<br>')}</span>
+        </div>`).join('');
+      return `
+        <div class="co-card">
+          <div class="co-card-head">
+            <h3>${esc(company)}</h3>
+            <div class="co-meta">${contacts.length} contact${contacts.length!==1?'s':''} · Last run ${ds}</div>
+          </div>
+          <div class="funnel">${steps}</div>
+        </div>`;
+    }).join('');
+    vc.innerHTML = `<div class="company-grid">${cards}</div>`;
+  }
+
+  /* ── BY CONTACT ── */
+  function renderContactView() {
+    const vc = document.getElementById('view-container');
+    if (!ALL_CONTACTS.length) {
+      vc.innerHTML = `<div class="empty"><h3>No contacts yet</h3><p>Run the pipeline to start tracking.</p></div>`;
+      return;
+    }
+    const companies = [...new Set(ALL_CONTACTS.map(c => c.company).filter(Boolean))].sort();
+    const coOpts = companies.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    const stOpts = STATUS_ORDER.map(s => `<option value="${s}">${STATUS_LABELS[s]}</option>`).join('');
+
+    vc.innerHTML = `
+      <div class="contact-toolbar">
+        <input class="filter-input" id="f-search" type="text" placeholder="Search name or company…" oninput="applyFilters()">
+        <select class="filter-select" id="f-company" onchange="applyFilters()"><option value="">All companies</option>${coOpts}</select>
+        <select class="filter-select" id="f-status"  onchange="applyFilters()"><option value="">All statuses</option>${stOpts}</select>
+        <button class="csv-btn" onclick="exportCSV()">Export CSV</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>#</th><th>Contact</th><th>Status</th><th>Message</th><th>Notes</th><th>Follow-up</th><th>Added</th>
+          </tr></thead>
+          <tbody id="contact-tbody"></tbody>
+        </table>
+      </div>`;
+
+    document.getElementById('f-search').value  = _search;
+    document.getElementById('f-company').value = _filterCompany;
+    document.getElementById('f-status').value  = _filterStatus;
+    applyFilters();
+  }
+
+  function applyFilters() {
+    _search        = (document.getElementById('f-search')?.value  || '').toLowerCase();
+    _filterCompany =  document.getElementById('f-company')?.value || '';
+    _filterStatus  =  document.getElementById('f-status')?.value  || '';
+
+    const today = new Date(); today.setHours(0,0,0,0);
+    const filtered = ALL_CONTACTS.filter(c => {
+      if (_filterStatus  && c.status  !== _filterStatus)  return false;
+      if (_filterCompany && c.company !== _filterCompany) return false;
+      if (_search && !`${c.name} ${c.company}`.toLowerCase().includes(_search)) return false;
+      return true;
+    });
+
+    const tbody = document.getElementById('contact-tbody');
+    if (!tbody) return;
+    if (!filtered.length) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">No contacts match.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = filtered.map((c, i) => {
+      const added    = new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      const preview  = (c.message||'').substring(0,80)+((c.message||'').length>80?'…':'');
+      const overdue  = c.follow_up_date && new Date(c.follow_up_date) < today;
+      const stSelect = STATUS_ORDER.map(s =>
+        `<option value="${s}"${c.status===s?' selected':''}>${STATUS_LABELS[s]}</option>`).join('');
+      return `
+        <tr id="row-${c.id}">
+          <td style="color:var(--muted);font-size:12px">${i+1}</td>
+          <td class="name-cell">
+            ${c.url ? `<a href="${esc(c.url)}" target="_blank">${esc(c.name||c.url)}</a>` : esc(c.name||'—')}
+            <div class="co">${esc(c.company||'')}</div>
+          </td>
+          <td><select class="status-select" onchange="updateStatus(${c.id},this.value)">${stSelect}</select></td>
+          <td>
+            <div class="msg-preview" onclick="toggleMsg(this)">${esc(preview)}</div>
+            <div class="msg-full">${esc(c.message||'')}</div>
+          </td>
+          <td class="notes-cell">
+            <div class="notes-view" onclick="startEditNotes(${c.id})" id="nv-${c.id}">${esc(c.notes||'')}</div>
+            <textarea class="notes-input" id="ni-${c.id}"
+              onblur="saveNotes(${c.id})"
+              onkeydown="if(event.key==='Escape')cancelNotes(${c.id})"
+            >${esc(c.notes||'')}</textarea>
+          </td>
+          <td>
+            <input type="date" class="date-input${overdue?' overdue':''}" id="dt-${c.id}"
+              value="${c.follow_up_date||''}" onchange="updateDate(${c.id},this.value)">
+          </td>
+          <td style="color:var(--muted);font-size:12px;white-space:nowrap">${added}</td>
+        </tr>`;
+    }).join('');
+  }
+
+  function toggleMsg(el) { el.parentElement.classList.toggle('msg-expanded'); }
+
+  function startEditNotes(id) {
+    document.getElementById(`nv-${id}`).style.display = 'none';
+    const inp = document.getElementById(`ni-${id}`);
+    inp.style.display = 'block';
+    inp.focus();
+  }
+  function cancelNotes(id) {
+    const c = ALL_CONTACTS.find(x => x.id===id);
+    document.getElementById(`ni-${id}`).value = c?.notes||'';
+    document.getElementById(`ni-${id}`).style.display = 'none';
+    document.getElementById(`nv-${id}`).style.display = '';
+  }
+  async function saveNotes(id) {
+    const inp = document.getElementById(`ni-${id}`);
+    const val = inp.value.trim();
+    const c   = ALL_CONTACTS.find(x => x.id===id);
+    if (!c || val === (c.notes||'')) { cancelNotes(id); return; }
+    await patchContact(id, {notes: val});
+    c.notes = val;
+    const nv = document.getElementById(`nv-${id}`);
+    nv.textContent = val;
+    inp.style.display = 'none';
+    nv.style.display  = '';
+    renderStats();
+  }
+
+  async function updateStatus(id, status) {
+    const c = ALL_CONTACTS.find(x => x.id===id);
+    if (!c) return;
+    await patchContact(id, {status});
+    c.status = status;
+    renderStats();
+  }
+
+  async function updateDate(id, date) {
+    const c = ALL_CONTACTS.find(x => x.id===id);
+    if (!c) return;
+    await patchContact(id, {follow_up_date: date||null});
+    c.follow_up_date = date||null;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const el = document.getElementById(`dt-${id}`);
+    if (el) el.classList.toggle('overdue', !!date && new Date(date) < today);
+  }
+
+  async function patchContact(id, fields) {
+    try {
+      const res  = await fetch(`/contacts/${id}`, {
+        method: 'PATCH',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(fields),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      showToast('Saved ✓');
+    } catch(e) {
+      showToast('Save failed: ' + e.message, true);
+    }
+  }
+
+  function exportCSV() {
+    const cols = ['id','name','company','status','notes','follow_up_date','url','message','created_at'];
+    const rows = [cols.join(',')];
+    for (const c of ALL_CONTACTS) {
+      rows.push(cols.map(k => `"${(c[k]??'').toString().replace(/"/g,'""')}"`).join(','));
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([rows.join('\n')], {type:'text/csv'}));
+    a.download = `outreach-crm-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+  }
+
+  let _tt;
+  function showToast(msg, isError=false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.borderColor = isError ? '#ff6b6b' : 'rgba(123,110,246,.5)';
+    t.classList.add('show');
+    clearTimeout(_tt);
+    _tt = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function esc(s) {
+    return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>

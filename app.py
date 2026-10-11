@@ -919,7 +919,15 @@ async def update_contact(contact_id: int, request: Request):
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard():
+    """Analytics dashboard with charts."""
     with open("dashboard.html", "r") as f:
+        return HTMLResponse(content=f.read())
+
+
+@app.get("/crm", response_class=HTMLResponse)
+async def crm():
+    """CRM contact tracker (by company / by contact views)."""
+    with open("crm.html", "r") as f:
         return HTMLResponse(content=f.read())
 
 

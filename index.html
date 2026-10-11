@@ -546,6 +546,131 @@
       .row-new { animation: none; }
     }
 
+    /* ── Run History ── */
+    .history-section {
+      margin-top: 48px;
+    }
+    .history-header {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .history-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .history-count {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .run-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .run-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(150,100,200,0.06);
+    }
+    .run-card-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      cursor: pointer;
+      user-select: none;
+      transition: background .15s;
+    }
+    .run-card-head:hover { background: #fdfaff; }
+    .run-card-head .run-company {
+      font-weight: 700;
+      font-size: 0.9375rem;
+      color: var(--text-primary);
+      flex: 1;
+    }
+    .run-card-head .run-meta {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+    .run-card-head .run-chevron {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      transition: transform .2s;
+    }
+    .run-card.open .run-chevron { transform: rotate(180deg); }
+
+    .run-card-body {
+      display: none;
+      border-top: 1px solid var(--border);
+    }
+    .run-card.open .run-card-body { display: block; }
+
+    .run-contacts-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8375rem;
+    }
+    .run-contacts-table thead {
+      background: linear-gradient(to right, rgba(255,179,71,0.05), rgba(196,113,237,0.05));
+    }
+    .run-contacts-table th {
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .run-contacts-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f5f0fc;
+      vertical-align: top;
+    }
+    .run-contacts-table tr:last-child td { border-bottom: none; }
+    .run-contacts-table tbody tr:hover td { background: #fdfaff; }
+    .rct-name a { color: var(--text-primary); font-weight: 600; text-decoration: none; }
+    .rct-name a:hover { color: #7b6ef6; }
+    .rct-msg {
+      color: var(--text-secondary);
+      line-height: 1.55;
+      max-width: 400px;
+    }
+    .rct-copy {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .15s;
+    }
+    .rct-copy:hover { border-color: #c471ed; color: #c471ed; }
+    .rct-copy.copied { background: linear-gradient(135deg,rgba(255,179,71,.12),rgba(196,113,237,.12)); border-color:#c471ed; color:#9333ea; }
+
+    .history-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+    .history-loader {
+      text-align: center;
+      padding: 24px;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
     /* ── Mobile ── */
     @media (max-width: 600px) {
       .header h1 { font-size: 2rem; }
@@ -559,7 +684,8 @@
   <div class="container">
 
     <nav class="nav">
-      <a href="/dashboard" class="nav-btn">📋 Run History</a>
+      <a href="/dashboard" class="nav-btn">📊 Dashboard</a>
+      <a href="/crm" class="nav-btn">📋 CRM</a>
     </nav>
 
     <header class="header">
@@ -606,6 +732,17 @@
     </div>
 
     <div class="error-box" id="error-box"></div>
+
+    <!-- ── Past Runs ── -->
+    <div class="history-section">
+      <div class="history-header">
+        <span class="history-title">Past Runs</span>
+        <span class="history-count" id="history-count"></span>
+      </div>
+      <div id="run-list-container">
+        <div class="history-loader">Loading history…</div>
+      </div>
+    </div>
 
     <div class="results-section" id="results-section">
       <div class="results-header">
@@ -811,6 +948,7 @@
                 btnProg.style.width = "100%";
                 document.getElementById("results-count").textContent =
                   `${resultCount} message${resultCount !== 1 ? "s" : ""} generated`;
+                if (window._pipelineDoneHook) window._pipelineDoneHook();
                 setTimeout(() => {
                   btnLabel.textContent = "Generate Messages";
                   btnProg.style.width = "0%";
@@ -908,6 +1046,93 @@
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
     }
+
+    /* ── Run History ── */
+    async function loadHistory() {
+      const container = document.getElementById("run-list-container");
+      try {
+        const res  = await fetch("/history?limit=50");
+        const runs = await res.json();
+        if (!Array.isArray(runs) || runs.length === 0) {
+          container.innerHTML = `<div class="history-empty">No past runs yet. Generate your first batch above.</div>`;
+          return;
+        }
+        document.getElementById("history-count").textContent = `${runs.length} run${runs.length !== 1 ? "s" : ""}`;
+        container.innerHTML = `<div class="run-list">${runs.map(renderRunCard).join("")}</div>`;
+      } catch (e) {
+        container.innerHTML = `<div class="history-empty">Could not load history: ${escHtml(e.message)}</div>`;
+      }
+    }
+
+    function renderRunCard(run) {
+      const date = new Date(run.created_at).toLocaleDateString("en-US", {
+        month: "short", day: "numeric", year: "numeric",
+      });
+      const time = new Date(run.created_at).toLocaleTimeString("en-US", {
+        hour: "numeric", minute: "2-digit",
+      });
+      const count = Array.isArray(run.results) ? run.results.length : (run.total_profiles || 0);
+      return `
+        <div class="run-card" id="run-${run.id}">
+          <div class="run-card-head" onclick="toggleRun('${run.id}', ${JSON.stringify(run.results || []).replace(/"/g,'&quot;')})">
+            <span class="run-company">${escHtml(run.company || "Unknown")}</span>
+            <span class="run-meta">${count} contact${count !== 1 ? "s" : ""} · ${date} at ${time}</span>
+            <span class="run-chevron">▼</span>
+          </div>
+          <div class="run-card-body" id="run-body-${run.id}"></div>
+        </div>`;
+    }
+
+    function toggleRun(runId, results) {
+      const card = document.getElementById(`run-${runId}`);
+      const body = document.getElementById(`run-body-${runId}`);
+      const isOpen = card.classList.toggle("open");
+      if (isOpen && !body._loaded) {
+        body._loaded = true;
+        if (!results || results.length === 0) {
+          body.innerHTML = `<div class="history-empty" style="padding:24px">No contact details stored for this run.</div>`;
+        } else {
+          const rows = results.map((r, i) => {
+            const nameHtml = r.url
+              ? `<a href="${escHtml(r.url)}" target="_blank">${escHtml(r.name || r.url)}</a>`
+              : escHtml(r.name || "—");
+            return `
+              <tr>
+                <td style="color:var(--text-muted);font-size:.78rem;width:32px">${i + 1}</td>
+                <td class="rct-name">${nameHtml}</td>
+                <td class="rct-msg">${escHtml(r.message || "")}</td>
+                <td style="white-space:nowrap">
+                  ${r.message ? `<button class="rct-copy" onclick="copyRct(this,${JSON.stringify(r.message)})">Copy</button>` : ""}
+                </td>
+              </tr>`;
+          }).join("");
+          body.innerHTML = `
+            <table class="run-contacts-table">
+              <thead><tr>
+                <th>#</th><th>Contact</th><th>Message</th><th></th>
+              </tr></thead>
+              <tbody>${rows}</tbody>
+            </table>`;
+        }
+      }
+    }
+
+    function copyRct(btn, msg) {
+      navigator.clipboard.writeText(msg).then(() => {
+        btn.textContent = "✓ Copied";
+        btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1800);
+      });
+    }
+
+    // Refresh history after a successful pipeline run
+    const _origDone = window._pipelineDoneHook;
+    window._pipelineDoneHook = function() {
+      if (_origDone) _origDone();
+      setTimeout(loadHistory, 3000); // give supabase time to log
+    };
+
+    document.addEventListener("DOMContentLoaded", loadHistory);
   </script>
 </body>
 </html>
