@@ -15,20 +15,21 @@
       --grad-mid:   #c471ed;
       --grad-end:   #7b6ef6;
       --grad: linear-gradient(135deg, var(--grad-start), var(--grad-mid), var(--grad-end));
-      --bg: #fdf6f0;
-      --card: #ffffff;
-      --border: #ede8f5;
-      --text-primary: #1a1035;
-      --text-secondary: #7c7a8e;
-      --text-muted: #b0adc0;
+      --bg: #0f0f13;
+      --surface: #18181f;
+      --card: #1e1e28;
+      --border: rgba(255,255,255,.08);
+      --text-primary: #f0f0f5;
+      --text-secondary: #9898b8;
+      --text-muted: #8888a8;
     }
 
     body {
       font-family: "Plus Jakarta Sans", sans-serif;
       background: var(--bg);
       background-image:
-        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(255,179,71,0.18) 0%, transparent 60%),
-        radial-gradient(ellipse 70% 50% at 80% 110%, rgba(123,110,246,0.15) 0%, transparent 60%);
+        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(255,179,71,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 80% 110%, rgba(123,110,246,0.08) 0%, transparent 60%);
       min-height: 100vh;
       color: var(--text-primary);
       padding: 56px 20px 80px;
@@ -61,11 +62,11 @@
       cursor: pointer;
       text-decoration: none;
       transition: box-shadow .2s, border-color .2s, background .2s;
-      box-shadow: 0 1px 6px rgba(150,100,200,0.06);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.3);
     }
     .nav-btn:hover {
       border-color: #c471ed;
-      box-shadow: 0 4px 18px rgba(196,113,237,.18);
+      box-shadow: 0 4px 18px rgba(196,113,237,.25);
     }
     .nav-btn.grad-btn {
       background: var(--grad);
@@ -111,7 +112,7 @@
       border-radius: 20px;
       padding: 32px;
       margin-bottom: 32px;
-      box-shadow: 0 4px 32px rgba(150, 100, 200, 0.08), 0 1px 4px rgba(150,100,200,0.06);
+      box-shadow: 0 4px 32px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.3);
       border: 1px solid var(--border);
     }
 
@@ -156,7 +157,7 @@
       cursor: text;
       transition: border-color 0.2s;
       margin-bottom: 8px;
-      background: #fdfbff;
+      background: var(--surface);
     }
 
     .chip-field-wrap:focus-within { border-color: #c471ed; }
@@ -308,11 +309,11 @@
     /* ── Error ── */
     .error-box {
       display: none;
-      background: #fff5f5;
-      border: 1px solid #fecaca;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
       border-radius: 10px;
       padding: 12px 16px;
-      color: #b91c1c;
+      color: #f87171;
       font-size: 0.875rem;
       margin-bottom: 20px;
     }
@@ -347,7 +348,7 @@
       background: var(--card);
       border-radius: 20px;
       border: 1px solid var(--border);
-      box-shadow: 0 4px 32px rgba(150, 100, 200, 0.07), 0 1px 4px rgba(150,100,200,0.05);
+      box-shadow: 0 4px 32px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.25);
       overflow: hidden;
     }
 
@@ -358,7 +359,7 @@
     }
 
     thead {
-      background: linear-gradient(to right, rgba(255,179,71,0.06), rgba(196,113,237,0.06));
+      background: linear-gradient(to right, rgba(255,179,71,0.08), rgba(196,113,237,0.08));
       border-bottom: 1px solid var(--border);
     }
 
@@ -376,7 +377,7 @@
     td {
       padding: 16px 16px;
       vertical-align: top;
-      border-bottom: 1px solid #f5f0fc;
+      border-bottom: 1px solid var(--border);
     }
 
     tr:last-child td { border-bottom: none; }
@@ -385,7 +386,7 @@
       transition: background 0.15s;
     }
 
-    tbody tr:hover td { background: #fdfaff; }
+    tbody tr:hover td { background: rgba(255,255,255,0.03); }
 
     /* gradient left accent per row */
     tbody tr td:first-child {
@@ -443,15 +444,15 @@
     }
 
     .badge-no {
-      background: #f5f5f5;
+      background: rgba(255,255,255,0.06);
       color: var(--text-muted);
-      border: 1px solid #e5e5e5;
+      border: 1px solid var(--border);
     }
 
     .badge-warn {
-      background: #fff7ed;
-      color: #c2410c;
-      border: 1px solid #fed7aa;
+      background: rgba(251,146,60,0.12);
+      color: #fb923c;
+      border: 1px solid rgba(251,146,60,0.3);
     }
 
     .td-url a {
@@ -482,7 +483,7 @@
     .char-bar-track {
       flex: 1;
       height: 3px;
-      background: #ede8f5;
+      background: rgba(255,255,255,0.1);
       border-radius: 99px;
       overflow: hidden;
     }
@@ -508,7 +509,7 @@
     .td-copy { width: 70px; text-align: center; }
 
     .btn-copy {
-      background: transparent;
+      background: rgba(255,255,255,0.04);
       border: 1.5px solid var(--border);
       border-radius: 8px;
       color: var(--text-secondary);
@@ -573,7 +574,7 @@
       border: 1px solid var(--border);
       border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 2px 12px rgba(150,100,200,0.06);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
     }
     .run-card-head {
       display: flex;
@@ -584,7 +585,7 @@
       user-select: none;
       transition: background .15s;
     }
-    .run-card-head:hover { background: #fdfaff; }
+    .run-card-head:hover { background: rgba(255,255,255,0.04); }
     .run-card-head .run-company {
       font-weight: 700;
       font-size: 0.9375rem;
@@ -615,7 +616,7 @@
       font-size: 0.8375rem;
     }
     .run-contacts-table thead {
-      background: linear-gradient(to right, rgba(255,179,71,0.05), rgba(196,113,237,0.05));
+      background: linear-gradient(to right, rgba(255,179,71,0.08), rgba(196,113,237,0.08));
     }
     .run-contacts-table th {
       padding: 10px 16px;
@@ -630,11 +631,11 @@
     }
     .run-contacts-table td {
       padding: 12px 16px;
-      border-bottom: 1px solid #f5f0fc;
+      border-bottom: 1px solid var(--border);
       vertical-align: top;
     }
     .run-contacts-table tr:last-child td { border-bottom: none; }
-    .run-contacts-table tbody tr:hover td { background: #fdfaff; }
+    .run-contacts-table tbody tr:hover td { background: rgba(255,255,255,0.03); }
     .rct-name a { color: var(--text-primary); font-weight: 600; text-decoration: none; }
     .rct-name a:hover { color: #7b6ef6; }
     .rct-msg {
@@ -643,7 +644,7 @@
       max-width: 400px;
     }
     .rct-copy {
-      background: transparent;
+      background: rgba(255,255,255,0.04);
       border: 1.5px solid var(--border);
       border-radius: 8px;
       color: var(--text-secondary);

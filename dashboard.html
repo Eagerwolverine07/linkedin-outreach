@@ -18,8 +18,6 @@
       --muted:   #8888a8;
       --radius:  14px;
       --font:    'Plus Jakarta Sans', sans-serif;
-
-      /* status palette */
       --c-sent:        #a0a0c0;
       --c-accepted:    #7b6ef6;
       --c-replied:     #c471ed;
@@ -41,7 +39,7 @@
     .nav {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       padding: 14px 28px;
       border-bottom: 1px solid var(--border);
       background: var(--surface);
@@ -49,20 +47,6 @@
       top: 0;
       z-index: 10;
     }
-    .nav-link {
-      text-decoration: none;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      transition: all .2s;
-    }
-    .nav-link:hover { color: var(--text); border-color: rgba(255,255,255,.15); background: var(--card); }
     .nav-title {
       font-size: 16px;
       font-weight: 800;
@@ -72,22 +56,80 @@
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .nav-crm {
+    .nav-link {
       text-decoration: none;
       color: var(--muted);
       font-size: 13px;
-      font-weight: 500;
-      padding: 6px 12px;
+      font-weight: 600;
+      padding: 6px 14px;
       border-radius: 8px;
       border: 1px solid var(--border);
+      background: transparent;
       transition: all .2s;
+      white-space: nowrap;
     }
-    .nav-crm:hover { color: var(--text); border-color: rgba(255,255,255,.15); background: var(--card); }
+    .nav-link:hover { color: var(--text); border-color: rgba(255,255,255,.18); background: var(--card); }
 
     /* ── page ── */
     .page { padding: 28px 28px 60px; max-width: 1280px; margin: 0 auto; }
 
-    /* ── KPI strip ── */
+    /* ── skeleton shimmer ── */
+    @keyframes shimmer {
+      0%   { background-position: -600px 0; }
+      100% { background-position:  600px 0; }
+    }
+    .skel {
+      background: linear-gradient(90deg, #1e1e28 25%, #2a2a3a 50%, #1e1e28 75%);
+      background-size: 600px 100%;
+      animation: shimmer 1.4s infinite linear;
+      border-radius: 8px;
+    }
+
+    /* skeleton KPI row */
+    .skel-kpi-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 900px) { .skel-kpi-row { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 560px) { .skel-kpi-row { grid-template-columns: repeat(2, 1fr); } }
+
+    .skel-kpi {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .skel-kpi .skel-label { height: 10px; width: 60%; }
+    .skel-kpi .skel-val   { height: 34px; width: 45%; }
+    .skel-kpi .skel-sub   { height: 10px; width: 50%; }
+
+    /* skeleton chart cards */
+    .skel-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    .skel-grid .span-2 { grid-column: span 2; }
+    @media (max-width: 820px) {
+      .skel-grid { grid-template-columns: 1fr; }
+      .skel-grid .span-2 { grid-column: span 1; }
+    }
+
+    .skel-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+    }
+    .skel-card .skel-heading { height: 11px; width: 38%; margin-bottom: 20px; }
+    .skel-card .skel-chart   { border-radius: 8px; }
+
+    /* ── KPI strip (real) ── */
     .kpi-row {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -125,20 +167,18 @@
       background-clip: text;
     }
 
-    /* ── grid layout ── */
+    /* ── chart grid (real) ── */
     .charts-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 18px;
     }
     .charts-grid .span-2 { grid-column: span 2; }
-
     @media (max-width: 820px) {
       .charts-grid { grid-template-columns: 1fr; }
       .charts-grid .span-2 { grid-column: span 1; }
     }
 
-    /* ── chart card ── */
     .chart-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -146,7 +186,7 @@
       padding: 22px 24px;
     }
     .chart-card h3 {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: .07em;
@@ -156,16 +196,16 @@
     .chart-wrap { position: relative; }
     .chart-wrap canvas { width: 100% !important; }
 
-    /* ── funnel bar ── */
+    /* ── funnel bars ── */
     .funnel-bars { display: flex; flex-direction: column; gap: 10px; }
     .f-row { display: flex; align-items: center; gap: 12px; }
     .f-label { font-size: 12px; font-weight: 600; color: var(--text); min-width: 96px; }
-    .f-track { flex: 1; height: 28px; background: rgba(255,255,255,.05); border-radius: 6px; overflow: hidden; position: relative; }
+    .f-track { flex: 1; height: 28px; background: rgba(255,255,255,.05); border-radius: 6px; overflow: hidden; }
     .f-fill  { height: 100%; border-radius: 6px; transition: width .6s ease; }
     .f-count { font-size: 13px; font-weight: 700; min-width: 32px; text-align: right; }
     .f-pct   { font-size: 11px; color: var(--muted); min-width: 40px; text-align: right; }
 
-    /* ── top companies table ── */
+    /* ── company table ── */
     .co-table { width: 100%; border-collapse: collapse; }
     .co-table th {
       font-size: 10px;
@@ -189,36 +229,21 @@
     .co-bar-cell { padding-right: 16px; }
     .co-inline-track {
       display: inline-block;
-      width: 80px;
-      height: 4px;
+      width: 80px; height: 4px;
       background: rgba(255,255,255,.08);
       border-radius: 3px;
       vertical-align: middle;
     }
-    .co-inline-fill {
-      display: block;
-      height: 100%;
-      border-radius: 3px;
-      background: var(--grad);
-    }
+    .co-inline-fill { display: block; height: 100%; border-radius: 3px; background: var(--grad); }
 
-    /* ── empty / loader ── */
-    .loading-msg, .empty-msg {
+    /* ── empty ── */
+    .empty-msg {
       text-align: center;
-      padding: 60px 20px;
+      padding: 80px 20px;
       color: var(--muted);
-      font-size: 14px;
+      font-size: 15px;
     }
-    .spinner {
-      display: inline-block;
-      width: 22px; height: 22px;
-      border: 2px solid var(--border);
-      border-top-color: #7b6ef6;
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-      margin-bottom: 12px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .empty-msg strong { display: block; font-size: 20px; color: var(--text); margin-bottom: 8px; }
   </style>
 </head>
 <body>
@@ -226,22 +251,38 @@
 <nav class="nav">
   <a href="/" class="nav-link">← Pipeline</a>
   <span class="nav-title">Outreach Analytics</span>
-  <a href="/crm" class="nav-crm">📋 CRM</a>
+  <a href="/crm" class="nav-link">📋 CRM</a>
 </nav>
 
 <div class="page" id="page">
-  <div class="loading-msg">
-    <div class="spinner"></div><br>Loading analytics…
+
+  <!-- ── Skeleton ── -->
+  <div id="skeleton">
+    <div class="skel-kpi-row">
+      <div class="skel-kpi"><div class="skel skel-label"></div><div class="skel skel-val"></div><div class="skel skel-sub"></div></div>
+      <div class="skel-kpi"><div class="skel skel-label"></div><div class="skel skel-val"></div><div class="skel skel-sub"></div></div>
+      <div class="skel-kpi"><div class="skel skel-label"></div><div class="skel skel-val"></div><div class="skel skel-sub"></div></div>
+      <div class="skel-kpi"><div class="skel skel-label"></div><div class="skel skel-val"></div><div class="skel skel-sub"></div></div>
+      <div class="skel-kpi"><div class="skel skel-label"></div><div class="skel skel-val"></div><div class="skel skel-sub"></div></div>
+    </div>
+    <div class="skel-grid">
+      <div class="skel-card span-2"><div class="skel skel-heading"></div><div class="skel skel-chart" style="height:220px"></div></div>
+      <div class="skel-card"><div class="skel skel-heading"></div><div class="skel skel-chart" style="height:200px"></div></div>
+      <div class="skel-card"><div class="skel skel-heading"></div><div class="skel skel-chart" style="height:200px"></div></div>
+      <div class="skel-card span-2"><div class="skel skel-heading"></div><div class="skel skel-chart" style="height:120px"></div></div>
+      <div class="skel-card span-2"><div class="skel skel-heading"></div><div class="skel skel-chart" style="height:240px"></div></div>
+    </div>
   </div>
+
+  <!-- ── Real content (hidden until loaded) ── -->
+  <div id="content" style="display:none"></div>
+
 </div>
 
 <script>
   const GRAD_COLORS = {
-    sent:        '#a0a0c0',
-    accepted:    '#7b6ef6',
-    replied:     '#c471ed',
-    call_booked: '#ffb347',
-    no_response: '#444458',
+    sent: '#a0a0c0', accepted: '#7b6ef6', replied: '#c471ed',
+    call_booked: '#ffb347', no_response: '#444458',
   };
   const STATUS_LABELS = {
     sent: 'Sent', accepted: 'Accepted', replied: 'Replied',
@@ -249,7 +290,6 @@
   };
   const STATUS_ORDER = ['sent','accepted','replied','call_booked','no_response'];
 
-  // Chart.js global defaults
   Chart.defaults.color = '#8888a8';
   Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
   Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
@@ -260,14 +300,16 @@
       fetch('/history?limit=100').then(r => r.json()).catch(() => []),
     ]);
 
+    document.getElementById('skeleton').style.display = 'none';
+
     if (!Array.isArray(contacts) || contacts.length === 0) {
-      document.getElementById('page').innerHTML =
-        `<div class="empty-msg">No outreach data yet. Run the pipeline to see analytics.</div>`;
+      document.getElementById('content').style.display = 'block';
+      document.getElementById('content').innerHTML =
+        `<div class="empty-msg"><strong>No data yet</strong>Run the pipeline to start seeing analytics here.</div>`;
       return;
     }
 
-    // ── Derived metrics ──
-    const total   = contacts.length;
+    const total    = contacts.length;
     const byStatus = {};
     STATUS_ORDER.forEach(s => byStatus[s] = contacts.filter(c => c.status === s).length);
 
@@ -275,7 +317,6 @@
     const replyRate  = total > 0 ? ((byStatus.replied  + byStatus.call_booked) / total * 100).toFixed(1) : 0;
     const callRate   = total > 0 ? (byStatus.call_booked / total * 100).toFixed(1) : 0;
 
-    // By company
     const byCompany = {};
     for (const c of contacts) {
       const co = c.company || 'Unknown';
@@ -285,24 +326,23 @@
     }
     const companiesSorted = Object.entries(byCompany).sort((a, b) => b[1].total - a[1].total);
 
-    // Volume over time (by week)
     const weekMap = {};
     for (const c of contacts) {
-      const d  = new Date(c.created_at);
-      const mon = new Date(d); mon.setDate(d.getDate() - d.getDay() + 1); // Monday
+      const d = new Date(c.created_at);
+      const mon = new Date(d); mon.setDate(d.getDate() - d.getDay() + 1);
       const key = mon.toISOString().slice(0, 10);
       weekMap[key] = (weekMap[key] || 0) + 1;
     }
     const weeks = Object.keys(weekMap).sort();
-    const weekLabels = weeks.map(w => {
-      const d = new Date(w + 'T00:00:00');
-      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    });
+    const weekLabels = weeks.map(w =>
+      new Date(w + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    );
 
-    // ── Render page ──
-    document.getElementById('page').innerHTML = `
+    const runCount = Array.isArray(runs) ? runs.length : 0;
+
+    document.getElementById('content').innerHTML = `
       <div class="kpi-row">
-        <div class="kpi"><div class="kpi-label">Total Contacts</div><div class="kpi-val grad">${total}</div><div class="kpi-sub">${Array.isArray(runs) ? runs.length : 0} run${runs.length !== 1 ? 's' : ''}</div></div>
+        <div class="kpi"><div class="kpi-label">Total Contacts</div><div class="kpi-val grad">${total}</div><div class="kpi-sub">${runCount} run${runCount !== 1 ? 's' : ''}</div></div>
         <div class="kpi"><div class="kpi-label">Accepted</div><div class="kpi-val" style="color:#7b6ef6">${byStatus.accepted}</div><div class="kpi-sub">${acceptRate}% rate</div></div>
         <div class="kpi"><div class="kpi-label">Replied</div><div class="kpi-val" style="color:#c471ed">${byStatus.replied}</div><div class="kpi-sub">${replyRate}% rate</div></div>
         <div class="kpi"><div class="kpi-label">Call Booked</div><div class="kpi-val" style="color:#ffb347">${byStatus.call_booked}</div><div class="kpi-sub">${callRate}% rate</div></div>
@@ -311,51 +351,42 @@
 
       <div class="charts-grid">
 
-        <!-- Volume over time -->
         <div class="chart-card span-2">
           <h3>Outreach Volume by Week</h3>
-          <div class="chart-wrap" style="height:220px">
-            <canvas id="chart-volume"></canvas>
-          </div>
+          <div class="chart-wrap" style="height:220px"><canvas id="chart-volume"></canvas></div>
         </div>
 
-        <!-- Funnel -->
         <div class="chart-card">
           <h3>Conversion Funnel</h3>
           <div class="funnel-bars" id="funnel-bars"></div>
         </div>
 
-        <!-- Status donut -->
         <div class="chart-card">
           <h3>Status Breakdown</h3>
-          <div class="chart-wrap" style="height:220px">
-            <canvas id="chart-donut"></canvas>
-          </div>
+          <div class="chart-wrap" style="height:220px"><canvas id="chart-donut"></canvas></div>
         </div>
 
-        <!-- Company breakdown -->
         <div class="chart-card span-2">
           <h3>By Company</h3>
           <table class="co-table">
-            <thead>
-              <tr><th>Company</th><th>Contacts</th><th>Accepted</th><th>Replied</th><th>Call Booked</th><th class="co-bar-cell">Volume</th></tr>
-            </thead>
+            <thead><tr>
+              <th>Company</th><th>Contacts</th><th>Accepted</th><th>Replied</th><th>Call Booked</th><th class="co-bar-cell">Volume</th>
+            </tr></thead>
             <tbody id="co-tbody"></tbody>
           </table>
         </div>
 
-        <!-- Status over time (stacked) -->
         <div class="chart-card span-2">
           <h3>Status Mix over Time</h3>
-          <div class="chart-wrap" style="height:240px">
-            <canvas id="chart-stacked"></canvas>
-          </div>
+          <div class="chart-wrap" style="height:240px"><canvas id="chart-stacked"></canvas></div>
         </div>
 
       </div>
     `;
 
-    // ── 1. Volume bar chart ──
+    document.getElementById('content').style.display = 'block';
+
+    // 1. Volume bar
     new Chart(document.getElementById('chart-volume'), {
       type: 'bar',
       data: {
@@ -363,47 +394,40 @@
         datasets: [{
           label: 'Contacts',
           data: weeks.map(w => weekMap[w]),
-          backgroundColor: 'rgba(123,110,246,0.6)',
+          backgroundColor: 'rgba(123,110,246,0.55)',
           borderColor: '#7b6ef6',
           borderWidth: 1,
           borderRadius: 5,
         }],
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
           x: { grid: { color: 'rgba(255,255,255,0.04)' } },
-          y: { grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true, ticks: { stepSize: 1 } },
+          y: { grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true, ticks: { precision: 0 } },
         },
       },
     });
 
-    // ── 2. Funnel bars ──
-    const funnelEl = document.getElementById('funnel-bars');
-    const funnelStages = [
-      { key: 'sent',        label: 'Sent' },
-      { key: 'accepted',    label: 'Accepted' },
-      { key: 'replied',     label: 'Replied' },
-      { key: 'call_booked', label: 'Call Booked' },
-    ];
-    funnelEl.innerHTML = funnelStages.map(({ key, label }) => {
-      const n   = byStatus[key] || 0;
+    // 2. Funnel
+    document.getElementById('funnel-bars').innerHTML = [
+      { key: 'sent', label: 'Sent' }, { key: 'accepted', label: 'Accepted' },
+      { key: 'replied', label: 'Replied' }, { key: 'call_booked', label: 'Call Booked' },
+    ].map(({ key, label }) => {
+      const n = byStatus[key] || 0;
       const pct = total > 0 ? (n / total * 100).toFixed(0) : 0;
       const w   = total > 0 ? Math.max(2, n / total * 100) : 0;
       return `
         <div class="f-row">
           <span class="f-label">${label}</span>
-          <div class="f-track">
-            <div class="f-fill" style="width:${w}%;background:${GRAD_COLORS[key]}"></div>
-          </div>
+          <div class="f-track"><div class="f-fill" style="width:${w}%;background:${GRAD_COLORS[key]}"></div></div>
           <span class="f-count" style="color:${GRAD_COLORS[key]}">${n}</span>
           <span class="f-pct">${pct}%</span>
         </div>`;
     }).join('');
 
-    // ── 3. Donut chart ──
+    // 3. Donut
     new Chart(document.getElementById('chart-donut'), {
       type: 'doughnut',
       data: {
@@ -411,45 +435,33 @@
         datasets: [{
           data: STATUS_ORDER.map(s => byStatus[s]),
           backgroundColor: STATUS_ORDER.map(s => GRAD_COLORS[s]),
-          borderWidth: 0,
-          hoverOffset: 6,
+          borderWidth: 0, hoverOffset: 6,
         }],
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '68%',
-        plugins: {
-          legend: {
-            position: 'right',
-            labels: { boxWidth: 10, padding: 14, font: { size: 12 } },
-          },
-        },
+        responsive: true, maintainAspectRatio: false, cutout: '68%',
+        plugins: { legend: { position: 'right', labels: { boxWidth: 10, padding: 14, font: { size: 12 } } } },
       },
     });
 
-    // ── 4. Company table ──
+    // 4. Company table
     const maxTotal = companiesSorted[0]?.[1].total || 1;
-    document.getElementById('co-tbody').innerHTML = companiesSorted.slice(0, 12).map(([co, d]) => {
-      const barW = Math.round(d.total / maxTotal * 100);
-      return `
-        <tr>
-          <td style="font-weight:600">${esc(co)}</td>
-          <td>${d.total}</td>
-          <td style="color:#7b6ef6">${d.accepted || 0}</td>
-          <td style="color:#c471ed">${d.replied  || 0}</td>
-          <td style="color:#ffb347">${d.call_booked || 0}</td>
-          <td class="co-bar-cell">
-            <span class="co-inline-track"><span class="co-inline-fill" style="width:${barW}%"></span></span>
-          </td>
-        </tr>`;
-    }).join('');
+    document.getElementById('co-tbody').innerHTML = companiesSorted.slice(0, 12).map(([co, d]) => `
+      <tr>
+        <td style="font-weight:600">${esc(co)}</td>
+        <td>${d.total}</td>
+        <td style="color:#7b6ef6">${d.accepted || 0}</td>
+        <td style="color:#c471ed">${d.replied  || 0}</td>
+        <td style="color:#ffb347">${d.call_booked || 0}</td>
+        <td class="co-bar-cell">
+          <span class="co-inline-track"><span class="co-inline-fill" style="width:${Math.round(d.total/maxTotal*100)}%"></span></span>
+        </td>
+      </tr>`).join('');
 
-    // ── 5. Stacked status by week ──
-    // Group contacts by week + status
+    // 5. Stacked over time
     const weekStatusMap = {};
     for (const c of contacts) {
-      const d  = new Date(c.created_at);
+      const d = new Date(c.created_at);
       const mon = new Date(d); mon.setDate(d.getDate() - d.getDay() + 1);
       const key = mon.toISOString().slice(0, 10);
       if (!weekStatusMap[key]) weekStatusMap[key] = {};
@@ -461,21 +473,18 @@
         labels: weekLabels,
         datasets: STATUS_ORDER.map(s => ({
           label: STATUS_LABELS[s],
-          data: weeks.map(w => (weekStatusMap[w]?.[s] || 0)),
+          data: weeks.map(w => weekStatusMap[w]?.[s] || 0),
           backgroundColor: GRAD_COLORS[s],
           borderWidth: 0,
           borderRadius: s === 'no_response' ? 5 : 0,
         })),
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { position: 'top', labels: { boxWidth: 10, padding: 14, font: { size: 12 } } },
-        },
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { boxWidth: 10, padding: 14, font: { size: 12 } } } },
         scales: {
           x: { stacked: true, grid: { color: 'rgba(255,255,255,0.04)' } },
-          y: { stacked: true, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true, ticks: { stepSize: 1 } },
+          y: { stacked: true, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true, ticks: { precision: 0 } },
         },
       },
     });
