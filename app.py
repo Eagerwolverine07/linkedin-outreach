@@ -569,32 +569,88 @@ async def generate_message(session, profile, company_name):
 async def log_run_to_supabase(run_data: dict):
     """
     Inserts one run record into the Supabase 'runs' table.
-    run_data keys: company, total, personalized, not_at_company,
-                   not_found, avg_char_count, messages (list of dicts)
-    Silently skips if SUPABASE_URL or SUPABASE_API_KEY are not set.
+    Returns the new run id, or None on failure.
     """
     if not SUPABASE_URL or not SUPABASE_API_KEY:
-        print("[Supabase] env vars not set, skipping log")
-        return
+        print("[Supabase] env vars not set, skipping run log")
+        return None
 
     url = f"{SUPABASE_URL}/rest/v1/runs"
     headers = {
         "apikey":        SUPABASE_API_KEY,
         "Authorization": f"Bearer {SUPABASE_API_KEY}",
         "Content-Type":  "application/json",
-        "Prefer":        "return=minimal",
+        "Prefer":        "return=representation",
     }
     try:
         async with aiohttp.ClientSession() as s:
             async with s.post(url, headers=headers, json=run_data,
                               timeout=aiohttp.ClientTimeout(total=15)) as resp:
                 if resp.status in (200, 201):
-                    print(f"[Supabase] run logged OK company={run_data.get('company')} total={run_data.get('total')}")
+                    data = await resp.json()
+                    run_id = data[0]["id"] if data else None
+                    print(f"[Supabase] run logged OK id={run_id} company={run_data.get('company')}")
+                    return run_id
                 else:
                     body = await resp.text()
-                    print(f"[Supabase] log failed status={resp.status} body={body[:300]}")
+                    print(f"[Supabase] run log failed status={resp.status} body={body[:300]}")
     except Exception as e:
-        print(f"[Supabase] log exception: {e}")
+        print(f"[Supabase] run log exception: {e}")
+    return None
+
+
+async def log_contacts_to_supabase(run_id, company: str, results: list):
+    """
+    Inserts one row per profile result into the Supabase 'contacts' table.
+    run_id: the id returned from log_run_to_supabase (may be None — contacts
+            are still logged but won't have a run foreign key).
+    """
+    if not SUPABASE_URL or not SUPABASE_API_KEY:
+        print("[Supabase] env vars not set, skipping contacts log")
+        return
+
+    url = f"{SUPABASE_URL}/rest/v1/contacts"
+    headers = {
+        "apikey":        SUPABASE_API_KEY,
+        "Authorization": f"Bearer {SUPABASE_API_KEY}",
+        "Content-Type":  "application/json",
+        "Prefer":        "return=minimal",
+    }
+
+    rows = []
+    for r in results:
+        msg = r.get("message", "")
+        # Determine initial status: not_at_company, not_found, or sent
+        if "No longer at" in msg:
+            initial_status = "no_response"
+        elif r.get("personalized") == "No" and "No longer at" not in msg:
+            initial_status = "sent"
+        else:
+            initial_status = "sent"
+
+        rows.append({
+            "run_id":  run_id,          # FK to runs table (nullable)
+            "company": company,
+            "name":    r.get("name", ""),
+            "url":     r.get("url", ""),
+            "message": msg,
+            "status":  initial_status,
+        })
+
+    if not rows:
+        return
+
+    try:
+        async with aiohttp.ClientSession() as s:
+            async with s.post(url, headers=headers, json=rows,
+                              timeout=aiohttp.ClientTimeout(total=20)) as resp:
+                if resp.status in (200, 201):
+                    print(f"[Supabase] {len(rows)} contacts logged for run_id={run_id}")
+                else:
+                    body = await resp.text()
+                    print(f"[Supabase] contacts log failed status={resp.status} body={body[:300]}")
+    except Exception as e:
+        print(f"[Supabase] contacts log exception: {e}")
 
 
 # ─────────────────────────────────────────────
@@ -754,22 +810,34 @@ async def _stream_pipeline(urls, company):
     char_counts  = [r["char_count"] for r in _run_results if r.get("char_count", 0) > 0]
     avg_chars    = int(sum(char_counts) / len(char_counts)) if char_counts else 0
 
-    asyncio.create_task(log_run_to_supabase({
-        "company":        company,
-        "total":          total,
-        "personalized":   personalized,
-        "not_at_company": not_at_co,
-        "not_found":      not_found,
-        "avg_char_count": avg_chars,
-        "messages":       _run_results,
-    }))
+    async def _log_all():
+        run_id = await log_run_to_supabase({
+            "company":        company,
+            "total":          total,
+            "personalized":   personalized,
+            "not_at_company": not_at_co,
+            "not_found":      not_found,
+            "avg_char_count": avg_chars,
+            "messages":       _run_results,
+        })
+        await log_contacts_to_supabase(run_id, company, _run_results)
+
+    asyncio.create_task(_log_all())
 
     yield sse({"event": "done", "total": total})
 
 
 # ─────────────────────────────────────────────
-# SECTION 7: DASHBOARD ENDPOINTS
+# SECTION 7: DASHBOARD & CRM ENDPOINTS
 # ─────────────────────────────────────────────
+
+def _sb_headers():
+    return {
+        "apikey":        SUPABASE_API_KEY,
+        "Authorization": f"Bearer {SUPABASE_API_KEY}",
+        "Content-Type":  "application/json",
+    }
+
 
 @app.get("/history")
 async def history(limit: int = 50):
@@ -777,19 +845,74 @@ async def history(limit: int = 50):
     if not SUPABASE_URL or not SUPABASE_API_KEY:
         return {"error": "Supabase not configured"}
     url = f"{SUPABASE_URL}/rest/v1/runs?order=created_at.desc&limit={limit}"
-    headers = {
-        "apikey":        SUPABASE_API_KEY,
-        "Authorization": f"Bearer {SUPABASE_API_KEY}",
-    }
     try:
         async with aiohttp.ClientSession() as s:
-            async with s.get(url, headers=headers,
+            async with s.get(url, headers=_sb_headers(),
                              timeout=aiohttp.ClientTimeout(total=15)) as resp:
                 if resp.status == 200:
                     return await resp.json()
                 else:
                     body = await resp.text()
                     return {"error": f"Supabase {resp.status}", "detail": body[:300]}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get("/contacts")
+async def get_contacts(company: str = None, status: str = None, limit: int = 200):
+    """Returns contacts from Supabase, optionally filtered by company and/or status."""
+    if not SUPABASE_URL or not SUPABASE_API_KEY:
+        return {"error": "Supabase not configured"}
+
+    filters = ["order=created_at.desc", f"limit={limit}"]
+    if company:
+        filters.append(f"company=eq.{company}")
+    if status:
+        filters.append(f"status=eq.{status}")
+
+    url = f"{SUPABASE_URL}/rest/v1/contacts?" + "&".join(filters)
+    try:
+        async with aiohttp.ClientSession() as s:
+            async with s.get(url, headers=_sb_headers(),
+                             timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                if resp.status == 200:
+                    return await resp.json()
+                else:
+                    body = await resp.text()
+                    return {"error": f"Supabase {resp.status}", "detail": body[:300]}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.patch("/contacts/{contact_id}")
+async def update_contact(contact_id: int, request: Request):
+    """
+    Updates a contact's CRM fields.
+    Accepted body fields: status, notes, follow_up_date
+    """
+    if not SUPABASE_URL or not SUPABASE_API_KEY:
+        return {"error": "Supabase not configured"}
+
+    body = await request.json()
+    allowed = {"status", "notes", "follow_up_date"}
+    patch   = {k: v for k, v in body.items() if k in allowed}
+    if not patch:
+        return {"error": "No valid fields to update"}
+
+    patch["updated_at"] = "now()"
+
+    url = f"{SUPABASE_URL}/rest/v1/contacts?id=eq.{contact_id}"
+    headers = {**_sb_headers(), "Prefer": "return=representation"}
+    try:
+        async with aiohttp.ClientSession() as s:
+            async with s.patch(url, headers=headers, json=patch,
+                               timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                if resp.status in (200, 204):
+                    data = await resp.json() if resp.status == 200 else []
+                    return data[0] if data else {"ok": True}
+                else:
+                    body_text = await resp.text()
+                    return {"error": f"Supabase {resp.status}", "detail": body_text[:300]}
     except Exception as e:
         return {"error": str(e)}
 
