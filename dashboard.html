@@ -285,13 +285,13 @@
 <script>
   const GRAD_COLORS = {
     sent: '#a0a0c0', accepted: '#7b6ef6', replied: '#c471ed',
-    call_booked: '#ffb347', no_response: '#c8c8d8',
+    warm_intro: '#ffb347', no_response: '#c8c8d8',
   };
   const STATUS_LABELS = {
     sent: 'Sent', accepted: 'Accepted', replied: 'Replied',
-    call_booked: 'Call Booked', no_response: 'No Response',
+    warm_intro: 'Warm Intro', no_response: 'No Response',
   };
-  const STATUS_ORDER = ['sent','accepted','replied','call_booked','no_response'];
+  const STATUS_ORDER = ['sent','accepted','replied','warm_intro','no_response'];
 
   Chart.defaults.color = '#9090aa';
   Chart.defaults.borderColor = 'rgba(0,0,0,0.06)';
@@ -316,9 +316,9 @@
     const byStatus = {};
     STATUS_ORDER.forEach(s => byStatus[s] = contacts.filter(c => c.status === s).length);
 
-    const acceptRate = total > 0 ? ((byStatus.accepted + byStatus.replied + byStatus.call_booked) / total * 100).toFixed(1) : 0;
-    const replyRate  = total > 0 ? ((byStatus.replied  + byStatus.call_booked) / total * 100).toFixed(1) : 0;
-    const callRate   = total > 0 ? (byStatus.call_booked / total * 100).toFixed(1) : 0;
+    const acceptRate = total > 0 ? ((byStatus.accepted + byStatus.replied + byStatus.warm_intro) / total * 100).toFixed(1) : 0;
+    const replyRate  = total > 0 ? ((byStatus.replied  + byStatus.warm_intro) / total * 100).toFixed(1) : 0;
+    const callRate   = total > 0 ? (byStatus.warm_intro / total * 100).toFixed(1) : 0;
 
     const byCompany = {};
     for (const c of contacts) {
@@ -348,7 +348,7 @@
         <div class="kpi"><div class="kpi-label">Total Contacts</div><div class="kpi-val grad">${total}</div><div class="kpi-sub">${runCount} run${runCount !== 1 ? 's' : ''}</div></div>
         <div class="kpi"><div class="kpi-label">Accepted</div><div class="kpi-val" style="color:#7b6ef6">${byStatus.accepted}</div><div class="kpi-sub">${acceptRate}% rate</div></div>
         <div class="kpi"><div class="kpi-label">Replied</div><div class="kpi-val" style="color:#c471ed">${byStatus.replied}</div><div class="kpi-sub">${replyRate}% rate</div></div>
-        <div class="kpi"><div class="kpi-label">Call Booked</div><div class="kpi-val" style="color:#ffb347">${byStatus.call_booked}</div><div class="kpi-sub">${callRate}% rate</div></div>
+        <div class="kpi"><div class="kpi-label">Warm Intro</div><div class="kpi-val" style="color:#ffb347">${byStatus.warm_intro}</div><div class="kpi-sub">${callRate}% rate</div></div>
         <div class="kpi"><div class="kpi-label">No Response</div><div class="kpi-val" style="color:#555570">${byStatus.no_response}</div><div class="kpi-sub">${total > 0 ? (byStatus.no_response/total*100).toFixed(1) : 0}%</div></div>
       </div>
 
@@ -416,7 +416,7 @@
     // 2. Funnel
     document.getElementById('funnel-bars').innerHTML = [
       { key: 'sent', label: 'Sent' }, { key: 'accepted', label: 'Accepted' },
-      { key: 'replied', label: 'Replied' }, { key: 'call_booked', label: 'Call Booked' },
+      { key: 'replied', label: 'Replied' }, { key: 'warm_intro', label: 'Warm Intro' },
     ].map(({ key, label }) => {
       const n = byStatus[key] || 0;
       const pct = total > 0 ? (n / total * 100).toFixed(0) : 0;
@@ -455,7 +455,7 @@
         <td>${d.total}</td>
         <td style="color:#7b6ef6">${d.accepted || 0}</td>
         <td style="color:#c471ed">${d.replied  || 0}</td>
-        <td style="color:#ffb347">${d.call_booked || 0}</td>
+        <td style="color:#ffb347">${d.warm_intro || 0}</td>
         <td class="co-bar-cell">
           <span class="co-inline-track"><span class="co-inline-fill" style="width:${Math.round(d.total/maxTotal*100)}%"></span></span>
         </td>

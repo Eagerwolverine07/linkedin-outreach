@@ -116,7 +116,7 @@
     .s-sent        { color: #a0a0c0; }
     .s-accepted    { color: #7b6ef6; }
     .s-replied     { color: #c471ed; }
-    .s-call_booked { color: #ffb347; }
+    .s-warm_intro { color: #ffb347; }
     .s-no_response { color: #b0adc0; }
 
     /* ─── BY COMPANY view ─── */
@@ -347,7 +347,7 @@
   <div class="stat-card"><div class="label">Sent</div><div class="value s-sent" id="s-sent">—</div></div>
   <div class="stat-card"><div class="label">Accepted</div><div class="value s-accepted" id="s-accepted">—</div></div>
   <div class="stat-card"><div class="label">Replied</div><div class="value s-replied" id="s-replied">—</div></div>
-  <div class="stat-card"><div class="label">Call Booked</div><div class="value s-call_booked" id="s-call_booked">—</div></div>
+  <div class="stat-card"><div class="label">Warm Intro</div><div class="value s-warm_intro" id="s-warm_intro">—</div></div>
   <div class="stat-card"><div class="label">No Response</div><div class="value s-no_response" id="s-no_response">—</div></div>
 </div>
 
@@ -362,8 +362,8 @@
   let CURRENT_VIEW  = 'company';
   let _search = '', _filterStatus = '', _filterCompany = '';
 
-  const STATUS_LABELS = { sent:'Sent', accepted:'Accepted', replied:'Replied', call_booked:'Call Booked', no_response:'No Response' };
-  const STATUS_ORDER  = ['sent','accepted','replied','call_booked','no_response'];
+  const STATUS_LABELS = { sent:'Sent', accepted:'Accepted', replied:'Replied', warm_intro:'Warm Intro', no_response:'No Response' };
+  const STATUS_ORDER  = ['sent','accepted','replied','warm_intro','no_response'];
 
   document.addEventListener('DOMContentLoaded', loadContacts);
 
@@ -387,7 +387,7 @@
     document.getElementById('s-sent').textContent        = c.filter(x => x.status==='sent').length;
     document.getElementById('s-accepted').textContent    = c.filter(x => x.status==='accepted').length;
     document.getElementById('s-replied').textContent     = c.filter(x => x.status==='replied').length;
-    document.getElementById('s-call_booked').textContent = c.filter(x => x.status==='call_booked').length;
+    document.getElementById('s-warm_intro').textContent = c.filter(x => x.status==='warm_intro').length;
     document.getElementById('s-no_response').textContent = c.filter(x => x.status==='no_response').length;
   }
 
