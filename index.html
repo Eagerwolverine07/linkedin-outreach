@@ -39,6 +39,44 @@
       margin: 0 auto;
     }
 
+    /* ── Nav ── */
+    .nav {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      color: var(--text-primary);
+      font-family: "Plus Jakarta Sans", sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: box-shadow .2s, border-color .2s, background .2s;
+      box-shadow: 0 1px 6px rgba(150,100,200,0.06);
+    }
+    .nav-btn:hover {
+      border-color: #c471ed;
+      box-shadow: 0 4px 18px rgba(196,113,237,.18);
+    }
+    .nav-btn.grad-btn {
+      background: var(--grad);
+      border-color: transparent;
+      color: #fff;
+    }
+    .nav-btn.grad-btn:hover {
+      opacity: .88;
+      box-shadow: 0 4px 18px rgba(196,113,237,.35);
+    }
+
     /* ── Header ── */
     .header {
       text-align: center;
@@ -519,6 +557,11 @@
 </head>
 <body>
   <div class="container">
+
+    <nav class="nav">
+      <a href="/history" class="nav-btn">📋 History</a>
+      <a href="/dashboard" class="nav-btn grad-btn">📊 Dashboard</a>
+    </nav>
 
     <header class="header">
       <h1>LinkedIn <span class="grad-word">Outreach</span> Pipeline</h1>
