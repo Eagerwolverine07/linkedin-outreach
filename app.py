@@ -634,7 +634,6 @@ async def log_contacts_to_supabase(run_id, company: str, results: list):
             "name":    r.get("name", ""),
             "url":     r.get("url", ""),
             "message": msg,
-            "status":  initial_status,
         })
 
     if not rows:
@@ -859,16 +858,14 @@ async def history(limit: int = 50):
 
 
 @app.get("/contacts")
-async def get_contacts(company: str = None, status: str = None, limit: int = 200):
-    """Returns contacts from Supabase, optionally filtered by company and/or status."""
+async def get_contacts(company: str = None, limit: int = 200):
+    """Returns contacts from Supabase, optionally filtered by company."""
     if not SUPABASE_URL or not SUPABASE_API_KEY:
         return {"error": "Supabase not configured"}
 
     filters = ["order=created_at.desc", f"limit={limit}"]
     if company:
         filters.append(f"company=eq.{company}")
-    if status:
-        filters.append(f"status=eq.{status}")
 
     url = f"{SUPABASE_URL}/rest/v1/contacts?" + "&".join(filters)
     try:
@@ -888,13 +885,13 @@ async def get_contacts(company: str = None, status: str = None, limit: int = 200
 async def update_contact(contact_id: int, request: Request):
     """
     Updates a contact's CRM fields.
-    Accepted body fields: status, notes, follow_up_date
+    Accepted body fields: accepted, replied, warm_intro (booleans), notes, follow_up_date
     """
     if not SUPABASE_URL or not SUPABASE_API_KEY:
         return {"error": "Supabase not configured"}
 
     body = await request.json()
-    allowed = {"status", "notes", "follow_up_date"}
+    allowed = {"accepted", "replied", "warm_intro", "notes", "follow_up_date"}
     patch   = {k: v for k, v in body.items() if k in allowed}
     if not patch:
         return {"error": "No valid fields to update"}
