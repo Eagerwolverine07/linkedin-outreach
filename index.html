@@ -1024,16 +1024,28 @@
       tbody.appendChild(tr);
     }
 
-    function copyMessage(btn, message) {
-      navigator.clipboard.writeText(message).then(() => {
+    function _doCopy(text, btn) {
+      const done = () => {
         btn.textContent = "✓ Copied";
         btn.classList.add("copied");
-        setTimeout(() => {
-          btn.textContent = "Copy";
-          btn.classList.remove("copied");
-        }, 1800);
-      });
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1800);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => _fallbackCopy(text, btn, done));
+      } else {
+        _fallbackCopy(text, btn, done);
+      }
     }
+    function _fallbackCopy(text, btn, done) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.cssText = "position:fixed;opacity:0;top:0;left:0";
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      try { document.execCommand("copy"); done(); } catch(e) {}
+      document.body.removeChild(ta);
+    }
+    function copyMessage(btn, message) { _doCopy(message, btn); }
 
     function showError(msg) {
       const box = document.getElementById("error-box");
@@ -1119,13 +1131,7 @@
       }
     }
 
-    function copyRct(btn, msg) {
-      navigator.clipboard.writeText(msg).then(() => {
-        btn.textContent = "✓ Copied";
-        btn.classList.add("copied");
-        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1800);
-      });
-    }
+    function copyRct(btn, msg) { _doCopy(msg, btn); }
 
     // Refresh history after a successful pipeline run
     const _origDone = window._pipelineDoneHook;
