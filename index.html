@@ -735,17 +735,6 @@
 
     <div class="error-box" id="error-box"></div>
 
-    <!-- ── Past Runs ── -->
-    <div class="history-section">
-      <div class="history-header">
-        <span class="history-title">Past Runs</span>
-        <span class="history-count" id="history-count"></span>
-      </div>
-      <div id="run-list-container">
-        <div class="history-loader">Loading history…</div>
-      </div>
-    </div>
-
     <div class="results-section" id="results-section">
       <div class="results-header">
         <span class="results-title">Personalized messages</span>
@@ -765,6 +754,17 @@
           </thead>
           <tbody id="results-body"></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- ── Past Runs ── -->
+    <div class="history-section">
+      <div class="history-header">
+        <span class="history-title">Past Runs</span>
+        <span class="history-count" id="history-count"></span>
+      </div>
+      <div id="run-list-container">
+        <div class="history-loader">Loading history…</div>
       </div>
     </div>
 
@@ -1085,10 +1085,11 @@
       const time = new Date(run.created_at).toLocaleTimeString("en-US", {
         hour: "numeric", minute: "2-digit",
       });
-      const count = Array.isArray(run.results) ? run.results.length : (run.total_profiles || 0);
+      const msgs = Array.isArray(run.messages) ? run.messages : [];
+      const count = msgs.length || (run.total_profiles || 0);
       return `
         <div class="run-card" id="run-${run.id}">
-          <div class="run-card-head" onclick="toggleRun('${run.id}', ${JSON.stringify(run.results || []).replace(/"/g,'&quot;')})">
+          <div class="run-card-head" onclick="toggleRun('${run.id}', ${JSON.stringify(msgs).replace(/"/g,'&quot;')})">
             <span class="run-company">${escHtml(run.company || "Unknown")}</span>
             <span class="run-meta">${count} contact${count !== 1 ? "s" : ""} · ${date} at ${time}</span>
             <span class="run-chevron">▼</span>
