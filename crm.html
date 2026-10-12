@@ -49,16 +49,6 @@
       border-bottom: 1px solid var(--border);
       background: var(--surface);
     }
-    .nav-back {
-      text-decoration: none;
-      color: var(--muted);
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: color .2s;
-    }
-    .nav-back:hover { color: var(--text); }
     .nav-title {
       font-size: 16px;
       font-weight: 700;
@@ -337,11 +327,12 @@
 <body>
 
 <nav class="nav">
-  <a href="/" class="nav-back">← Pipeline</a>
+  <a href="/" class="nav-btn" style="text-decoration:none">🚀 Pipeline</a>
   <span class="nav-title grad-text">Outreach CRM</span>
   <a href="/dashboard" class="nav-btn" style="text-decoration:none">📊 Dashboard</a>
-  <button class="nav-btn active" id="btn-company" onclick="switchView('company')">By Company</button>
-  <button class="nav-btn"        id="btn-contact" onclick="switchView('contact')">By Contact</button>
+  <a href="/crm" class="nav-btn active" style="text-decoration:none">📋 CRM</a>
+  <button class="nav-btn" id="btn-company" onclick="switchView('company')">By Company</button>
+  <button class="nav-btn" id="btn-contact" onclick="switchView('contact')">By Contact</button>
 </nav>
 
 <div class="header">
