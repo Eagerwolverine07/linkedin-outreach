@@ -233,17 +233,30 @@
     .stat-val { font-size: 18px; font-weight: 700; color: var(--text); }
     .stat-lbl { font-size: 11px; color: var(--muted); font-weight: 500; }
 
-    /* outreach wordmark */
+    /* outreach wordmark — matches screenshot exactly */
     .wordmark {
-      font-size: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0px;
+      text-align: center;
+    }
+    .wordmark-line {
+      font-size: 26px;
       font-weight: 800;
-      line-height: 1;
-      background: linear-gradient(105deg, #f0a07a 0%, #e06090 40%, #9966e8 100%);
+      line-height: 1.15;
+      color: #12102a;
+      letter-spacing: -0.02em;
+    }
+    .wordmark-outreach {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      background: linear-gradient(100deg, #e8845a 0%, #cc5588 45%, #8844dd 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      letter-spacing: -0.02em;
-      margin-bottom: 2px;
     }
 
     /* workflow strip */
@@ -347,17 +360,21 @@
       </div>
 
       <!-- Outreach — LIVE (warm right side) -->
-      <a href="/outreach" class="module-card warm">
-        <div class="wordmark">Outreach</div>
-        <div class="module-desc">Paste LinkedIn URLs, get personalized connection messages, and track every conversation in one place.</div>
-        <div class="workflow">
+      <a href="/outreach" class="module-card warm" style="align-items:center; text-align:center;">
+        <div class="wordmark">
+          <span class="wordmark-line">LinkedIn</span>
+          <span class="wordmark-outreach">Outreach</span>
+          <span class="wordmark-line">Pipeline</span>
+        </div>
+        <div class="module-desc" style="text-align:center;">Paste profile URLs → get personalized connection messages</div>
+        <div class="workflow" style="justify-content:center; border-top:1px solid rgba(255,255,255,0.52); padding-top:14px; width:100%;">
           <span class="wf-step">LinkedIn URL</span>
           <span class="wf-arrow">→</span>
           <span class="wf-step">Message</span>
           <span class="wf-arrow">→</span>
           <span class="wf-step">Track</span>
         </div>
-        <span class="module-cta" style="margin-top:6px;">
+        <span class="module-cta" style="margin-top:2px; justify-content:center; width:100%;">
           Open
           <svg width="15" height="15" fill="none" viewBox="0 0 24 24">
             <path d="M5 12h14M13 6l6 6-6 6" stroke="#1a1035" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
