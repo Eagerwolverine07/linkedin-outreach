@@ -137,111 +137,92 @@
     /* ── view container ── */
     #view-container { padding: 0 32px 48px; }
 
-    /* ── flag colours ── */
-    .f-accepted  { color: #7b6ef6; }
-    .f-replied   { color: #c471ed; }
-    .f-warm_intro { color: #ffb347; }
-    .f-none      { color: #b0adc0; }
-
-    /* ── flag dots trigger ── */
-    .flag-dots {
-      display: flex;
+    /* ── status pill (cell trigger) ── */
+    .status-pill {
+      display: inline-flex;
       align-items: center;
       gap: 6px;
+      padding: 4px 10px 4px 7px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
       cursor: pointer;
-      padding: 4px 2px;
-      border-radius: 8px;
-      width: fit-content;
-    }
-    .flag-dots:hover { background: rgba(255,255,255,0.4); }
-    .flag-dot {
-      width: 11px; height: 11px;
-      border-radius: 50%;
+      white-space: nowrap;
       border: 1.5px solid;
-      transition: background .15s, transform .15s;
+      transition: opacity .15s;
+      user-select: none;
+    }
+    .status-pill:hover { opacity: 0.8; }
+    .status-pill .pill-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
       flex-shrink: 0;
     }
-    .flag-dot.dot-accepted  { border-color: #7b6ef6; }
-    .flag-dot.dot-replied   { border-color: #c471ed; }
-    .flag-dot.dot-warm_intro { border-color: #ffb347; }
-    .flag-dot.dot-accepted.on  { background: #7b6ef6; }
-    .flag-dot.dot-replied.on   { background: #c471ed; }
-    .flag-dot.dot-warm_intro.on { background: #ffb347; }
+    /* per-status pill colors */
+    .pill-sent      { color: #9090aa; border-color: rgba(144,144,170,0.35); background: rgba(144,144,170,0.08); }
+    .pill-sent      .pill-dot { background: #b0adc0; }
+    .pill-accepted  { color: #7b6ef6; border-color: rgba(123,110,246,0.35); background: rgba(123,110,246,0.08); }
+    .pill-accepted  .pill-dot { background: #7b6ef6; }
+    .pill-replied   { color: #c471ed; border-color: rgba(196,113,237,0.35); background: rgba(196,113,237,0.08); }
+    .pill-replied   .pill-dot { background: #c471ed; }
+    .pill-warm_intro { color: #d08800; border-color: rgba(255,179,71,0.4); background: rgba(255,179,71,0.1); }
+    .pill-warm_intro .pill-dot { background: #ffb347; }
 
-    /* ── flag dropdown ── */
-    .flag-wrap { position: relative; }
-    .flag-dropdown {
+    /* ── status dropdown ── */
+    .status-wrap { position: relative; width: fit-content; }
+    .status-dropdown {
       display: none;
       position: absolute;
       top: calc(100% + 6px);
       left: 0;
       z-index: 100;
-      background: rgba(253,240,224,0.96);
+      background: rgba(253,240,224,0.97);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.72);
       border-radius: 12px;
-      padding: 10px 12px;
+      padding: 6px;
       box-shadow: 0 8px 28px rgba(120,80,40,0.18);
-      min-width: 148px;
-      display: none;
+      min-width: 152px;
       flex-direction: column;
-      gap: 8px;
+      gap: 2px;
     }
-    .flag-dropdown.open { display: flex; }
-    .flag-dropdown-title {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .07em;
-      text-transform: uppercase;
-      color: var(--muted);
-      padding-bottom: 6px;
-      border-bottom: 1px solid rgba(255,255,255,0.55);
-      margin-bottom: 2px;
-    }
-    .flag-dropdown label {
+    .status-dropdown.open { display: flex; }
+    .status-option {
       display: flex;
       align-items: center;
       gap: 8px;
+      padding: 7px 10px;
+      border-radius: 8px;
       font-size: 12px;
       font-weight: 500;
       cursor: pointer;
       white-space: nowrap;
-      color: var(--text);
+      transition: background .12s;
     }
-    .flag-dropdown label .dot-preview {
-      width: 10px; height: 10px;
+    .status-option:hover { background: rgba(255,255,255,0.55); }
+    .status-option.selected { background: rgba(255,255,255,0.42); }
+    .status-option .opt-dot {
+      width: 8px; height: 8px;
       border-radius: 50%;
       flex-shrink: 0;
     }
-    .flag-dropdown input[type=checkbox] {
-      width: 13px; height: 13px;
-      flex-shrink: 0;
-      cursor: pointer;
+    .status-option.opt-sent    { color: #9090aa; }
+    .status-option.opt-sent    .opt-dot { background: #b0adc0; }
+    .status-option.opt-accepted  { color: #7b6ef6; }
+    .status-option.opt-accepted  .opt-dot { background: #7b6ef6; }
+    .status-option.opt-replied   { color: #c471ed; }
+    .status-option.opt-replied   .opt-dot { background: #c471ed; }
+    .status-option.opt-warm_intro { color: #d08800; }
+    .status-option.opt-warm_intro .opt-dot { background: #ffb347; }
+    /* sent is always checked, never clickable */
+    .status-option.opt-sent { cursor: default; opacity: 0.6; }
+    .status-option .opt-check {
       margin-left: auto;
+      font-size: 11px;
+      opacity: 0;
     }
-    .flag-dropdown input[type=checkbox].check-accepted  { accent-color: #7b6ef6; }
-    .flag-dropdown input[type=checkbox].check-replied   { accent-color: #c471ed; }
-    .flag-dropdown input[type=checkbox].check-warm_intro { accent-color: #ffb347; }
-    /* sent row — static, non-interactive */
-    .flag-sent-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--muted);
-      padding-bottom: 6px;
-      border-bottom: 1px solid rgba(255,255,255,0.55);
-      margin-bottom: 2px;
-    }
-    .flag-sent-row .dot-preview { background: #b0adc0; }
-    .flag-sent-row .sent-check {
-      width: 13px; height: 13px;
-      margin-left: auto;
-      opacity: 0.45;
-      pointer-events: none;
-    }
+    .status-option.selected .opt-check { opacity: 1; }
 
     /* ─── BY COMPANY view ─── */
     .company-grid {
@@ -531,6 +512,13 @@
   const FLAGS = ['accepted','replied','warm_intro'];
   const FLAG_LABELS = { accepted:'Accepted', replied:'Replied', warm_intro:'Warm Intro' };
 
+  // Status hierarchy: highest flag wins; "sent" is baseline
+  const STATUS_ORDER = ['warm_intro','replied','accepted'];
+  function topStatus(c) {
+    for (const f of STATUS_ORDER) { if (c[f]) return f; }
+    return 'sent';
+  }
+
   document.addEventListener('DOMContentLoaded', loadContacts);
 
   async function loadContacts() {
@@ -677,15 +665,21 @@
       const added    = new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
       const preview  = (c.message||'').substring(0,80)+((c.message||'').length>80?'…':'');
       const overdue  = c.follow_up_date && new Date(c.follow_up_date) < today;
-      const dots = FLAGS.map(f => `
-        <div class="flag-dot dot-${f}${c[f]?' on':''}"></div>`).join('');
-      const checkboxes = FLAGS.map(f => `
-        <label>
-          <div class="dot-preview" style="background:${f==='accepted'?'#7b6ef6':f==='replied'?'#c471ed':'#ffb347'}"></div>
-          ${FLAG_LABELS[f]}
-          <input type="checkbox" class="check-${f}" ${c[f]?'checked':''}
-            onchange="updateFlag(${c.id},'${f}',this.checked,this)">
-        </label>`).join('');
+      const status = topStatus(c);
+      const statusLabel = status === 'sent' ? 'Sent' : FLAG_LABELS[status];
+      const opts = [
+        { key:'sent',       label:'Sent',       dot:'#b0adc0' },
+        { key:'accepted',   label:'Accepted',   dot:'#7b6ef6' },
+        { key:'replied',    label:'Replied',    dot:'#c471ed' },
+        { key:'warm_intro', label:'Warm Intro', dot:'#ffb347' },
+      ];
+      const optHtml = opts.map(o => `
+        <div class="status-option opt-${o.key}${status===o.key?' selected':''}"
+          ${o.key==='sent' ? '' : `onclick="setStatus(${c.id},'${o.key}',event)"`}>
+          <div class="opt-dot" style="background:${o.dot}"></div>
+          ${o.label}
+          <span class="opt-check">✓</span>
+        </div>`).join('');
       return `
         <tr id="row-${c.id}">
           <td style="color:var(--muted);font-size:12px">${i+1}</td>
@@ -694,16 +688,11 @@
             <div class="co">${esc(c.company||'')}</div>
           </td>
           <td>
-            <div class="flag-wrap" id="fw-${c.id}">
-              <div class="flag-dots" onclick="toggleFlagDropdown(${c.id},event)">${dots}</div>
-              <div class="flag-dropdown" id="fd-${c.id}">
-                <div class="flag-sent-row">
-                  <div class="dot-preview" style="background:#b0adc0"></div>
-                  Sent
-                  <input type="checkbox" class="sent-check" checked disabled>
-                </div>
-                ${checkboxes}
+            <div class="status-wrap" id="sw-${c.id}">
+              <div class="status-pill pill-${status}" onclick="toggleStatusDropdown(${c.id},event)">
+                <div class="pill-dot"></div>${statusLabel}
               </div>
+              <div class="status-dropdown" id="sd-${c.id}">${optHtml}</div>
             </div>
           </td>
           <td>
@@ -757,29 +746,59 @@
     renderStats();
   }
 
-  function toggleFlagDropdown(id, e) {
+  function toggleStatusDropdown(id, e) {
     e.stopPropagation();
-    const fd = document.getElementById(`fd-${id}`);
-    const isOpen = fd.classList.contains('open');
-    // close all others first
-    document.querySelectorAll('.flag-dropdown.open').forEach(el => el.classList.remove('open'));
-    if (!isOpen) fd.classList.add('open');
+    const sd = document.getElementById(`sd-${id}`);
+    const isOpen = sd.classList.contains('open');
+    document.querySelectorAll('.status-dropdown.open').forEach(el => el.classList.remove('open'));
+    if (!isOpen) sd.classList.add('open');
   }
 
   document.addEventListener('click', () => {
-    document.querySelectorAll('.flag-dropdown.open').forEach(el => el.classList.remove('open'));
+    document.querySelectorAll('.status-dropdown.open').forEach(el => el.classList.remove('open'));
   });
 
-  async function updateFlag(id, flag, value, checkbox) {
+  async function setStatus(id, newStatus, e) {
+    e.stopPropagation();
     const c = ALL_CONTACTS.find(x => x.id===id);
     if (!c) return;
-    await patchContact(id, {[flag]: value});
-    c[flag] = value;
-    // update the dot in the trigger row
-    const wrap = document.getElementById(`fw-${id}`);
-    if (wrap) {
-      const dot = wrap.querySelector(`.dot-${flag}`);
-      if (dot) dot.classList.toggle('on', value);
+
+    // clicking the already-selected status resets to "sent"
+    const current = topStatus(c);
+    const target = current === newStatus ? null : newStatus;
+
+    // build patch: clear all flags, then set the right ones
+    const patch = { accepted: false, replied: false, warm_intro: false };
+    if (target === 'accepted')   patch.accepted = true;
+    if (target === 'replied')    { patch.accepted = true; patch.replied = true; }
+    if (target === 'warm_intro') { patch.accepted = true; patch.replied = true; patch.warm_intro = true; }
+
+    await patchContact(id, patch);
+    Object.assign(c, patch);
+
+    // re-render just this cell
+    const sw = document.getElementById(`sw-${id}`);
+    if (sw) {
+      const status = topStatus(c);
+      const statusLabel = status === 'sent' ? 'Sent' : FLAG_LABELS[status];
+      const opts = [
+        { key:'sent',       label:'Sent',       dot:'#b0adc0' },
+        { key:'accepted',   label:'Accepted',   dot:'#7b6ef6' },
+        { key:'replied',    label:'Replied',    dot:'#c471ed' },
+        { key:'warm_intro', label:'Warm Intro', dot:'#ffb347' },
+      ];
+      const optHtml = opts.map(o => `
+        <div class="status-option opt-${o.key}${status===o.key?' selected':''}"
+          ${o.key==='sent' ? '' : `onclick="setStatus(${id},'${o.key}',event)"`}>
+          <div class="opt-dot" style="background:${o.dot}"></div>
+          ${o.label}
+          <span class="opt-check">✓</span>
+        </div>`).join('');
+      sw.innerHTML = `
+        <div class="status-pill pill-${status}" onclick="toggleStatusDropdown(${id},event)">
+          <div class="pill-dot"></div>${statusLabel}
+        </div>
+        <div class="status-dropdown" id="sd-${id}">${optHtml}</div>`;
     }
     renderStats();
   }
