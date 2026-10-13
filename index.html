@@ -1071,7 +1071,8 @@
 
       const tr = document.createElement("tr");
       tr.className = "row-new";
-      tr.dataset.url = row.url;
+      tr.dataset.url     = row.url;
+      tr.dataset.message = row.message || "";
       tr.innerHTML = `
         <td class="td-sr">${row.sr}</td>
         <td class="td-name"><span class="name-text">${escHtml(row.name)}</span></td>
@@ -1095,17 +1096,18 @@
           </div>` : ""}
         </td>
         <td class="td-copy">
-          ${!isWarn ? `<button class="btn-copy" onclick="copyMessage(this, ${JSON.stringify(row.message)})">Copy</button>` : ""}
+          ${!isWarn ? `<button class="btn-copy" onclick="copyMessage(this)">Copy</button>` : ""}
         </td>
         <td style="width:44px;text-align:center;">
-          <button class="btn-trash" title="Remove contact" onclick="trashRow(this, ${JSON.stringify(row.url)})">🗑</button>
+          <button class="btn-trash" title="Remove contact" onclick="trashRow(this)">🗑</button>
         </td>
       `;
       tbody.appendChild(tr);
     }
 
-    async function trashRow(btn, url) {
+    async function trashRow(btn) {
       const tr = btn.closest("tr");
+      const url = tr.dataset.url;
       // Find the contact id by URL from the server
       try {
         const res = await fetch(`/contacts?limit=500`);
@@ -1154,7 +1156,10 @@
       try { document.execCommand("copy"); done(); } catch(e) {}
       document.body.removeChild(ta);
     }
-    function copyMessage(btn, message) { _doCopy(message, btn); }
+    function copyMessage(btn) {
+      const message = btn.closest("tr").dataset.message || "";
+      _doCopy(message, btn);
+    }
 
     function showError(msg) {
       const box = document.getElementById("error-box");
@@ -1221,12 +1226,12 @@
               ? `<a href="${escHtml(r.url)}" target="_blank">${escHtml(r.name || r.url)}</a>`
               : escHtml(r.name || "—");
             return `
-              <tr>
+              <tr data-message="${escHtml(r.message || "")}">
                 <td style="color:var(--text-muted);font-size:.78rem;width:32px">${i + 1}</td>
                 <td class="rct-name">${nameHtml}</td>
                 <td class="rct-msg">${escHtml(r.message || "")}</td>
                 <td style="white-space:nowrap">
-                  ${r.message ? `<button class="rct-copy" onclick="copyRct(this,${JSON.stringify(r.message)})">Copy</button>` : ""}
+                  ${r.message ? `<button class="rct-copy" onclick="copyRct(this)">Copy</button>` : ""}
                 </td>
               </tr>`;
           }).join("");
@@ -1241,7 +1246,10 @@
       }
     }
 
-    function copyRct(btn, msg) { _doCopy(msg, btn); }
+    function copyRct(btn) {
+      const msg = btn.closest("tr").dataset.message || "";
+      _doCopy(msg, btn);
+    }
 
     // Refresh history after a successful pipeline run
     const _origDone = window._pipelineDoneHook;
