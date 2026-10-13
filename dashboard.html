@@ -321,9 +321,9 @@
     FLAGS.forEach(f => byFlag[f] = contacts.filter(c => c[f]).length);
     byFlag.no_response = contacts.filter(c => !c.accepted && !c.replied && !c.warm_intro).length;
 
-    const acceptRate = total > 0 ? (byFlag.accepted / total * 100).toFixed(1) : 0;
-    const replyRate  = total > 0 ? (byFlag.replied   / total * 100).toFixed(1) : 0;
-    const callRate   = total > 0 ? (byFlag.warm_intro / total * 100).toFixed(1) : 0;
+    const acceptRate = total > 0             ? (byFlag.accepted   / total            * 100).toFixed(1) : 0;
+    const replyRate  = byFlag.accepted > 0   ? (byFlag.replied    / byFlag.accepted  * 100).toFixed(1) : 0;
+    const callRate   = byFlag.accepted > 0   ? (byFlag.warm_intro / byFlag.accepted  * 100).toFixed(1) : 0;
 
     const byCompany = {};
     for (const c of contacts) {
@@ -352,9 +352,9 @@
     document.getElementById('content').innerHTML = `
       <div class="kpi-row">
         <div class="kpi"><div class="kpi-label">Total Contacts</div><div class="kpi-val grad">${total}</div><div class="kpi-sub">${runCount} run${runCount !== 1 ? 's' : ''}</div></div>
-        <div class="kpi"><div class="kpi-label">Accepted</div><div class="kpi-val" style="color:#7b6ef6">${byFlag.accepted}</div><div class="kpi-sub">${acceptRate}% rate</div></div>
-        <div class="kpi"><div class="kpi-label">Replied</div><div class="kpi-val" style="color:#c471ed">${byFlag.replied}</div><div class="kpi-sub">${replyRate}% rate</div></div>
-        <div class="kpi"><div class="kpi-label">Warm Intro</div><div class="kpi-val" style="color:#ffb347">${byFlag.warm_intro}</div><div class="kpi-sub">${callRate}% rate</div></div>
+        <div class="kpi"><div class="kpi-label">Accepted</div><div class="kpi-val" style="color:#7b6ef6">${byFlag.accepted}</div><div class="kpi-sub">${acceptRate}% of sent</div></div>
+        <div class="kpi"><div class="kpi-label">Replied</div><div class="kpi-val" style="color:#c471ed">${byFlag.replied}</div><div class="kpi-sub">${replyRate}% of accepted</div></div>
+        <div class="kpi"><div class="kpi-label">Warm Intro</div><div class="kpi-val" style="color:#ffb347">${byFlag.warm_intro}</div><div class="kpi-sub">${callRate}% of accepted</div></div>
         <div class="kpi"><div class="kpi-label">No Response</div><div class="kpi-val" style="color:#555570">${byFlag.no_response}</div><div class="kpi-sub">${total > 0 ? (byFlag.no_response/total*100).toFixed(1) : 0}%</div></div>
       </div>
 
