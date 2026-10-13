@@ -914,8 +914,8 @@ async def _stream_pipeline(urls, company):
 
             # ── Wait between batches (skip after last) ──
             if batch_index < len(batches) - 1:
-                yield sse({"event": "status", "message": "Waiting 90 seconds before next batch..."})
-                await asyncio.sleep(90)
+                yield sse({"event": "status", "message": "Waiting 45 seconds before next batch..."})
+                await asyncio.sleep(45)
 
     total        = sr_no - 1
     personalized = sum(1 for r in _run_results if r.get("personalized") == "Yes")
