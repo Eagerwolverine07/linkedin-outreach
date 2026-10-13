@@ -335,17 +335,14 @@
     }
     const companiesSorted = Object.entries(byCompany).sort((a, b) => b[1].total - a[1].total);
 
-    const weekMap = {};
+    // Daily map: { "2026-10-12": count }
+    const dayMap = {};
     for (const c of contacts) {
-      const d = new Date(c.created_at);
-      const mon = new Date(d); mon.setDate(d.getDate() - d.getDay() + 1);
-      const key = mon.toISOString().slice(0, 10);
-      weekMap[key] = (weekMap[key] || 0) + 1;
+      const key = new Date(c.created_at).toISOString().slice(0, 10);
+      dayMap[key] = (dayMap[key] || 0) + 1;
     }
-    const weeks = Object.keys(weekMap).sort();
-    const weekLabels = weeks.map(w =>
-      new Date(w + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-    );
+    // All days sorted
+    const allDays = Object.keys(dayMap).sort();
 
     const runCount = Array.isArray(runs) ? runs.length : 0;
 
@@ -361,7 +358,14 @@
       <div class="charts-grid">
 
         <div class="chart-card span-2">
-          <h3>Outreach Volume by Week</h3>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+            <h3 style="margin-bottom:0">Daily Outreach Volume</h3>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button id="vol-prev" onclick="shiftWeek(-1)" style="border:1.5px solid var(--border);background:var(--card);border-radius:8px;padding:4px 10px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text)">←</button>
+              <span id="vol-label" style="font-size:12px;font-weight:600;color:var(--muted);min-width:140px;text-align:center"></span>
+              <button id="vol-next" onclick="shiftWeek(1)" style="border:1.5px solid var(--border);background:var(--card);border-radius:8px;padding:4px 10px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text)">→</button>
+            </div>
+          </div>
           <div class="chart-wrap" style="height:220px"><canvas id="chart-volume"></canvas></div>
         </div>
 
@@ -385,39 +389,86 @@
           </table>
         </div>
 
-        <div class="chart-card span-2">
-          <h3>Status Mix over Time</h3>
-          <div class="chart-wrap" style="height:240px"><canvas id="chart-stacked"></canvas></div>
-        </div>
 
       </div>
     `;
 
     document.getElementById('content').style.display = 'block';
 
-    // 1. Volume bar
-    new Chart(document.getElementById('chart-volume'), {
-      type: 'bar',
-      data: {
-        labels: weekLabels,
-        datasets: [{
-          label: 'Contacts',
-          data: weeks.map(w => weekMap[w]),
-          backgroundColor: 'rgba(123,110,246,0.55)',
-          borderColor: '#7b6ef6',
-          borderWidth: 1,
-          borderRadius: 5,
-        }],
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { grid: { color: 'rgba(0,0,0,0.06)' } },
-          y: { grid: { color: 'rgba(0,0,0,0.06)' }, beginAtZero: true, ticks: { precision: 0 } },
+    // 1. Daily line chart with week navigation
+    let volChart = null;
+    let volWeekOffset = 0; // 0 = current week, -1 = last week, etc.
+
+    function getWeekDays(offset) {
+      // Monday-based week containing today + offset weeks
+      const today = new Date();
+      const dow = today.getDay(); // 0=Sun
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1) + offset * 7);
+      monday.setHours(0, 0, 0, 0);
+      const days = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        days.push(d.toISOString().slice(0, 10));
+      }
+      return days;
+    }
+
+    function renderVolChart() {
+      const days = getWeekDays(volWeekOffset);
+      const labels = days.map(d => {
+        const dt = new Date(d + 'T00:00:00');
+        return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      });
+      const data = days.map(d => dayMap[d] || 0);
+
+      // Week label
+      const start = new Date(days[0] + 'T00:00:00');
+      const end   = new Date(days[6] + 'T00:00:00');
+      const fmt = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      document.getElementById('vol-label').textContent = `${fmt(start)} – ${fmt(end)}`;
+
+      // Disable next if already at current week
+      document.getElementById('vol-next').disabled = volWeekOffset >= 0;
+      document.getElementById('vol-next').style.opacity = volWeekOffset >= 0 ? '0.35' : '1';
+
+      if (volChart) volChart.destroy();
+      volChart = new Chart(document.getElementById('chart-volume'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Contacts',
+            data,
+            borderColor: '#7b6ef6',
+            backgroundColor: 'rgba(123,110,246,0.10)',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#7b6ef6',
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            tension: 0.35,
+            fill: true,
+          }],
         },
-      },
-    });
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: 'rgba(0,0,0,0.06)' } },
+            y: { grid: { color: 'rgba(0,0,0,0.06)' }, beginAtZero: true, ticks: { precision: 0 } },
+          },
+        },
+      });
+    }
+
+    window.shiftWeek = function(dir) {
+      if (dir === 1 && volWeekOffset >= 0) return;
+      volWeekOffset += dir;
+      renderVolChart();
+    };
+
+    renderVolChart();
 
     // 2. Funnel
     const funnelItems = [...FLAGS, 'no_response'];
@@ -465,28 +516,6 @@
         </td>
       </tr>`).join('');
 
-    // 5. Stacked over time (total contacts sent per week)
-    new Chart(document.getElementById('chart-stacked'), {
-      type: 'bar',
-      data: {
-        labels: weekLabels,
-        datasets: [{
-          label: 'Contacts Sent',
-          data: weeks.map(w => weekMap[w] || 0),
-          backgroundColor: '#7b6ef6',
-          borderWidth: 0,
-          borderRadius: 5,
-        }],
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'top', labels: { boxWidth: 10, padding: 14, font: { size: 12 } } } },
-        scales: {
-          x: { stacked: true, grid: { color: 'rgba(0,0,0,0.06)' } },
-          y: { stacked: true, grid: { color: 'rgba(0,0,0,0.06)' }, beginAtZero: true, ticks: { precision: 0 } },
-        },
-      },
-    });
   }
 
   function esc(s) {
