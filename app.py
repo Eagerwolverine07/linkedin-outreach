@@ -673,9 +673,9 @@ async def classify_priority(session, title: str, headline: str) -> str:
 # SECTION 5b: SUPABASE LOGGER
 # ─────────────────────────────────────────────
 
-async def log_run_to_supabase(run_data: dict):
+async def create_run_in_supabase(company: str) -> int | None:
     """
-    Inserts one run record into the Supabase 'runs' table.
+    Creates a run record immediately at pipeline start.
     Returns the new run id, or None on failure.
     """
     if not SUPABASE_URL or not SUPABASE_API_KEY:
@@ -691,19 +691,45 @@ async def log_run_to_supabase(run_data: dict):
     }
     try:
         async with aiohttp.ClientSession() as s:
-            async with s.post(url, headers=headers, json=run_data,
+            async with s.post(url, headers=headers,
+                              json={"company": company, "total": 0, "personalized": 0,
+                                    "not_at_company": 0, "not_found": 0, "avg_char_count": 0},
                               timeout=aiohttp.ClientTimeout(total=15)) as resp:
                 if resp.status in (200, 201):
                     data = await resp.json()
                     run_id = data[0]["id"] if data else None
-                    print(f"[Supabase] run logged OK id={run_id} company={run_data.get('company')}")
+                    print(f"[Supabase] run created id={run_id} company={company}")
                     return run_id
                 else:
                     body = await resp.text()
-                    print(f"[Supabase] run log failed status={resp.status} body={body[:300]}")
+                    print(f"[Supabase] run create failed status={resp.status} body={body[:300]}")
     except Exception as e:
-        print(f"[Supabase] run log exception: {e}")
+        print(f"[Supabase] run create exception: {e}")
     return None
+
+
+async def update_run_in_supabase(run_id: int, totals: dict):
+    """Updates the run record with final totals once the pipeline finishes."""
+    if not run_id or not SUPABASE_URL or not SUPABASE_API_KEY:
+        return
+    url = f"{SUPABASE_URL}/rest/v1/runs?id=eq.{run_id}"
+    headers = {
+        "apikey":        SUPABASE_API_KEY,
+        "Authorization": f"Bearer {SUPABASE_API_KEY}",
+        "Content-Type":  "application/json",
+        "Prefer":        "return=minimal",
+    }
+    try:
+        async with aiohttp.ClientSession() as s:
+            async with s.patch(url, headers=headers, json=totals,
+                               timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                if resp.status in (200, 204):
+                    print(f"[Supabase] run {run_id} totals updated")
+                else:
+                    body = await resp.text()
+                    print(f"[Supabase] run update failed status={resp.status} body={body[:300]}")
+    except Exception as e:
+        print(f"[Supabase] run update exception: {e}")
 
 
 async def log_contacts_to_supabase(run_id, company: str, results: list):
@@ -823,10 +849,14 @@ async def _stream_pipeline(urls, company):
 
     BATCH_SIZE   = 4
     batches      = [urls[i:i+BATCH_SIZE] for i in range(0, len(urls), BATCH_SIZE)]
-    sr_no        = 1
-    _run_results = []   # collect every result row for Supabase logging
+    sr_no           = 1
+    _run_results    = []   # collect every result row for Supabase logging
+    _logged_results = []   # track which results have already been saved to Supabase
 
     yield sse({"event": "status", "message": f"Starting pipeline for {len(urls)} profiles across {len(batches)} batch(es)..."})
+
+    # Create the run record immediately so contacts can be saved after each batch
+    run_id = await create_run_in_supabase(company)
 
     async with aiohttp.ClientSession() as session:
 
@@ -896,6 +926,12 @@ async def _stream_pipeline(urls, company):
                 yield sse(row)
                 sr_no += 1
 
+            # ── Save this batch's contacts to Supabase immediately ──
+            batch_results = [r for r in _run_results if r not in _logged_results]
+            if batch_results:
+                await log_contacts_to_supabase(run_id, company, batch_results)
+                _logged_results.extend(batch_results)
+
             # ── Wait between batches (skip after last) ──
             if batch_index < len(batches) - 1:
                 yield sse({"event": "status", "message": "Waiting 45 seconds before next batch..."})
@@ -908,19 +944,15 @@ async def _stream_pipeline(urls, company):
     char_counts  = [r["char_count"] for r in _run_results if r.get("char_count", 0) > 0]
     avg_chars    = int(sum(char_counts) / len(char_counts)) if char_counts else 0
 
-    async def _log_all():
-        run_id = await log_run_to_supabase({
-            "company":        company,
-            "total":          total,
-            "personalized":   personalized,
-            "not_at_company": not_at_co,
-            "not_found":      not_found,
-            "avg_char_count": avg_chars,
-            "messages":       _run_results,
-        })
-        await log_contacts_to_supabase(run_id, company, _run_results)
-
-    await _log_all()
+    # Update the run record with final totals
+    await update_run_in_supabase(run_id, {
+        "total":          total,
+        "personalized":   personalized,
+        "not_at_company": not_at_co,
+        "not_found":      not_found,
+        "avg_char_count": avg_chars,
+        "messages":       _run_results,
+    })
 
     yield sse({"event": "done", "total": total})
 
