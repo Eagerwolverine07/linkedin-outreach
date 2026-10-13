@@ -286,6 +286,24 @@
       transform: none;
     }
 
+    .btn-stop {
+      padding: 14px 20px;
+      border-radius: 12px;
+      border: 1.5px solid rgba(239,68,68,0.4);
+      background: rgba(239,68,68,0.07);
+      color: #ef4444;
+      font-family: var(--font);
+      font-size: 0.875rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s, border-color .15s;
+    }
+    .btn-stop:hover {
+      background: rgba(239,68,68,0.14);
+      border-color: #ef4444;
+    }
+
     /* progress fill overlay */
     .btn-generate .btn-progress {
       position: absolute;
@@ -786,10 +804,15 @@
         Duplicates removed automatically.
       </p>
 
-      <button class="btn-generate" id="generate-btn" onclick="runPipeline()">
-        <div class="btn-progress" id="btn-progress"></div>
-        <span class="btn-label" id="btn-label">Generate Messages</span>
-      </button>
+      <div style="display:flex;gap:10px;align-items:stretch">
+        <button class="btn-generate" id="generate-btn" onclick="runPipeline()" style="flex:1">
+          <div class="btn-progress" id="btn-progress"></div>
+          <span class="btn-label" id="btn-label">Generate Messages</span>
+        </button>
+        <button class="btn-stop" id="stop-btn" onclick="stopPipeline()" style="display:none">
+          ⏹ Stop
+        </button>
+      </div>
 
       <div class="status-ticker" id="status-ticker">
         <div class="ticker-dot"></div>
@@ -934,6 +957,14 @@
     /* ── Pipeline ── */
     let resultCount = 0;
     let totalUrls = 0;
+    let _activeReader = null;
+
+    function stopPipeline() {
+      if (_activeReader) {
+        _activeReader.cancel();
+        _activeReader = null;
+      }
+    }
 
     async function runPipeline() {
       const company  = document.getElementById("company-input").value.trim();
@@ -964,6 +995,7 @@
       btnLabel.textContent = `Scraping ${totalUrls} profile${totalUrls !== 1 ? "s" : ""}…`;
       btnProg.style.width = "0%";
       ticker.classList.add("visible");
+      document.getElementById("stop-btn").style.display = "block";
 
       try {
         const response = await fetch("/generate", {
@@ -975,6 +1007,7 @@
         if (!response.ok) throw new Error(`Server error ${response.status}`);
 
         const reader  = response.body.getReader();
+        _activeReader = reader;
         const decoder = new TextDecoder();
         let   buffer  = "";
 
@@ -1038,13 +1071,18 @@
           }
         }
       } catch (err) {
-        showError("Something went wrong: " + err.message);
+        if (err.name !== "AbortError" && !err.message?.includes("cancel")) {
+          showError("Something went wrong: " + err.message);
+        }
       } finally {
+        _activeReader = null;
         ticker.classList.remove("visible");
         btn.disabled = false;
+        document.getElementById("stop-btn").style.display = "none";
         if (btnLabel.textContent !== "Generate Messages" &&
             !btnLabel.textContent.startsWith("Done")) {
           btnLabel.textContent = "Generate Messages";
+          btnProg.style.width = "0%";
         }
       }
     }
