@@ -485,7 +485,7 @@ def company_match(profile, company_name):
 # ─────────────────────────────────────────────
 
 GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL = "llama3-70b-8192"
+GROQ_MODEL = "llama-3.3-70b-versatile"
 
 SYSTEM_PROMPT = """You write short LinkedIn connection request messages for Amber Sahu, a recent BU MS in Management graduate targeting sales roles at tech companies.
 
@@ -643,12 +643,15 @@ async def classify_priority(session, title: str, headline: str) -> str:
     try:
         async with session.post(GROQ_URL, headers=headers, json=payload,
                                 timeout=aiohttp.ClientTimeout(total=15)) as resp:
+            raw = await resp.text()
             if resp.status == 200:
-                data = await resp.json()
+                data = json.loads(raw)
                 msg_obj = data["choices"][0]["message"]
                 result = (msg_obj.get("content") or msg_obj.get("reasoning") or "medium").strip().lower()
                 if result in ("high", "medium", "low"):
                     return result
+            else:
+                print(f"[Priority] Groq error {resp.status}: {raw[:200]}")
     except Exception as e:
         print(f"[Priority] classify exception: {e}")
     return "medium"
