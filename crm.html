@@ -174,96 +174,6 @@
     .funnel-count  { font-size: 22px; font-weight: 700; }
     .funnel-label  { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); text-align:center; }
 
-    /* ─── Company drill-down panel ─── */
-    .drill-overlay {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(26,16,53,.35);
-      backdrop-filter: blur(2px);
-      z-index: 100;
-    }
-    .drill-overlay.open { display: flex; align-items: flex-start; justify-content: flex-end; }
-    .drill-panel {
-      width: min(560px, 95vw);
-      height: 100vh;
-      background: var(--surface);
-      border-left: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      transform: translateX(100%);
-      transition: transform .3s cubic-bezier(.4,0,.2,1);
-    }
-    .drill-overlay.open .drill-panel { transform: translateX(0); }
-    .drill-head {
-      padding: 22px 24px 18px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .drill-head h2 { font-size: 18px; font-weight: 700; flex: 1; }
-    .drill-close {
-      width: 32px; height: 32px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: transparent;
-      cursor: pointer;
-      font-size: 16px;
-      color: var(--muted);
-      display: flex; align-items: center; justify-content: center;
-      transition: all .2s;
-    }
-    .drill-close:hover { background: #fff0f0; border-color: #ff6b6b; color: #ff6b6b; }
-    .drill-body { overflow-y: auto; flex: 1; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
-    .drill-contact {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .drill-contact-head {
-      padding: 14px 16px 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border-bottom: 1px solid var(--border);
-    }
-    .drill-contact-head .dc-name { font-size: 14px; font-weight: 700; flex: 1; }
-    .drill-contact-head .dc-name a { color: var(--text); text-decoration: none; }
-    .drill-contact-head .dc-name a:hover { text-decoration: underline; }
-    .drill-flags { display: flex; gap: 6px; flex-wrap: wrap; }
-    .drill-flag-pill {
-      font-size: 10px; font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 999px;
-      border: 1px solid currentColor;
-      opacity: .85;
-    }
-    .drill-msg {
-      padding: 14px 16px;
-      font-size: 13px;
-      color: var(--text);
-      white-space: pre-wrap;
-      line-height: 1.6;
-    }
-    .drill-msg-empty { color: var(--muted); font-style: italic; }
-    .drill-copy-btn {
-      margin: 0 16px 14px;
-      padding: 8px 14px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--card);
-      font-family: var(--font);
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text);
-      cursor: pointer;
-      display: flex; align-items: center; gap: 6px;
-      transition: all .2s;
-      width: calc(100% - 32px);
-      justify-content: center;
-    }
-    .drill-copy-btn:hover { background: var(--grad); border-color: transparent; color: #fff; }
 
     /* ─── BY CONTACT view ─── */
     .contact-toolbar {
@@ -467,16 +377,6 @@
 
 <div id="toast"></div>
 
-<!-- Company drill-down panel -->
-<div class="drill-overlay" id="drill-overlay" onclick="closeDrill(event)">
-  <div class="drill-panel" id="drill-panel">
-    <div class="drill-head">
-      <h2 id="drill-title">Company</h2>
-      <button class="drill-close" onclick="closeDrillBtn()">✕</button>
-    </div>
-    <div class="drill-body" id="drill-body"></div>
-  </div>
-</div>
 
 <script>
   let ALL_CONTACTS  = [];
@@ -560,7 +460,7 @@
               <h3>${esc(company)}</h3>
               <div class="co-meta">${contacts.length} contact${contacts.length!==1?'s':''} · Last run ${ds}</div>
             </div>
-            <button class="co-expand-btn" title="View contacts" data-company="${esc(company)}" onclick="openDrill(this.dataset.company)">↗</button>
+            <button class="co-expand-btn" title="View contacts" data-company="${esc(company)}" onclick="drillToContacts(this.dataset.company)">↗</button>
           </div>
           <div class="funnel">${steps}</div>
         </div>`;
@@ -752,65 +652,10 @@
     return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  /* ── Company drill-down panel ── */
-  function openDrill(company) {
-    const contacts = ALL_CONTACTS.filter(c => (c.company||'Unknown') === company);
-    const FLAG_COLORS = { accepted:'#7b6ef6', replied:'#c471ed', warm_intro:'#ffb347' };
-
-    document.getElementById('drill-title').textContent = company;
-    document.getElementById('drill-body').innerHTML = contacts.map(c => {
-      const activeFlags = FLAGS.filter(f => c[f]);
-      const flagPills = activeFlags.length
-        ? activeFlags.map(f => `<span class="drill-flag-pill" style="color:${FLAG_COLORS[f]}">${FLAG_LABELS[f]}</span>`).join('')
-        : `<span class="drill-flag-pill" style="color:#b0adc0">No response</span>`;
-      const nameHtml = c.url
-        ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.name||c.url)}</a>`
-        : esc(c.name||'Unknown');
-      const msgHtml = c.message
-        ? `<div class="drill-msg">${esc(c.message)}</div>
-           <button class="drill-copy-btn" onclick="copyMsg(${c.id}, this)">
-             <span>📋</span> Copy message
-           </button>`
-        : `<div class="drill-msg drill-msg-empty">No message saved.</div>`;
-      return `
-        <div class="drill-contact">
-          <div class="drill-contact-head">
-            <div class="dc-name">${nameHtml}</div>
-            <div class="drill-flags">${flagPills}</div>
-          </div>
-          ${msgHtml}
-        </div>`;
-    }).join('');
-
-    const overlay = document.getElementById('drill-overlay');
-    overlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeDrillBtn() {
-    document.getElementById('drill-overlay').classList.remove('open');
-    document.body.style.overflow = '';
-  }
-  function closeDrill(e) {
-    if (e.target === document.getElementById('drill-overlay')) closeDrillBtn();
-  }
-
-  function copyMsg(id, btn) {
-    const c = ALL_CONTACTS.find(x => x.id === id);
-    if (!c?.message) return;
-    navigator.clipboard.writeText(c.message).then(() => {
-      const orig = btn.innerHTML;
-      btn.innerHTML = '<span>✓</span> Copied!';
-      btn.style.background = 'var(--grad)';
-      btn.style.color = '#fff';
-      btn.style.borderColor = 'transparent';
-      setTimeout(() => {
-        btn.innerHTML = orig;
-        btn.style.background = '';
-        btn.style.color = '';
-        btn.style.borderColor = '';
-      }, 1800);
-    });
+  /* ── Company arrow → switch to By Contact with filter pre-set ── */
+  function drillToContacts(company) {
+    _filterCompany = company;
+    switchView('contact');
   }
 </script>
 </body>
