@@ -143,19 +143,18 @@
       flex-shrink: 0;
       width: 30px; height: 30px;
       border-radius: 8px;
-      border: 1px solid var(--border);
+      border: none;
       background: transparent;
       color: var(--muted);
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      font-size: 14px;
+      font-size: 16px;
       transition: all .2s;
       text-decoration: none;
     }
     .co-expand-btn:hover {
-      background: var(--grad);
-      border-color: transparent;
-      color: #fff;
+      color: #7b6ef6;
+      transform: scale(1.2);
     }
 
     .funnel {
@@ -554,7 +553,6 @@
           <span class="funnel-count ${flagClasses[s]}">${counts[s]}</span>
           <span class="funnel-label">${flagLabels[s].replace(' ','<br>')}</span>
         </div>`).join('');
-      const coKey = esc(company);
       return `
         <div class="co-card">
           <div class="co-card-head">
@@ -562,7 +560,7 @@
               <h3>${esc(company)}</h3>
               <div class="co-meta">${contacts.length} contact${contacts.length!==1?'s':''} · Last run ${ds}</div>
             </div>
-            <button class="co-expand-btn" title="View contacts" onclick="openDrill(${JSON.stringify(company)})">↗</button>
+            <button class="co-expand-btn" title="View contacts" data-company="${esc(company)}" onclick="openDrill(this.dataset.company)">↗</button>
           </div>
           <div class="funnel">${steps}</div>
         </div>`;
