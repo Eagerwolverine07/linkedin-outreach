@@ -920,7 +920,7 @@ async def _stream_pipeline(urls, company):
         })
         await log_contacts_to_supabase(run_id, company, _run_results)
 
-    asyncio.create_task(_log_all())
+    await _log_all()
 
     yield sse({"event": "done", "total": total})
 
