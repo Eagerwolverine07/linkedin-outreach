@@ -15,7 +15,7 @@
       --grad-mid:   #c471ed;
       --grad-end:   #7b6ef6;
       --grad: linear-gradient(135deg, var(--grad-start), var(--grad-mid), var(--grad-end));
-      --bg: #fdf0c8;
+      --bg: #faeee4;
       --surface: rgba(255,255,255,0.55);
       --card: rgba(255,255,255,0.52);
       --border: rgba(255,255,255,0.6);
@@ -28,12 +28,12 @@
 
     body {
       font-family: "Plus Jakarta Sans", sans-serif;
-      background: #fdf0c8;
+      background: #faeee4;
       background-image:
-        radial-gradient(ellipse 90% 70% at 10% 0%, #ffe8a0 0%, transparent 55%),
-        radial-gradient(ellipse 70% 60% at 90% 5%, #ffd6a0 0%, transparent 50%),
-        radial-gradient(ellipse 60% 50% at 50% 100%, #e8d5f5 0%, transparent 55%),
-        radial-gradient(ellipse 40% 40% at 80% 80%, rgba(123,110,246,0.18) 0%, transparent 50%);
+        radial-gradient(ellipse 80% 60% at 0% 0%,   #fdf0e0 0%, transparent 60%),
+        radial-gradient(ellipse 70% 55% at 100% 0%, #f5c9a0 0%, transparent 55%),
+        radial-gradient(ellipse 55% 50% at 100% 100%, #d4607a33 0%, transparent 55%),
+        radial-gradient(ellipse 50% 45% at 0% 100%,  #8855bb22 0%, transparent 55%);
       background-attachment: fixed;
       min-height: 100vh;
       color: var(--text-primary);
@@ -63,7 +63,7 @@
       gap: 4px;
       padding: 5px;
       border-radius: 999px;
-      background: rgba(255,248,220,0.72);
+      background: rgba(253,240,224,0.78);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid rgba(255,255,255,0.65);
@@ -705,9 +705,9 @@
 <body>
   <nav class="nav">
     <div class="nav-capsule">
-      <a href="/" class="nav-pill active">🚀 Pipeline</a>
-      <a href="/dashboard" class="nav-pill">📊 Dashboard</a>
-      <a href="/crm" class="nav-pill">📋 CRM</a>
+      <a href="/" class="nav-pill active">Pipeline</a>
+      <a href="/dashboard" class="nav-pill">Dashboard</a>
+      <a href="/crm" class="nav-pill">CRM</a>
     </div>
   </nav>
 
