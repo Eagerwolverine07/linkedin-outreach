@@ -37,52 +37,63 @@
       background-attachment: fixed;
       min-height: 100vh;
       color: var(--text-primary);
-      padding: 56px 20px 80px;
+      padding: 0 0 80px;
     }
 
     .container {
       max-width: 820px;
       margin: 0 auto;
+      padding: 40px 20px 0;
     }
 
     /* ── Nav ── */
     .nav {
       display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-bottom: 24px;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      border-bottom: 1px solid rgba(255,255,255,0.45);
+      background: rgba(255,248,220,0.70);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.5), 0 2px 12px rgba(120,80,20,0.06);
     }
-    .nav-btn {
+    .nav-title {
+      font-size: 15px;
+      font-weight: 800;
+      flex: 1;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.01em;
+    }
+    .nav-pill {
+      text-decoration: none;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      border-radius: 12px;
-      border: 1.5px solid rgba(255,255,255,0.6);
-      background: rgba(255,255,255,0.45);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      color: var(--text-primary);
-      font-family: "Plus Jakarta Sans", sans-serif;
+      gap: 5px;
+      color: var(--text-secondary);
       font-size: 13px;
       font-weight: 600;
+      padding: 6px 13px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.55);
+      background: rgba(255,255,255,0.38);
+      transition: all .18s;
+      white-space: nowrap;
       cursor: pointer;
-      text-decoration: none;
-      transition: box-shadow .2s, border-color .2s, background .2s;
-      box-shadow: 0 2px 12px rgba(120,80,40,0.08);
+      font-family: "Plus Jakarta Sans", sans-serif;
     }
-    .nav-btn:hover {
-      border-color: #c471ed;
-      box-shadow: 0 4px 18px rgba(196,113,237,.18);
-    }
-    .nav-btn.grad-btn {
+    .nav-pill:hover { color: var(--text-primary); border-color: rgba(196,113,237,0.5); background: rgba(255,255,255,0.65); }
+    .nav-pill.active {
       background: var(--grad);
       border-color: transparent;
       color: #fff;
-    }
-    .nav-btn.grad-btn:hover {
-      opacity: .88;
-      box-shadow: 0 4px 18px rgba(196,113,237,.35);
+      box-shadow: 0 2px 10px rgba(196,113,237,0.30);
     }
 
     /* ── Header ── */
@@ -695,16 +706,14 @@
   </style>
 </head>
 <body>
-  <div class="container">
+  <nav class="nav">
+    <span class="nav-title">Outreach Pipeline</span>
+    <a href="/" class="nav-pill active">🚀 Pipeline</a>
+    <a href="/dashboard" class="nav-pill">📊 Dashboard</a>
+    <a href="/crm" class="nav-pill">📋 CRM</a>
+  </nav>
 
-    <nav class="nav" style="justify-content:space-between">
-      <span style="font-size:16px;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Outreach Pipeline</span>
-      <div style="display:flex;gap:10px">
-        <a href="/" class="nav-btn grad-btn">🚀 Pipeline</a>
-        <a href="/dashboard" class="nav-btn">📊 Dashboard</a>
-        <a href="/crm" class="nav-btn">📋 CRM</a>
-      </div>
-    </nav>
+  <div class="container">
 
     <header class="header">
       <h1>LinkedIn <span class="grad-word">Outreach</span> Pipeline</h1>

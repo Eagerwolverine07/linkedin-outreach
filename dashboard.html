@@ -47,44 +47,57 @@
     .nav {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 14px 28px;
-      border-bottom: 1px solid rgba(255,255,255,0.5);
-      background: rgba(255,248,220,0.65);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      gap: 8px;
+      padding: 12px 28px;
+      border-bottom: 1px solid rgba(255,255,255,0.45);
+      background: rgba(255,248,220,0.70);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
       position: sticky;
       top: 0;
       z-index: 10;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.5), 0 2px 12px rgba(120,80,20,0.06);
     }
     .nav-title {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 800;
       flex: 1;
       background: var(--grad);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      letter-spacing: -0.01em;
     }
-    .nav-link {
+    .nav-pill {
       text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
       color: var(--muted);
       font-size: 13px;
       font-weight: 600;
-      padding: 6px 14px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.6);
-      background: rgba(255,255,255,0.4);
-      backdrop-filter: blur(8px);
-      transition: all .2s;
+      padding: 6px 13px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.55);
+      background: rgba(255,255,255,0.38);
+      transition: all .18s;
       white-space: nowrap;
+      cursor: pointer;
+      font-family: var(--font);
     }
-    .nav-link:hover { color: var(--text); border-color: #c471ed; background: rgba(255,255,255,0.7); }
-    .nav-link.active {
+    .nav-pill:hover { color: var(--text); border-color: rgba(196,113,237,0.5); background: rgba(255,255,255,0.65); }
+    .nav-pill.active {
       background: var(--grad);
       border-color: transparent;
       color: #fff;
       -webkit-text-fill-color: #fff;
+      box-shadow: 0 2px 10px rgba(196,113,237,0.30);
+    }
+    .nav-divider {
+      width: 1px; height: 18px;
+      background: rgba(150,120,60,0.2);
+      margin: 0 4px;
+      flex-shrink: 0;
     }
 
     /* ── page ── */
@@ -283,10 +296,10 @@
 <body>
 
 <nav class="nav">
-  <span class="nav-title grad-text">Outreach Analytics</span>
-  <a href="/" class="nav-link">🚀 Pipeline</a>
-  <a href="/dashboard" class="nav-link active">📊 Dashboard</a>
-  <a href="/crm" class="nav-link">📋 CRM</a>
+  <span class="nav-title">Outreach Analytics</span>
+  <a href="/" class="nav-pill">🚀 Pipeline</a>
+  <a href="/dashboard" class="nav-pill active">📊 Dashboard</a>
+  <a href="/crm" class="nav-pill">📋 CRM</a>
 </nav>
 
 <div class="page" id="page">
