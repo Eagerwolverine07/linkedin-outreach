@@ -567,6 +567,45 @@ async def generate_message(session, profile, company_name):
     return f"Hey {first_name}, [message generation failed — retry]"
 
 
+PRIORITY_SYSTEM = """You classify LinkedIn profiles into sales outreach priority tiers.
+Output exactly one word: high, medium, or low.
+
+HIGH: Account Executives (AE), Sales Development Reps (SDR/BDR), Sales Managers, VP/Director of Sales, Revenue/GTM roles that own quota or pipeline, Enterprise Sales, Regional Sales Manager, Inside Sales.
+MEDIUM: Technical Account Managers (TAM), Customer Success Managers (CSM), Solutions Engineers, Sales Ops, Partnerships, Business Development (non-SDR), Enablement.
+LOW: Engineering, Product, Marketing, Finance, HR, Legal, Data Science, operations roles with no direct sales involvement, C-suite at small companies where sales title is unclear.
+
+Output only: high, medium, or low"""
+
+
+async def classify_priority(session, title: str, headline: str) -> str:
+    """Classify a contact's sales priority using Groq. Returns 'high', 'medium', or 'low'."""
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type":  "application/json",
+    }
+    payload = {
+        "model":    GROQ_MODEL,
+        "messages": [
+            {"role": "system", "content": PRIORITY_SYSTEM},
+            {"role": "user",   "content": f"Title: {title}\nHeadline: {headline}"},
+        ],
+        "temperature": 0,
+        "max_tokens":  5,
+    }
+    try:
+        async with session.post(GROQ_URL, headers=headers, json=payload,
+                                timeout=aiohttp.ClientTimeout(total=15)) as resp:
+            if resp.status == 200:
+                data = await resp.json()
+                msg_obj = data["choices"][0]["message"]
+                result = (msg_obj.get("content") or msg_obj.get("reasoning") or "medium").strip().lower()
+                if result in ("high", "medium", "low"):
+                    return result
+    except Exception as e:
+        print(f"[Priority] classify exception: {e}")
+    return "medium"
+
+
 # ─────────────────────────────────────────────
 # SECTION 5b: SUPABASE LOGGER
 # ─────────────────────────────────────────────
@@ -634,11 +673,12 @@ async def log_contacts_to_supabase(run_id, company: str, results: list):
             initial_status = "sent"
 
         rows.append({
-            "run_id":  run_id,          # FK to runs table (nullable)
-            "company": company,
-            "name":    r.get("name", ""),
-            "url":     r.get("url", ""),
-            "message": msg,
+            "run_id":   run_id,          # FK to runs table (nullable)
+            "company":  company,
+            "name":     r.get("name", ""),
+            "url":      r.get("url", ""),
+            "message":  msg,
+            "priority": r.get("priority", "medium"),
         })
 
     if not rows:
@@ -771,6 +811,7 @@ async def _stream_pipeline(urls, company):
                         "url":          url,
                         "message":      f"⚠️ No longer at {company} (per LinkedIn)",
                         "char_count":   0,
+                        "priority":     "low",
                     }
                     _run_results.append(row)
                     yield sse(row)
@@ -785,9 +826,21 @@ async def _stream_pipeline(urls, company):
                 if profile:
                     name         = f"{profile.get('first_name','')} {profile.get('last_name','')}".strip() or name_label
                     personalized = "Yes"
+                    title        = ""
+                    headline     = profile.get("headline", "")
+                    for exp in profile.get("experiences", []):
+                        if company_match({"experiences": [exp]}, company):
+                            title = exp.get("title", "")
+                            break
+                    if not title and profile.get("experiences"):
+                        title = profile["experiences"][0].get("title", "")
                 else:
                     name         = name_label
                     personalized = "No"
+                    title        = ""
+                    headline     = ""
+
+                priority = await classify_priority(session, title, headline)
 
                 row = {
                     "event":        "result",
@@ -797,6 +850,7 @@ async def _stream_pipeline(urls, company):
                     "url":          url,          # always the original URL, never reconstructed
                     "message":      message,
                     "char_count":   len(message),
+                    "priority":     priority,
                 }
                 _run_results.append(row)
                 yield sse(row)
@@ -868,7 +922,7 @@ async def get_contacts(company: str = None, limit: int = 200):
     if not SUPABASE_URL or not SUPABASE_API_KEY:
         return {"error": "Supabase not configured"}
 
-    filters = ["order=created_at.desc", f"limit={limit}"]
+    filters = ["order=created_at.desc", f"limit={limit}", "deleted=eq.false"]
     if company:
         filters.append(f"company=eq.{company}")
 
@@ -896,7 +950,7 @@ async def update_contact(contact_id: int, request: Request):
         return {"error": "Supabase not configured"}
 
     body = await request.json()
-    allowed = {"accepted", "replied", "warm_intro", "notes", "follow_up_date"}
+    allowed = {"accepted", "replied", "warm_intro", "notes", "follow_up_date", "priority", "deleted"}
     patch   = {k: v for k, v in body.items() if k in allowed}
     if not patch:
         return {"error": "No valid fields to update"}
