@@ -505,7 +505,7 @@
     }).join('');
 
     // 3. Donut — rich version with center stat + custom legend
-    const funnelItems = [...FLAGS, 'no_response'];
+    const funnelItems = [...FLAGS];
     const donutCard = document.getElementById('chart-donut').closest('.chart-card');
     donutCard.style.position = 'relative';
     const donutCenter  = document.getElementById('donut-center');
