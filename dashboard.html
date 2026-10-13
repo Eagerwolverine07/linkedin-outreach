@@ -470,18 +470,25 @@
 
     renderVolChart();
 
-    // 2. Funnel
+    // 2. Funnel — each stage uses the correct denominator
+    const funnelDenom = {
+      accepted:   { denom: total,            label: '% of sent' },
+      replied:    { denom: byFlag.accepted,  label: '% of accepted' },
+      warm_intro: { denom: byFlag.accepted,  label: '% of accepted' },
+      no_response:{ denom: total,            label: '% of sent' },
+    };
     const funnelItems = [...FLAGS, 'no_response'];
     document.getElementById('funnel-bars').innerHTML = funnelItems.map(key => {
       const n = byFlag[key] || 0;
-      const pct = total > 0 ? (n / total * 100).toFixed(0) : 0;
-      const w   = total > 0 ? Math.max(2, n / total * 100) : 0;
+      const { denom, label } = funnelDenom[key];
+      const pct = denom > 0 ? (n / denom * 100).toFixed(0) : 0;
+      const w   = denom > 0 ? Math.max(2, n / denom * 100) : 0;
       return `
         <div class="f-row">
           <span class="f-label">${FLAG_LABELS[key]}</span>
           <div class="f-track"><div class="f-fill" style="width:${w}%;background:${FLAG_COLORS[key]}"></div></div>
           <span class="f-count" style="color:${FLAG_COLORS[key]}">${n}</span>
-          <span class="f-pct">${pct}%</span>
+          <span class="f-pct">${pct}% <span style="font-size:10px;color:var(--muted)">${label}</span></span>
         </div>`;
     }).join('');
 
