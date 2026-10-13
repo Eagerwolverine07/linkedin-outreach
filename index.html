@@ -87,9 +87,14 @@
     }
     .nav-pill:hover { color: var(--text-primary); background: rgba(255,255,255,0.5); }
     .nav-pill.active {
-      background: rgba(80,50,20,0.13);
+      background: transparent;
       color: var(--text-primary);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08) inset;
+      border: 1.5px solid transparent;
+      background-image: linear-gradient(rgba(253,240,224,0.0), rgba(253,240,224,0.0)),
+                        var(--grad);
+      background-origin: border-box;
+      background-clip: padding-box, border-box;
+      box-shadow: 0 1px 6px rgba(196,113,237,0.18);
     }
 
     /* ── Header ── */

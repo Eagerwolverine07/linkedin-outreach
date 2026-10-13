@@ -88,10 +88,15 @@
     }
     .nav-btn:hover, .nav-pill:hover { color: var(--text); background: rgba(255,255,255,0.5); }
     .nav-btn.active, .nav-pill.active {
-      background: rgba(80,50,20,0.13);
+      background: transparent;
       color: var(--text);
       -webkit-text-fill-color: var(--text);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08) inset;
+      border: 1.5px solid transparent;
+      background-image: linear-gradient(rgba(253,240,224,0.0), rgba(253,240,224,0.0)),
+                        var(--grad);
+      background-origin: border-box;
+      background-clip: padding-box, border-box;
+      box-shadow: 0 1px 6px rgba(196,113,237,0.18);
     }
     .nav-divider {
       width: 1px; height: 18px;
@@ -236,14 +241,19 @@
     .csv-btn {
       margin-left: auto;
       padding: 7px 16px;
-      background: var(--grad);
-      border: none;
+      background: rgba(255,255,255,0.38);
+      border: 1px solid rgba(255,255,255,0.55);
       border-radius: 8px;
-      color: #fff;
+      color: var(--muted);
       font-family: var(--font);
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
+      transition: background .18s, color .18s;
+    }
+    .csv-btn:hover {
+      background: rgba(255,255,255,0.58);
+      color: var(--text);
     }
 
     .table-wrap {
@@ -307,6 +317,7 @@
       max-width: 340px;
       white-space: pre-wrap;
       line-height: 1.5;
+      cursor: pointer;
     }
     .msg-expanded .msg-preview { display: none; }
     .msg-expanded .msg-full    { display: block; }
@@ -589,7 +600,7 @@
           <td><div class="flag-checks">${flagChecks}</div></td>
           <td>
             <div class="msg-preview" onclick="toggleMsg(this)">${esc(preview)}</div>
-            <div class="msg-full">${esc(c.message||'')}</div>
+            <div class="msg-full" onclick="toggleMsg(this)">${esc(c.message||'')}</div>
           </td>
           <td class="notes-cell">
             <div class="notes-view" onclick="startEditNotes(${c.id})" id="nv-${c.id}">${esc(c.notes||'')}</div>
@@ -607,7 +618,10 @@
     }).join('');
   }
 
-  function toggleMsg(el) { el.parentElement.classList.toggle('msg-expanded'); }
+  function toggleMsg(el) {
+    // el is either .msg-preview or .msg-full — both are direct children of the td
+    el.parentElement.classList.toggle('msg-expanded');
+  }
 
   function startEditNotes(id) {
     document.getElementById(`nv-${id}`).style.display = 'none';
