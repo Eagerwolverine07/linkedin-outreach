@@ -43,6 +43,11 @@ app = FastAPI()
 # ─────────────────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
+async def home():
+    with open("home.html", "r") as f:
+        return HTMLResponse(content=f.read())
+
+@app.get("/outreach", response_class=HTMLResponse)
 async def index():
     with open("index.html", "r") as f:
         return HTMLResponse(content=f.read())
