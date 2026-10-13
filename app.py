@@ -536,6 +536,8 @@ For company-angle openers (no profile data): write 1–2 sentences about the com
 End with the exact phrase: "Open to a quick chat?"
 Middle section must say exactly: "I'm a recent BU MS grad targeting sales roles at [company] and would love 15 min to hear your take."
 
+COMPANY NAME: Use the company name exactly as provided — same capitalization, same spelling. Do not alter it.
+
 OUTPUT: Return ONLY the final message text. No explanation, no quotes around it, no label."""
 
 
