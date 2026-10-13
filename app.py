@@ -619,8 +619,8 @@ PRIORITY_SYSTEM = """You classify LinkedIn profiles into sales outreach priority
 Output exactly one word: high, medium, or low.
 
 HIGH: Account Executives (AE), Sales Development Reps (SDR/BDR), Sales Managers, VP/Director of Sales, Revenue/GTM roles that own quota or pipeline, Enterprise Sales, Regional Sales Manager, Inside Sales.
-MEDIUM: Technical Account Managers (TAM), Customer Success Managers (CSM), Solutions Engineers, Sales Ops, Partnerships, Business Development (non-SDR), Enablement.
-LOW: Engineering, Product, Marketing, Finance, HR, Legal, Data Science, operations roles with no direct sales involvement, C-suite at small companies where sales title is unclear.
+MEDIUM: Customer Success Managers (CSM), Sales Ops, Partnerships, Business Development (non-SDR), Enablement.
+LOW: Technical Account Managers (TAM), Solutions Engineers, Sales Engineers, Engineering, Product, Marketing, Finance, HR, Legal, Data Science, operations roles with no direct sales involvement, C-suite at small companies where sales title is unclear.
 
 Output only: high, medium, or low"""
 
