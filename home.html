@@ -8,39 +8,91 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --card:    rgba(255,255,255,0.52);
-      --border:  rgba(255,255,255,0.6);
-      --text:    #1a1035;
-      --muted:   #9090aa;
-      --radius:  16px;
-      --font:    'Plus Jakarta Sans', sans-serif;
-      --glass-shadow: 0 8px 32px rgba(120,80,40,0.10), 0 1.5px 0 rgba(255,255,255,0.7) inset;
-      --glass-blur:   blur(18px);
+      --font: 'Plus Jakarta Sans', sans-serif;
+      --text: #1a1035;
+      --muted: #7a7a99;
+      --glass-blur: blur(18px);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: var(--font);
+      color: var(--text);
+      min-height: 100vh;
+      overflow: hidden; /* full-screen split, no scroll */
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ══════════════════════════════════════════
+       SPLIT BACKGROUND
+       Left half  = warm  (outreach palette)
+       Right half = cool  (tracker palette)
+       Diagonal seam runs top-right → bottom-left
+    ══════════════════════════════════════════ */
+    .bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+
+    /* warm left panel */
+    .bg-left {
+      position: absolute;
+      inset: 0;
       background: #f5e6d8;
       background-image:
-        radial-gradient(ellipse 70% 55% at 100% 0%, #f0b488 0%, transparent 50%),
-        radial-gradient(ellipse 55% 50% at 100% 100%, #c94f72 0%, transparent 50%),
-        radial-gradient(ellipse 50% 45% at 0% 100%,  #7744aa 0%, transparent 50%);
-      background-attachment: fixed;
-      color: var(--text);
+        radial-gradient(ellipse 80% 70% at 0% 0%,   #f9d4b0 0%, transparent 55%),
+        radial-gradient(ellipse 65% 60% at 0% 100%,  #7744aa 0%, transparent 55%),
+        radial-gradient(ellipse 55% 50% at 50% 100%, #c94f72 0%, transparent 50%);
+      /* clip to left of diagonal: top-left → bottom of diagonal, across to bottom-right corner bottom-left */
+      clip-path: polygon(0 0, 56% 0, 44% 100%, 0 100%);
+    }
+
+    /* cool right panel */
+    .bg-right {
+      position: absolute;
+      inset: 0;
+      background: #d8e8f5;
+      background-image:
+        radial-gradient(ellipse 80% 70% at 100% 0%,   #a8d0f0 0%, transparent 55%),
+        radial-gradient(ellipse 65% 60% at 100% 100%,  #2255aa 0%, transparent 55%),
+        radial-gradient(ellipse 55% 50% at 50% 0%,    #44aacc 0%, transparent 50%);
+      clip-path: polygon(56% 0, 100% 0, 100% 100%, 44% 100%);
+    }
+
+    /* blended seam overlay — sits between the two halves, feathers the edge */
+    .bg-seam {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        105deg,
+        transparent 38%,
+        rgba(255,255,255,0.38) 47%,
+        rgba(255,255,255,0.38) 53%,
+        transparent 62%
+      );
+      pointer-events: none;
+    }
+
+    /* ── layout ── */
+    .page {
+      position: relative;
+      z-index: 1;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 40px 20px;
+      gap: 0;
     }
 
-    /* ── hero text ── */
+    /* ── hero ── */
     .hero {
       text-align: center;
-      margin-bottom: 52px;
+      margin-bottom: 48px;
     }
     .hero-label {
       font-size: 11px;
@@ -51,10 +103,11 @@
       margin-bottom: 14px;
     }
     .hero-title {
-      font-size: 42px;
+      font-size: 44px;
       font-weight: 800;
-      line-height: 1.1;
-      background: linear-gradient(135deg, #1a1035 0%, #7744aa 60%, #c94f72 100%);
+      line-height: 1.08;
+      /* gradient that spans warm → cool, mirroring the split */
+      background: linear-gradient(105deg, #7744aa 0%, #1a1035 40%, #2255aa 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -64,72 +117,82 @@
       font-size: 15px;
       color: var(--muted);
       font-weight: 400;
-      max-width: 380px;
+      max-width: 360px;
       margin: 0 auto;
       line-height: 1.6;
     }
 
-    /* ── module cards ── */
+    /* ── cards row ── */
     .modules {
       display: flex;
-      gap: 20px;
+      gap: 24px;
       align-items: stretch;
       flex-wrap: wrap;
       justify-content: center;
-      max-width: 800px;
       width: 100%;
+      max-width: 740px;
     }
 
     .module-card {
-      background: var(--card);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      border: 1px solid var(--border);
-      box-shadow: var(--glass-shadow);
       border-radius: 24px;
-      padding: 32px 28px 28px;
-      width: 320px;
+      padding: 30px 26px 26px;
+      width: 310px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
       position: relative;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: transform 0.22s ease, box-shadow 0.22s ease;
       text-decoration: none;
       color: inherit;
     }
-    .module-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 16px 48px rgba(120,80,40,0.16), 0 1.5px 0 rgba(255,255,255,0.7) inset;
+
+    /* warm card — left */
+    .module-card.warm {
+      background: rgba(255, 245, 235, 0.58);
+      border: 1px solid rgba(255,255,255,0.68);
+      box-shadow: 0 8px 32px rgba(120,60,20,0.12), 0 1.5px 0 rgba(255,255,255,0.75) inset;
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
     }
-    .module-card.disabled {
-      opacity: 0.6;
+    .module-card.warm:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 18px 48px rgba(120,60,20,0.18), 0 1.5px 0 rgba(255,255,255,0.75) inset;
+    }
+
+    /* cool card — right */
+    .module-card.cool {
+      background: rgba(230, 242, 255, 0.55);
+      border: 1px solid rgba(255,255,255,0.65);
+      box-shadow: 0 8px 32px rgba(20,60,120,0.12), 0 1.5px 0 rgba(255,255,255,0.72) inset;
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      opacity: 0.72;
       cursor: default;
       pointer-events: none;
     }
 
     .module-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 14px;
+      width: 46px;
+      height: 46px;
+      border-radius: 13px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
       flex-shrink: 0;
     }
-    .module-icon.purple {
+    .module-icon.warm-icon {
       background: linear-gradient(135deg, #c471ed 0%, #7b6ef6 100%);
-      box-shadow: 0 4px 16px rgba(123,110,246,0.35);
+      box-shadow: 0 4px 14px rgba(123,110,246,0.38);
     }
-    .module-icon.coral {
-      background: linear-gradient(135deg, #f0b488 0%, #c94f72 100%);
-      box-shadow: 0 4px 16px rgba(201,79,114,0.30);
+    .module-icon.cool-icon {
+      background: linear-gradient(135deg, #5ab0e8 0%, #2255aa 100%);
+      box-shadow: 0 4px 14px rgba(34,85,170,0.30);
     }
 
     .module-badge {
       position: absolute;
-      top: 20px;
-      right: 20px;
+      top: 18px;
+      right: 18px;
       font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.08em;
@@ -137,19 +200,19 @@
       padding: 3px 9px;
       border-radius: 999px;
     }
-    .module-badge.live {
-      background: rgba(100,200,120,0.18);
-      color: #2e7d32;
-      border: 1px solid rgba(100,200,120,0.35);
+    .badge-live {
+      background: rgba(80,190,100,0.15);
+      color: #1e6e35;
+      border: 1px solid rgba(80,190,100,0.32);
     }
-    .module-badge.soon {
-      background: rgba(120,80,40,0.10);
-      color: var(--muted);
-      border: 1px solid rgba(120,80,40,0.15);
+    .badge-soon {
+      background: rgba(34,85,170,0.10);
+      color: #2255aa;
+      border: 1px solid rgba(34,85,170,0.20);
     }
 
     .module-name {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 700;
       color: var(--text);
       line-height: 1.2;
@@ -163,25 +226,13 @@
 
     .module-stats {
       display: flex;
-      gap: 16px;
+      gap: 18px;
       padding-top: 14px;
-      border-top: 1px solid rgba(255,255,255,0.5);
+      border-top: 1px solid rgba(255,255,255,0.52);
     }
-    .stat {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .stat-val {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .stat-lbl {
-      font-size: 11px;
-      color: var(--muted);
-      font-weight: 500;
-    }
+    .stat { display: flex; flex-direction: column; gap: 2px; }
+    .stat-val { font-size: 18px; font-weight: 700; color: var(--text); }
+    .stat-lbl { font-size: 11px; color: var(--muted); font-weight: 500; }
 
     .module-cta {
       display: inline-flex;
@@ -190,39 +241,35 @@
       font-size: 13px;
       font-weight: 600;
       color: var(--text);
-      margin-top: 4px;
+      margin-top: 2px;
     }
-    .module-cta svg {
-      transition: transform 0.2s;
-    }
-    .module-card:hover .module-cta svg {
-      transform: translateX(3px);
-    }
+    .module-cta svg { transition: transform 0.2s; }
+    .module-card:hover .module-cta svg { transform: translateX(3px); }
 
-    /* ── coming soon overlay ── */
-    .soon-overlay {
+    .soon-block {
+      padding-top: 14px;
+      border-top: 1px solid rgba(255,255,255,0.45);
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 20px 0 4px;
+      gap: 5px;
     }
-    .soon-overlay .soon-text {
-      font-size: 13px;
+    .soon-label {
+      font-size: 12px;
       font-weight: 600;
-      color: var(--muted);
+      color: #2255aa;
+      opacity: 0.7;
     }
-    .soon-overlay .soon-hint {
+    .soon-hint {
       font-size: 11px;
-      color: rgba(144,144,170,0.7);
+      color: var(--muted);
+      opacity: 0.8;
     }
 
     /* ── footer ── */
     .footer {
-      margin-top: 48px;
+      margin-top: 44px;
       font-size: 11px;
-      color: rgba(144,144,170,0.6);
+      color: rgba(100,100,140,0.5);
       text-align: center;
       letter-spacing: 0.04em;
     }
@@ -230,92 +277,96 @@
 </head>
 <body>
 
-  <div class="hero">
-    <p class="hero-label">Amber Sahu · Job Search OS</p>
-    <h1 class="hero-title">Your search,<br>in one place.</h1>
-    <p class="hero-sub">Track outreach, manage applications, and stay on top of every opportunity.</p>
+  <!-- split background -->
+  <div class="bg">
+    <div class="bg-left"></div>
+    <div class="bg-right"></div>
+    <div class="bg-seam"></div>
   </div>
 
-  <div class="modules">
+  <div class="page">
 
-    <!-- Outreach Pipeline — LIVE -->
-    <a href="/outreach" class="module-card">
-      <span class="module-badge live">Live</span>
-      <div class="module-icon purple">
-        <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-          <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <div>
-        <div class="module-name">Outreach Pipeline</div>
-        <div class="module-desc">Send LinkedIn connection requests, track replies, schedule follow-ups, and move contacts through your funnel.</div>
-      </div>
-      <div class="module-stats" id="outreach-stats">
-        <div class="stat">
-          <span class="stat-val" id="stat-sent">—</span>
-          <span class="stat-lbl">Sent</span>
-        </div>
-        <div class="stat">
-          <span class="stat-val" id="stat-accepted">—</span>
-          <span class="stat-lbl">Accepted</span>
-        </div>
-        <div class="stat">
-          <span class="stat-val" id="stat-calls">—</span>
-          <span class="stat-lbl">Calls booked</span>
-        </div>
-      </div>
-      <span class="module-cta">
-        Open pipeline
-        <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
-          <path d="M5 12h14M13 6l6 6-6 6" stroke="#1a1035" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </span>
-    </a>
-
-    <!-- Application Tracker — Coming Soon -->
-    <div class="module-card disabled">
-      <span class="module-badge soon">Coming soon</span>
-      <div class="module-icon coral">
-        <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <div>
-        <div class="module-name">Application Tracker</div>
-        <div class="module-desc">Log job applications, track status from applied to offer, and match each role to your resume and story bank.</div>
-      </div>
-      <div class="soon-overlay">
-        <span class="soon-text">In the works</span>
-        <span class="soon-hint">Resume tailoring · Role matching · Status kanban</span>
-      </div>
+    <div class="hero">
+      <p class="hero-label">Amber Sahu · Job Search OS</p>
+      <h1 class="hero-title">Your search,<br>in one place.</h1>
+      <p class="hero-sub">Track outreach, manage applications, and stay on top of every opportunity.</p>
     </div>
 
+    <div class="modules">
+
+      <!-- Outreach Pipeline — LIVE (warm side) -->
+      <a href="/outreach" class="module-card warm">
+        <span class="module-badge badge-live">Live</span>
+        <div class="module-icon warm-icon">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+            <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="module-name">Outreach Pipeline</div>
+          <div class="module-desc">Send LinkedIn connection requests, track replies, schedule follow-ups, and move contacts through your funnel.</div>
+        </div>
+        <div class="module-stats">
+          <div class="stat">
+            <span class="stat-val" id="stat-sent">—</span>
+            <span class="stat-lbl">Sent</span>
+          </div>
+          <div class="stat">
+            <span class="stat-val" id="stat-accepted">—</span>
+            <span class="stat-lbl">Accepted</span>
+          </div>
+          <div class="stat">
+            <span class="stat-val" id="stat-calls">—</span>
+            <span class="stat-lbl">Calls booked</span>
+          </div>
+        </div>
+        <span class="module-cta">
+          Open pipeline
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="#1a1035" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </a>
+
+      <!-- Application Tracker — Coming Soon (cool side) -->
+      <div class="module-card cool">
+        <span class="module-badge badge-soon">Coming soon</span>
+        <div class="module-icon cool-icon">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="module-name">Application Tracker</div>
+          <div class="module-desc">Log job applications, track status from applied to offer, and match each role to your resume and story bank.</div>
+        </div>
+        <div class="soon-block">
+          <span class="soon-label">In the works</span>
+          <span class="soon-hint">Resume tailoring · Role matching · Status kanban</span>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="footer">Job Search OS · Built for Amber · 2026</p>
+
   </div>
 
-  <p class="footer">Job Search OS · Built for Amber · 2026</p>
-
   <script>
-    // Pull live stats from the API
     const API = 'https://linkedin-outreach-paas.onrender.com';
-
     async function loadStats() {
       try {
         const res = await fetch(`${API}/contacts`);
         if (!res.ok) return;
         const contacts = await res.json();
-
         const sent     = contacts.length;
         const accepted = contacts.filter(c => ['accepted','replied','call_booked','converted'].includes(c.status)).length;
         const calls    = contacts.filter(c => ['call_booked','converted'].includes(c.status)).length;
-
         document.getElementById('stat-sent').textContent     = sent;
         document.getElementById('stat-accepted').textContent = accepted;
         document.getElementById('stat-calls').textContent    = calls;
-      } catch (e) {
-        // silently fail — backend may be cold-starting
-      }
+      } catch (e) { /* backend may be cold-starting */ }
     }
-
     loadStats();
   </script>
 
