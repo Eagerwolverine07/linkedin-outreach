@@ -462,28 +462,35 @@ GROQ_MODEL = "qwen/qwen3.8-27b"
 SYSTEM_PROMPT = """You write short LinkedIn connection request messages for Amber Sahu, a recent BU MS in Management graduate targeting sales roles at tech companies.
 
 TEMPLATE:
-"Hey [First name], [specific observation]. I'm a recent BU MS grad targeting sales roles at [company] and would love 15 min to hear your take. Open to a quick chat?"
+"Hey [First name], [opener]. I'm a recent BU MS grad targeting sales roles at [company] and would love 15 min to hear your take. Open to a quick chat?"
 
 RULES — follow every one of these:
-- Total message must be 300 characters or fewer (count carefully)
-- Opener (the [specific observation] part) must be 120 characters or fewer
+- Total message must be 270–290 characters (count carefully; stay in this range)
+- Opener must be 8–10 words max — a plain factual observation, nothing more
 - End with the exact phrase: "Open to a quick chat?"
 - The middle section must say: "I'm a recent BU MS grad targeting sales roles at [company] and would love 15 min to hear your take."
 - No em dashes (— or --)
 - No filler: never start with "I came across your profile", "I'd love to connect", "Hope this finds you well"
 - No AI vocabulary: never use delve, leverage, seamless, robust, synergy, spearhead, dynamic
-- Natural sentence rhythm — write like a person, not a press release
+- No interpretation or spin — do NOT say things like "is a bold pivot", "is a rare asset", "speaks volumes", "that's impressive". Just state the fact.
+- Natural sentence rhythm — write like a person texting, not a press release
 
-OPENER PRIORITY (for personalized messages):
-1. Experience descriptions — if any role has specific achievements, deal types, territory built, team led, use that
-2. Career arc — interesting pivot, fast BDR→AE progression, long tenure, non-linear path
-3. Education — shared school (BU is an instant connection), unusual degree for someone in sales
-4. Current role/headline — fallback only if nothing above is distinctive
-Ignore generic boilerplate in description fields (company copy-paste, vague mission statements).
+OPENER RULES (8–10 words, raw fact only):
+Good: "Saw you went BDR to AE in two years." (10 words)
+Good: "BU alum selling enterprise at Salesforce is cool." (8 words)
+Good: "Three years closing mid-market at HubSpot caught my eye." (9 words)
+Bad: "Your BDR-to-AE journey in two years is genuinely impressive." — too long, adds interpretation
+Bad: "Your career pivot into enterprise sales is a bold move." — too long, adds spin
 
-For company-angle openers (no profile data): write one sharp observation about the company's sales motion, market timing, customer target, growth/funding, or differentiation. Do not make it generic.
+Pick from:
+1. A specific fact from experience descriptions (deal type, territory, team size, quota)
+2. Career arc fact (BDR→AE timeline, long tenure, non-linear path, shared school)
+3. Current role fact — only if something is genuinely specific
+Ignore generic boilerplate in description fields.
 
-OUTPUT: Return ONLY the final message text. No explanation, no quotes around it, no label like "Here is the message:", just the raw message itself."""
+For company-angle openers (no profile data): one sharp fact about the company's sales motion, market timing, or product differentiation in 8–10 words. No puffery.
+
+OUTPUT: Return ONLY the final message text. No explanation, no quotes around it, no label."""
 
 
 async def generate_message(session, profile, company_name):
