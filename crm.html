@@ -144,12 +144,21 @@
     .f-none      { color: #b0adc0; }
 
     /* ── flag checkboxes ── */
-    .flag-checks { display: flex; gap: 6px; flex-direction: column; }
+    .flag-checks { display: flex; gap: 3px; flex-direction: column; }
     .flag-checks label {
       display: flex; align-items: center; gap: 5px;
-      font-size: 12px; cursor: pointer; white-space: nowrap;
+      font-size: 11px; cursor: pointer; white-space: nowrap;
+      line-height: 1.3;
     }
-    .flag-checks input[type=checkbox] { accent-color: #7b6ef6; cursor: pointer; }
+    .flag-checks input[type=checkbox] {
+      width: 13px; height: 13px;
+      flex-shrink: 0;
+      cursor: pointer;
+      accent-color: #7b6ef6;
+    }
+    .flag-checks input[type=checkbox].check-accepted  { accent-color: #7b6ef6; }
+    .flag-checks input[type=checkbox].check-replied   { accent-color: #c471ed; }
+    .flag-checks input[type=checkbox].check-warm_intro { accent-color: #ffb347; }
 
     /* ─── BY COMPANY view ─── */
     .company-grid {
@@ -587,7 +596,7 @@
       const overdue  = c.follow_up_date && new Date(c.follow_up_date) < today;
       const flagChecks = FLAGS.map(f => `
         <label>
-          <input type="checkbox" ${c[f]?'checked':''} onchange="updateFlag(${c.id},'${f}',this.checked)">
+          <input type="checkbox" class="check-${f}" ${c[f]?'checked':''} onchange="updateFlag(${c.id},'${f}',this.checked)">
           <span class="f-${f}">${FLAG_LABELS[f]}</span>
         </label>`).join('');
       return `
