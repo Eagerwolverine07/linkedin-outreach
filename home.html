@@ -233,6 +233,41 @@
     .stat-val { font-size: 18px; font-weight: 700; color: var(--text); }
     .stat-lbl { font-size: 11px; color: var(--muted); font-weight: 500; }
 
+    /* outreach wordmark */
+    .wordmark {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+      background: linear-gradient(105deg, #f0a07a 0%, #e06090 40%, #9966e8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+      margin-bottom: 2px;
+    }
+
+    /* workflow strip */
+    .workflow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255,255,255,0.52);
+    }
+    .wf-step {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      opacity: 0.75;
+      white-space: nowrap;
+    }
+    .wf-arrow {
+      font-size: 11px;
+      color: var(--muted);
+      opacity: 0.6;
+      flex-shrink: 0;
+    }
+
     .module-cta {
       display: inline-flex;
       align-items: center;
@@ -311,34 +346,19 @@
         </div>
       </div>
 
-      <!-- Outreach Pipeline — LIVE (warm right side) -->
+      <!-- Outreach — LIVE (warm right side) -->
       <a href="/outreach" class="module-card warm">
-        <span class="module-badge badge-live">Live</span>
-        <div class="module-icon warm-icon">
-          <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-            <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+        <div class="wordmark">Outreach</div>
+        <div class="module-desc">Paste LinkedIn URLs, get personalized connection messages, and track every conversation in one place.</div>
+        <div class="workflow">
+          <span class="wf-step">LinkedIn URL</span>
+          <span class="wf-arrow">→</span>
+          <span class="wf-step">Message</span>
+          <span class="wf-arrow">→</span>
+          <span class="wf-step">Track</span>
         </div>
-        <div>
-          <div class="module-name">Outreach Pipeline</div>
-          <div class="module-desc">Send LinkedIn connection requests, track replies, schedule follow-ups, and move contacts through your funnel.</div>
-        </div>
-        <div class="module-stats">
-          <div class="stat">
-            <span class="stat-val" id="stat-sent">—</span>
-            <span class="stat-lbl">Sent</span>
-          </div>
-          <div class="stat">
-            <span class="stat-val" id="stat-accepted">—</span>
-            <span class="stat-lbl">Accepted</span>
-          </div>
-          <div class="stat">
-            <span class="stat-val" id="stat-calls">—</span>
-            <span class="stat-lbl">Calls booked</span>
-          </div>
-        </div>
-        <span class="module-cta">
-          Open pipeline
+        <span class="module-cta" style="margin-top:6px;">
+          Open
           <svg width="15" height="15" fill="none" viewBox="0 0 24 24">
             <path d="M5 12h14M13 6l6 6-6 6" stroke="#1a1035" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
@@ -351,23 +371,6 @@
 
   </div>
 
-  <script>
-    const API = 'https://linkedin-outreach-paas.onrender.com';
-    async function loadStats() {
-      try {
-        const res = await fetch(`${API}/contacts`);
-        if (!res.ok) return;
-        const contacts = await res.json();
-        const sent     = contacts.length;
-        const accepted = contacts.filter(c => ['accepted','replied','call_booked','converted'].includes(c.status)).length;
-        const calls    = contacts.filter(c => ['call_booked','converted'].includes(c.status)).length;
-        document.getElementById('stat-sent').textContent     = sent;
-        document.getElementById('stat-accepted').textContent = accepted;
-        document.getElementById('stat-calls').textContent    = calls;
-      } catch (e) { /* backend may be cold-starting */ }
-    }
-    loadStats();
-  </script>
 
 </body>
 </html>
