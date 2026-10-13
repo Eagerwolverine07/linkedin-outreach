@@ -611,6 +611,9 @@ async def generate_message(session, profile, company_name):
                 data    = json.loads(raw)
                 msg_obj = data["choices"][0]["message"]
                 message = (msg_obj.get("content") or "").strip()
+                # If the LLM dropped the greeting, prepend it
+                if not message.lower().startswith("hey"):
+                    message = f"Hey {first_name}, {message}"
                 if len(message) > 300:
                     message = message[:297] + "..."
                 print(f"[Groq] OK len={len(message)}")
