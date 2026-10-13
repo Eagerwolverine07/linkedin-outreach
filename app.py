@@ -497,6 +497,8 @@ SYSTEM_PROMPT = """You write short LinkedIn connection request messages for Ambe
 TEMPLATE:
 "Hey [First name], [opener]. I'm a recent BU MS grad targeting sales roles at [company] and would love 15 min to hear your take. Open to a quick chat?"
 
+IMPORTANT: Replace [First name] with the actual first name provided in the input. Never output the literal text "[First name]".
+
 CHARACTER BUDGET — this is the most important rule:
 - The fixed parts of the message use ~138 characters: "Hey [name], " + the middle sentence + " Open to a quick chat?"
 - Total target: 270–290 characters
