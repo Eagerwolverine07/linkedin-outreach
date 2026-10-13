@@ -485,7 +485,7 @@ def company_match(profile, company_name):
 # ─────────────────────────────────────────────
 
 GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_MODEL = "llama3-70b-8192"
 
 SYSTEM_PROMPT = """You write short LinkedIn connection request messages for Amber Sahu, a recent BU MS in Management graduate targeting sales roles at tech companies.
 
