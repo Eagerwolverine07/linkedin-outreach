@@ -32,6 +32,7 @@ from dotenv import load_dotenv
 load_dotenv()
 APIFY_TOKEN      = os.getenv("APIFY_TOKEN")
 GROQ_API_KEY     = os.getenv("GROQ_API_KEY")
+NVIDIA_API_KEY   = os.getenv("NVIDIA_API_KEY")
 SUPABASE_URL     = os.getenv("SUPABASE_URL")       # e.g. https://xxxx.supabase.co
 SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")   # anon public key
 
@@ -485,7 +486,11 @@ def company_match(profile, company_name):
 # ─────────────────────────────────────────────
 
 GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL = "qwen/qwen3.8-27b"
+GROQ_MODEL = "qwen/qwen3.8-27b"  # fallback only
+
+# NVIDIA NIM (primary — Claude Sonnet via NIM)
+NIM_URL   = "https://integrate.api.nvidia.com/v1/chat/completions"
+NIM_MODEL = "anthropic/claude-3.5-sonnet"
 
 SYSTEM_PROMPT = """You write short LinkedIn connection request messages for Amber Sahu, a recent BU MS in Management graduate targeting sales roles at tech companies.
 
@@ -579,11 +584,11 @@ async def generate_message(session, profile, company_name):
         )
 
     headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Authorization": f"Bearer {NVIDIA_API_KEY}",
         "Content-Type":  "application/json",
     }
     payload = {
-        "model":       GROQ_MODEL,
+        "model":       NIM_MODEL,
         "messages":    [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user",   "content": user_content},
@@ -592,25 +597,25 @@ async def generate_message(session, profile, company_name):
         "max_tokens":  300,
     }
 
-    print(f"[Groq] Calling model={GROQ_MODEL} key_set={bool(GROQ_API_KEY)}")
+    print(f"[NIM] Calling model={NIM_MODEL} key_set={bool(NVIDIA_API_KEY)}")
     try:
-        async with session.post(GROQ_URL, headers=headers, json=payload,
+        async with session.post(NIM_URL, headers=headers, json=payload,
                                 timeout=aiohttp.ClientTimeout(total=30)) as resp:
             raw = await resp.text()
-            print(f"[Groq] status={resp.status} body_preview={raw[:200]}")
+            print(f"[NIM] status={resp.status} body_preview={raw[:200]}")
             if resp.status == 200:
                 data    = json.loads(raw)
                 msg_obj = data["choices"][0]["message"]
-                message = (msg_obj.get("content") or msg_obj.get("reasoning") or "").strip()
+                message = (msg_obj.get("content") or "").strip()
                 if len(message) > 300:
                     message = message[:297] + "..."
-                print(f"[Groq] OK len={len(message)}")
+                print(f"[NIM] OK len={len(message)}")
                 return message
             else:
-                print(f"[Groq] Error {resp.status}: {raw}")
+                print(f"[NIM] Error {resp.status}: {raw}")
     except Exception as e:
         import traceback
-        print(f"[Groq] Exception: {e}\n{traceback.format_exc()}")
+        print(f"[NIM] Exception: {e}\n{traceback.format_exc()}")
 
     return f"Hey {first_name}, [message generation failed — retry]"
 
@@ -626,13 +631,13 @@ Output only: high, medium, or low"""
 
 
 async def classify_priority(session, title: str, headline: str) -> str:
-    """Classify a contact's sales priority using Groq. Returns 'high', 'medium', or 'low'."""
+    """Classify a contact's sales priority using NIM. Returns 'high', 'medium', or 'low'."""
     headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Authorization": f"Bearer {NVIDIA_API_KEY}",
         "Content-Type":  "application/json",
     }
     payload = {
-        "model":    GROQ_MODEL,
+        "model":    NIM_MODEL,
         "messages": [
             {"role": "system", "content": PRIORITY_SYSTEM},
             {"role": "user",   "content": f"Title: {title}\nHeadline: {headline}"},
@@ -641,17 +646,17 @@ async def classify_priority(session, title: str, headline: str) -> str:
         "max_tokens":  5,
     }
     try:
-        async with session.post(GROQ_URL, headers=headers, json=payload,
+        async with session.post(NIM_URL, headers=headers, json=payload,
                                 timeout=aiohttp.ClientTimeout(total=15)) as resp:
             raw = await resp.text()
             if resp.status == 200:
                 data = json.loads(raw)
                 msg_obj = data["choices"][0]["message"]
-                result = (msg_obj.get("content") or msg_obj.get("reasoning") or "medium").strip().lower()
+                result = (msg_obj.get("content") or "medium").strip().lower()
                 if result in ("high", "medium", "low"):
                     return result
             else:
-                print(f"[Priority] Groq error {resp.status}: {raw[:200]}")
+                print(f"[Priority] NIM error {resp.status}: {raw[:200]}")
     except Exception as e:
         print(f"[Priority] classify exception: {e}")
     return "medium"
