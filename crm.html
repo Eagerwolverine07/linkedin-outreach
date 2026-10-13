@@ -143,22 +143,105 @@
     .f-warm_intro { color: #ffb347; }
     .f-none      { color: #b0adc0; }
 
-    /* ── flag checkboxes ── */
-    .flag-checks { display: flex; gap: 3px; flex-direction: column; }
-    .flag-checks label {
-      display: flex; align-items: center; gap: 5px;
-      font-size: 11px; cursor: pointer; white-space: nowrap;
-      line-height: 1.3;
+    /* ── flag dots trigger ── */
+    .flag-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      padding: 4px 2px;
+      border-radius: 8px;
+      width: fit-content;
     }
-    .flag-checks input[type=checkbox] {
+    .flag-dots:hover { background: rgba(255,255,255,0.4); }
+    .flag-dot {
+      width: 11px; height: 11px;
+      border-radius: 50%;
+      border: 1.5px solid;
+      transition: background .15s, transform .15s;
+      flex-shrink: 0;
+    }
+    .flag-dot.dot-accepted  { border-color: #7b6ef6; }
+    .flag-dot.dot-replied   { border-color: #c471ed; }
+    .flag-dot.dot-warm_intro { border-color: #ffb347; }
+    .flag-dot.dot-accepted.on  { background: #7b6ef6; }
+    .flag-dot.dot-replied.on   { background: #c471ed; }
+    .flag-dot.dot-warm_intro.on { background: #ffb347; }
+
+    /* ── flag dropdown ── */
+    .flag-wrap { position: relative; }
+    .flag-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      z-index: 100;
+      background: rgba(253,240,224,0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 8px 28px rgba(120,80,40,0.18);
+      min-width: 148px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .flag-dropdown.open { display: flex; }
+    .flag-dropdown-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.55);
+      margin-bottom: 2px;
+    }
+    .flag-dropdown label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      color: var(--text);
+    }
+    .flag-dropdown label .dot-preview {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .flag-dropdown input[type=checkbox] {
       width: 13px; height: 13px;
       flex-shrink: 0;
       cursor: pointer;
-      accent-color: #7b6ef6;
+      margin-left: auto;
     }
-    .flag-checks input[type=checkbox].check-accepted  { accent-color: #7b6ef6; }
-    .flag-checks input[type=checkbox].check-replied   { accent-color: #c471ed; }
-    .flag-checks input[type=checkbox].check-warm_intro { accent-color: #ffb347; }
+    .flag-dropdown input[type=checkbox].check-accepted  { accent-color: #7b6ef6; }
+    .flag-dropdown input[type=checkbox].check-replied   { accent-color: #c471ed; }
+    .flag-dropdown input[type=checkbox].check-warm_intro { accent-color: #ffb347; }
+    /* sent row — static, non-interactive */
+    .flag-sent-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.55);
+      margin-bottom: 2px;
+    }
+    .flag-sent-row .dot-preview { background: #b0adc0; }
+    .flag-sent-row .sent-check {
+      width: 13px; height: 13px;
+      margin-left: auto;
+      opacity: 0.45;
+      pointer-events: none;
+    }
 
     /* ─── BY COMPANY view ─── */
     .company-grid {
@@ -556,7 +639,7 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>#</th><th>Contact</th><th>Flags</th><th>Message</th><th>Notes</th><th>Follow-up</th><th>Added</th>
+            <th>#</th><th>Contact</th><th>Status</th><th>Message</th><th>Notes</th><th>Follow-up</th><th>Added</th>
           </tr></thead>
           <tbody id="contact-tbody"></tbody>
         </table>
@@ -594,10 +677,14 @@
       const added    = new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
       const preview  = (c.message||'').substring(0,80)+((c.message||'').length>80?'…':'');
       const overdue  = c.follow_up_date && new Date(c.follow_up_date) < today;
-      const flagChecks = FLAGS.map(f => `
+      const dots = FLAGS.map(f => `
+        <div class="flag-dot dot-${f}${c[f]?' on':''}"></div>`).join('');
+      const checkboxes = FLAGS.map(f => `
         <label>
-          <input type="checkbox" class="check-${f}" ${c[f]?'checked':''} onchange="updateFlag(${c.id},'${f}',this.checked)">
-          <span class="f-${f}">${FLAG_LABELS[f]}</span>
+          <div class="dot-preview" style="background:${f==='accepted'?'#7b6ef6':f==='replied'?'#c471ed':'#ffb347'}"></div>
+          ${FLAG_LABELS[f]}
+          <input type="checkbox" class="check-${f}" ${c[f]?'checked':''}
+            onchange="updateFlag(${c.id},'${f}',this.checked,this)">
         </label>`).join('');
       return `
         <tr id="row-${c.id}">
@@ -606,7 +693,19 @@
             ${c.url ? `<a href="${esc(c.url)}" target="_blank">${esc(c.name||c.url)}</a>` : esc(c.name||'—')}
             <div class="co">${esc(c.company||'')}</div>
           </td>
-          <td><div class="flag-checks">${flagChecks}</div></td>
+          <td>
+            <div class="flag-wrap" id="fw-${c.id}">
+              <div class="flag-dots" onclick="toggleFlagDropdown(${c.id},event)">${dots}</div>
+              <div class="flag-dropdown" id="fd-${c.id}">
+                <div class="flag-sent-row">
+                  <div class="dot-preview" style="background:#b0adc0"></div>
+                  Sent
+                  <input type="checkbox" class="sent-check" checked disabled>
+                </div>
+                ${checkboxes}
+              </div>
+            </div>
+          </td>
           <td>
             <div class="msg-preview" onclick="toggleMsg(this)">${esc(preview)}</div>
             <div class="msg-full" onclick="toggleMsg(this)">${esc(c.message||'')}</div>
@@ -658,11 +757,30 @@
     renderStats();
   }
 
-  async function updateFlag(id, flag, value) {
+  function toggleFlagDropdown(id, e) {
+    e.stopPropagation();
+    const fd = document.getElementById(`fd-${id}`);
+    const isOpen = fd.classList.contains('open');
+    // close all others first
+    document.querySelectorAll('.flag-dropdown.open').forEach(el => el.classList.remove('open'));
+    if (!isOpen) fd.classList.add('open');
+  }
+
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.flag-dropdown.open').forEach(el => el.classList.remove('open'));
+  });
+
+  async function updateFlag(id, flag, value, checkbox) {
     const c = ALL_CONTACTS.find(x => x.id===id);
     if (!c) return;
     await patchContact(id, {[flag]: value});
     c[flag] = value;
+    // update the dot in the trigger row
+    const wrap = document.getElementById(`fw-${id}`);
+    if (wrap) {
+      const dot = wrap.querySelector(`.dot-${flag}`);
+      if (dot) dot.classList.toggle('on', value);
+    }
     renderStats();
   }
 
