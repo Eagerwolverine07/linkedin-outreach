@@ -486,7 +486,7 @@ def company_match(profile, company_name):
 # ─────────────────────────────────────────────
 
 GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL = "llama-3.3-70b-versatile"  # primary model
+GROQ_MODEL = "qwen/qwen3.8-27b"  # primary model
 
 # NVIDIA NIM (disabled — API key issues; keeping constants for future use)
 NIM_URL   = "https://integrate.api.nvidia.com/v1/chat/completions"
