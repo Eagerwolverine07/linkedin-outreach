@@ -37,28 +37,27 @@
       z-index: 0;
     }
 
-    /* warm left panel */
+    /* cool left panel (tracker) */
     .bg-left {
-      position: absolute;
-      inset: 0;
-      background: #f5e6d8;
-      background-image:
-        radial-gradient(ellipse 80% 70% at 0% 0%,   #f9d4b0 0%, transparent 55%),
-        radial-gradient(ellipse 65% 60% at 0% 100%,  #7744aa 0%, transparent 55%),
-        radial-gradient(ellipse 55% 50% at 50% 100%, #c94f72 0%, transparent 50%);
-      /* clip to left of diagonal: top-left → bottom of diagonal, across to bottom-right corner bottom-left */
-      clip-path: polygon(0 0, 56% 0, 44% 100%, 0 100%);
-    }
-
-    /* cool right panel */
-    .bg-right {
       position: absolute;
       inset: 0;
       background: #d8e8f5;
       background-image:
-        radial-gradient(ellipse 80% 70% at 100% 0%,   #a8d0f0 0%, transparent 55%),
-        radial-gradient(ellipse 65% 60% at 100% 100%,  #2255aa 0%, transparent 55%),
-        radial-gradient(ellipse 55% 50% at 50% 0%,    #44aacc 0%, transparent 50%);
+        radial-gradient(ellipse 80% 70% at 0% 0%,   #a8d0f0 0%, transparent 55%),
+        radial-gradient(ellipse 65% 60% at 0% 100%,  #2255aa 0%, transparent 55%),
+        radial-gradient(ellipse 55% 50% at 50% 0%,   #44aacc 0%, transparent 50%);
+      clip-path: polygon(0 0, 56% 0, 44% 100%, 0 100%);
+    }
+
+    /* warm right panel (outreach) */
+    .bg-right {
+      position: absolute;
+      inset: 0;
+      background: #f5e6d8;
+      background-image:
+        radial-gradient(ellipse 80% 70% at 100% 0%,   #f9d4b0 0%, transparent 55%),
+        radial-gradient(ellipse 65% 60% at 100% 100%,  #7744aa 0%, transparent 55%),
+        radial-gradient(ellipse 55% 50% at 50% 100%,  #c94f72 0%, transparent 50%);
       clip-path: polygon(56% 0, 100% 0, 100% 100%, 44% 100%);
     }
 
@@ -294,7 +293,25 @@
 
     <div class="modules">
 
-      <!-- Outreach Pipeline — LIVE (warm side) -->
+      <!-- Application Tracker — Coming Soon (cool left side) -->
+      <div class="module-card cool">
+        <span class="module-badge badge-soon">Coming soon</span>
+        <div class="module-icon cool-icon">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="module-name">Application Tracker</div>
+          <div class="module-desc">Log job applications, track status from applied to offer, and match each role to your resume and story bank.</div>
+        </div>
+        <div class="soon-block">
+          <span class="soon-label">In the works</span>
+          <span class="soon-hint">Resume tailoring · Role matching · Status kanban</span>
+        </div>
+      </div>
+
+      <!-- Outreach Pipeline — LIVE (warm right side) -->
       <a href="/outreach" class="module-card warm">
         <span class="module-badge badge-live">Live</span>
         <div class="module-icon warm-icon">
@@ -327,24 +344,6 @@
           </svg>
         </span>
       </a>
-
-      <!-- Application Tracker — Coming Soon (cool side) -->
-      <div class="module-card cool">
-        <span class="module-badge badge-soon">Coming soon</span>
-        <div class="module-icon cool-icon">
-          <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div>
-          <div class="module-name">Application Tracker</div>
-          <div class="module-desc">Log job applications, track status from applied to offer, and match each role to your resume and story bank.</div>
-        </div>
-        <div class="soon-block">
-          <span class="soon-label">In the works</span>
-          <span class="soon-hint">Resume tailoring · Role matching · Status kanban</span>
-        </div>
-      </div>
 
     </div>
 
