@@ -833,13 +833,7 @@ async def _stream_pipeline(urls, company):
 
             batch_profiles = {}  # url → profile or None
             for url, profile in zip(batch, tier1_results):
-                if profile and company_match(profile, company):
-                    batch_profiles[url] = profile
-                elif profile:
-                    # Scraped but company doesn't match — mark so we can surface it
-                    batch_profiles[url] = "NOT_AT_COMPANY"
-                else:
-                    batch_profiles[url] = None  # Tier 1 missed
+                batch_profiles[url] = profile  # None if missed
 
             # ── Tier 2: for any profile Tier 1 missed ──
             missed = [u for u, p in batch_profiles.items() if p is None]
@@ -847,32 +841,11 @@ async def _stream_pipeline(urls, company):
                 yield sse({"event": "status", "message": f"Tier 1 missed {len(missed)} profile(s), trying Tier 2..."})
                 for url in missed:
                     profile = await scrape_profile_tier2(session, url)
-                    if profile and company_match(profile, company):
-                        batch_profiles[url] = profile
-                    elif profile:
-                        batch_profiles[url] = "NOT_AT_COMPANY"
-                    # else: stays None → company-angle opener
+                    batch_profiles[url] = profile  # stays None → company-angle opener
 
             # ── Generate messages for this batch ──
             for url in batch:
                 profile = batch_profiles.get(url)
-
-                if profile == "NOT_AT_COMPANY":
-                    name_label = url.rstrip("/").split("/")[-1]
-                    row = {
-                        "event":        "result",
-                        "sr":           sr_no,
-                        "name":         name_label,
-                        "personalized": "No",
-                        "url":          url,
-                        "message":      f"⚠️ No longer at {company} (per LinkedIn)",
-                        "char_count":   0,
-                        "priority":     "low",
-                    }
-                    _run_results.append(row)
-                    yield sse(row)
-                    sr_no += 1
-                    continue
 
                 name_label = url.rstrip("/").split("/")[-1]  # slug as placeholder
 
@@ -882,10 +855,6 @@ async def _stream_pipeline(urls, company):
                     personalized = "Yes"
                     title        = ""
                     headline     = profile.get("headline", "")
-                    for exp in profile.get("experiences", []):
-                        if company_match({"experiences": [exp]}, company):
-                            title = exp.get("title", "")
-                            break
                     if not title and profile.get("experiences"):
                         title = profile["experiences"][0].get("title", "")
                 else:
