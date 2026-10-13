@@ -15,21 +15,26 @@
       --grad-mid:   #c471ed;
       --grad-end:   #7b6ef6;
       --grad: linear-gradient(135deg, var(--grad-start), var(--grad-mid), var(--grad-end));
-      --bg: #fdf6f0;
-      --surface: #fdfbff;
-      --card: #ffffff;
-      --border: #ede8f5;
+      --bg: #fdf0c8;
+      --surface: rgba(255,255,255,0.55);
+      --card: rgba(255,255,255,0.52);
+      --border: rgba(255,255,255,0.6);
       --text-primary: #1a1035;
       --text-secondary: #7c7a8e;
       --text-muted: #b0adc0;
+      --glass-shadow: 0 8px 32px rgba(120,80,40,0.10), 0 1.5px 0 rgba(255,255,255,0.7) inset;
+      --glass-blur: blur(18px);
     }
 
     body {
       font-family: "Plus Jakarta Sans", sans-serif;
-      background: var(--bg);
+      background: #fdf0c8;
       background-image:
-        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(255,179,71,0.18) 0%, transparent 60%),
-        radial-gradient(ellipse 70% 50% at 80% 110%, rgba(123,110,246,0.15) 0%, transparent 60%);
+        radial-gradient(ellipse 90% 70% at 10% 0%, #ffe8a0 0%, transparent 55%),
+        radial-gradient(ellipse 70% 60% at 90% 5%, #ffd6a0 0%, transparent 50%),
+        radial-gradient(ellipse 60% 50% at 50% 100%, #e8d5f5 0%, transparent 55%),
+        radial-gradient(ellipse 40% 40% at 80% 80%, rgba(123,110,246,0.18) 0%, transparent 50%);
+      background-attachment: fixed;
       min-height: 100vh;
       color: var(--text-primary);
       padding: 56px 20px 80px;
@@ -53,8 +58,10 @@
       gap: 6px;
       padding: 8px 16px;
       border-radius: 12px;
-      border: 1.5px solid var(--border);
-      background: var(--card);
+      border: 1.5px solid rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.45);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       color: var(--text-primary);
       font-family: "Plus Jakarta Sans", sans-serif;
       font-size: 13px;
@@ -62,7 +69,7 @@
       cursor: pointer;
       text-decoration: none;
       transition: box-shadow .2s, border-color .2s, background .2s;
-      box-shadow: 0 1px 6px rgba(150,100,200,0.06);
+      box-shadow: 0 2px 12px rgba(120,80,40,0.08);
     }
     .nav-btn:hover {
       border-color: #c471ed;
@@ -112,8 +119,10 @@
       border-radius: 20px;
       padding: 32px;
       margin-bottom: 32px;
-      box-shadow: 0 4px 32px rgba(150, 100, 200, 0.08), 0 1px 4px rgba(150,100,200,0.06);
+      box-shadow: 0 8px 32px rgba(120,80,40,0.10), 0 1.5px 0 rgba(255,255,255,0.7) inset;
       border: 1px solid var(--border);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
     }
 
     .field-label {
@@ -157,7 +166,7 @@
       cursor: text;
       transition: border-color 0.2s;
       margin-bottom: 8px;
-      background: #fdfbff;
+      background: rgba(255,255,255,0.4);
     }
 
     .chip-field-wrap:focus-within { border-color: #c471ed; }
@@ -348,7 +357,9 @@
       background: var(--card);
       border-radius: 20px;
       border: 1px solid var(--border);
-      box-shadow: 0 4px 32px rgba(150, 100, 200, 0.07), 0 1px 4px rgba(150,100,200,0.05);
+      box-shadow: 0 8px 32px rgba(120,80,40,0.10), 0 1.5px 0 rgba(255,255,255,0.7) inset;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
       overflow: hidden;
     }
 
@@ -574,7 +585,9 @@
       border: 1px solid var(--border);
       border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 2px 12px rgba(150,100,200,0.06);
+      box-shadow: 0 8px 32px rgba(120,80,40,0.10), 0 1.5px 0 rgba(255,255,255,0.7) inset;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
     }
     .run-card-head {
       display: flex;
@@ -585,7 +598,7 @@
       user-select: none;
       transition: background .15s;
     }
-    .run-card-head:hover { background: #fdfaff; }
+    .run-card-head:hover { background: rgba(255,255,255,0.7); }
     .run-card-head .run-company {
       font-weight: 700;
       font-size: 0.9375rem;

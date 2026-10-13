@@ -10,24 +10,29 @@
     /* ── tokens ── */
     :root {
       --grad:   linear-gradient(135deg, #ffb347 0%, #c471ed 55%, #7b6ef6 100%);
-      --bg:     #fdf6f0;
-      --surface:#ffffff;
-      --card:   #ffffff;
-      --border: #ede8f5;
+      --bg:     #fdf0c8;
+      --surface: rgba(255,248,220,0.65);
+      --card:   rgba(255,255,255,0.52);
+      --border: rgba(255,255,255,0.6);
       --text:   #1a1035;
       --muted:  #9090aa;
-      --radius: 14px;
+      --radius: 16px;
       --font:   'Plus Jakarta Sans', sans-serif;
+      --glass-shadow: 0 8px 32px rgba(120,80,40,0.10), 0 1.5px 0 rgba(255,255,255,0.7) inset;
+      --glass-blur: blur(18px);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: var(--font);
-      background: var(--bg);
+      background: #fdf0c8;
       background-image:
-        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(255,179,71,0.18) 0%, transparent 60%),
-        radial-gradient(ellipse 70% 50% at 80% 110%, rgba(123,110,246,0.15) 0%, transparent 60%);
+        radial-gradient(ellipse 90% 70% at 10% 0%, #ffe8a0 0%, transparent 55%),
+        radial-gradient(ellipse 70% 60% at 90% 5%, #ffd6a0 0%, transparent 50%),
+        radial-gradient(ellipse 60% 50% at 50% 100%, #e8d5f5 0%, transparent 55%),
+        radial-gradient(ellipse 40% 40% at 80% 80%, rgba(123,110,246,0.18) 0%, transparent 50%);
+      background-attachment: fixed;
       color: var(--text);
       min-height: 100vh;
       font-size: 14px;
@@ -46,8 +51,13 @@
       align-items: center;
       gap: 12px;
       padding: 16px 32px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
+      border-bottom: 1px solid rgba(255,255,255,0.5);
+      background: rgba(255,248,220,0.65);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
     .nav-title {
       font-size: 16px;
@@ -61,12 +71,13 @@
       font-family: var(--font);
       font-weight: 600;
       cursor: pointer;
-      border: 1px solid var(--border);
-      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.4);
+      backdrop-filter: blur(8px);
       color: var(--text);
       transition: all .2s;
     }
-    .nav-btn:hover { border-color: #c471ed; background: #f5f0fc; }
+    .nav-btn:hover { border-color: #c471ed; background: rgba(255,255,255,0.7); }
     .nav-btn.active {
       background: var(--grad);
       border-color: transparent;
@@ -76,7 +87,7 @@
     /* ── header ── */
     .header {
       padding: 36px 32px 24px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid rgba(255,255,255,0.4);
     }
     .header h1 { font-size: 28px; font-weight: 700; }
     .header p  { color: var(--muted); margin-top: 6px; font-size: 13px; }
@@ -95,6 +106,9 @@
       padding: 16px 20px;
       min-width: 130px;
       flex: 1;
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      box-shadow: var(--glass-shadow);
     }
     .stat-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
     .stat-card .value { font-size: 28px; font-weight: 700; margin-top: 4px; }
@@ -128,6 +142,9 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       overflow: hidden;
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      box-shadow: var(--glass-shadow);
     }
     .co-card-head {
       padding: 18px 20px 14px;
@@ -185,8 +202,9 @@
       flex-wrap: wrap;
     }
     .filter-select, .filter-input {
-      background: var(--card);
-      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.5);
+      border: 1px solid rgba(255,255,255,0.6);
+      backdrop-filter: blur(8px);
       color: var(--text);
       border-radius: 8px;
       padding: 7px 12px;
@@ -215,11 +233,15 @@
     .table-wrap {
       overflow-x: auto;
       border-radius: var(--radius);
-      border: 1px solid var(--border);
+      border: 1px solid rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.45);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      box-shadow: var(--glass-shadow);
     }
     table { width: 100%; border-collapse: collapse; }
     thead th {
-      background: var(--surface);
+      background: rgba(255,240,180,0.45);
       padding: 12px 14px;
       text-align: left;
       font-size: 11px;
@@ -227,12 +249,12 @@
       text-transform: uppercase;
       letter-spacing: .06em;
       color: var(--muted);
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid rgba(255,255,255,0.5);
       white-space: nowrap;
     }
-    tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+    tbody tr { border-bottom: 1px solid rgba(255,255,255,0.4); transition: background .15s; }
     tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: #fdfaff; }
+    tbody tr:hover { background: rgba(255,255,255,0.6); }
     td { padding: 11px 14px; vertical-align: top; }
 
     td.name-cell a { color: var(--text); text-decoration: none; font-weight: 600; }
@@ -240,8 +262,8 @@
     td.name-cell .co { color: var(--muted); font-size: 12px; margin-top: 2px; }
 
     .status-select {
-      background: var(--card);
-      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.5);
+      border: 1px solid rgba(255,255,255,0.6);
       color: var(--text);
       border-radius: 8px;
       padding: 4px 8px;
