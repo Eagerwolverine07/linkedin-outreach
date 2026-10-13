@@ -445,11 +445,39 @@ async def scrape_profile_tier2(session, url):
 def company_match(profile, company_name):
     """
     Returns True if the profile's current company matches the target company name.
+    Checks current_company field first, then falls back to the most recent experience.
     Does a loose substring check in both directions to handle "Snowflake Inc" vs "Snowflake".
     """
-    current = (profile.get("current_company") or "").lower().strip()
-    target  = company_name.lower().strip()
-    return target in current or current in target
+    target = company_name.lower().strip()
+
+    def _matches(name):
+        n = (name or "").lower().strip()
+        return bool(n and (target in n or n in target))
+
+    # Check current_company field
+    if _matches(profile.get("current_company")):
+        return True
+
+    # Fall back: check experiences — look for any role with no end_date (still there)
+    # or the most recent experience if end dates are missing entirely
+    experiences = profile.get("experiences") or []
+    for exp in experiences:
+        company = exp.get("company") or exp.get("company_name") or ""
+        end_date = exp.get("end_date") or exp.get("ends_at") or ""
+        # No end date = current role
+        if not end_date and _matches(company):
+            return True
+
+    # Last resort: check if the first (most recent) experience matches,
+    # even if end_date is present — some scrapers set end_date to "Present"
+    if experiences:
+        first_exp = experiences[0]
+        company = first_exp.get("company") or first_exp.get("company_name") or ""
+        end_date = str(first_exp.get("end_date") or first_exp.get("ends_at") or "").lower()
+        if _matches(company) and ("present" in end_date or not end_date):
+            return True
+
+    return False
 
 
 # ─────────────────────────────────────────────
