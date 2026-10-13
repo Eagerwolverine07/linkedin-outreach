@@ -471,21 +471,25 @@ CHARACTER BUDGET — this is the most important rule:
 - Count before you output. If the opener is under 100 characters, it is too short. Rewrite it.
 
 OPENER STYLE:
-- 1–2 sentences, specific and grounded — state facts, not compliments
-- No spin, no interpretation: do NOT say "is a bold pivot", "speaks volumes", "is impressive", "is rare"
-- No filler openers: never "I came across your profile", "I'd love to connect"
+- 1–2 sentences that state a specific fact AND connect it to why you want to talk to them
+- The opener must lead into the ask — it should make "I'd love 15 min to hear your take" feel natural, not random
+- No floating observations — don't just drop a fact with no bridge to the message
+- No compliments or spin: do NOT say "is a bold pivot", "speaks volumes", "is impressive", "is rare", "I admire"
+- No filler openers: never "I came across your profile", "I'd love to connect", "I noticed"
 - No AI vocabulary: never use delve, leverage, seamless, robust, synergy, spearhead, dynamic
 - No em dashes (— or --)
-- Write like a person, not a press release
+- Write like a person texting, not a press release
 
-Good opener examples (notice they are 120–150 chars, specific, no spin):
-- "Saw you spent four years closing enterprise deals at Salesforce before moving to a startup — that kind of arc is exactly what I'm trying to understand." (152 chars ✓)
-- "Three years as a BDR at HubSpot then AE at a Series B caught my eye. Curious what made you make that jump." (107 chars ✓)
-- "Noticed you've been in enterprise storage sales across Dell and Weka — that's a niche I hadn't seen much of in this space." (122 chars ✓)
+Good opener examples (specific fact + natural bridge to the ask):
+- "Went from BDR to AE at Salesforce in under two years — that's the exact path I'm trying to map out." (100 chars ✓ — fact leads to ask)
+- "Three years closing mid-market at HubSpot then a jump to a Series B startup is a path I want to understand better." (114 chars ✓ — sets up why they're asking)
+- "Selling enterprise storage at both Dell and Weka is a niche combo I hadn't seen — curious how you landed there." (111 chars ✓ — observation + genuine curiosity)
+- "Been following what Weka's doing in the AI infrastructure space and saw you've been on the sales side since early days." (119 chars ✓ — context + hook)
 
 Bad opener examples:
-- "Storage background at Weka is useful for tech sales." (52 chars ✗ — too short, generic)
-- "Ten years of enterprise storage expertise at Dell and Weka." (60 chars ✗ — too short)
+- "Storage background at Weka is useful for tech sales." (✗ — goes nowhere, no bridge)
+- "Ten years of enterprise storage expertise at Dell and Weka." (✗ — just a fact, no connection)
+- "Your career arc is really interesting." (✗ — vague compliment, no substance)
 
 WHAT TO PULL FROM THE PROFILE:
 1. Experience descriptions — specific achievements, deal types, territory, team built, quota
