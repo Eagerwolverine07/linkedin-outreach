@@ -206,13 +206,18 @@
     .chart-wrap canvas { width: 100% !important; }
 
     /* ── funnel bars ── */
-    .funnel-bars { display: flex; flex-direction: column; gap: 10px; }
-    .f-row { display: flex; align-items: center; gap: 12px; }
-    .f-label { font-size: 12px; font-weight: 600; color: var(--text); min-width: 96px; }
-    .f-track { flex: 1; height: 28px; background: rgba(0,0,0,.05); border-radius: 6px; overflow: hidden; }
-    .f-fill  { height: 100%; border-radius: 6px; transition: width .6s ease; }
-    .f-count { font-size: 13px; font-weight: 700; min-width: 32px; text-align: right; }
-    .f-pct   { font-size: 11px; color: var(--muted); min-width: 40px; text-align: right; }
+    .funnel-header { margin-bottom: 20px; }
+    .funnel-header h2 { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .funnel-header p  { font-size: 13px; color: var(--muted); }
+    .funnel-bars { display: flex; flex-direction: column; gap: 18px; }
+    .f-row { display: flex; flex-direction: column; gap: 6px; }
+    .f-top { display: flex; align-items: baseline; justify-content: space-between; }
+    .f-label { font-size: 14px; font-weight: 700; color: var(--text); }
+    .f-right { display: flex; align-items: baseline; gap: 6px; }
+    .f-count { font-size: 20px; font-weight: 800; color: var(--text); }
+    .f-pct   { font-size: 13px; color: var(--muted); }
+    .f-track { width: 100%; height: 10px; background: rgba(0,0,0,.07); border-radius: 999px; overflow: hidden; }
+    .f-fill  { height: 100%; border-radius: 999px; transition: width .7s cubic-bezier(.4,0,.2,1); }
 
     /* ── company table ── */
     .co-table { width: 100%; border-collapse: collapse; }
@@ -370,7 +375,10 @@
         </div>
 
         <div class="chart-card">
-          <h3>Conversion Funnel</h3>
+          <div class="funnel-header">
+            <h2>From connection to opportunity</h2>
+            <p>Where your outreach turns into meaningful conversations.</p>
+          </div>
           <div class="funnel-bars" id="funnel-bars"></div>
         </div>
 
@@ -475,29 +483,32 @@
 
     renderVolChart();
 
-    // 2. Funnel — each stage uses the correct denominator
-    const funnelDenom = {
-      accepted:   { denom: total,            label: '% of sent' },
-      replied:    { denom: byFlag.accepted,  label: '% of accepted' },
-      warm_intro: { denom: byFlag.accepted,  label: '% of accepted' },
-      no_response:{ denom: total,            label: '% of sent' },
-    };
-    const funnelItems = [...FLAGS, 'no_response'];
-    document.getElementById('funnel-bars').innerHTML = funnelItems.map(key => {
-      const n = byFlag[key] || 0;
-      const { denom, label } = funnelDenom[key];
-      const pct = denom > 0 ? (n / denom * 100).toFixed(0) : 0;
-      const w   = denom > 0 ? Math.max(2, n / denom * 100) : 0;
+    // 2. Funnel — 4 stages, each with correct denominator
+    const funnelStages = [
+      { label: 'Contacted',  n: total,              denom: total,              denomLabel: '100% of contacts', color: '#a0a0c0' },
+      { label: 'Accepted',   n: byFlag.accepted,    denom: total,              denomLabel: '% of contacts',    color: '#7b6ef6' },
+      { label: 'Replied',    n: byFlag.replied,     denom: byFlag.accepted,    denomLabel: '% of accepted',    color: '#c471ed' },
+      { label: 'Warm intro', n: byFlag.warm_intro,  denom: byFlag.replied,     denomLabel: '% of replies',     color: '#ffb347' },
+    ];
+    document.getElementById('funnel-bars').innerHTML = funnelStages.map(({ label, n, denom, denomLabel, color }) => {
+      const pctNum = denom > 0 ? (n / denom * 100) : 0;
+      const pctStr = denom > 0 ? (pctNum % 1 === 0 ? pctNum.toFixed(0) : pctNum.toFixed(1)) + '%' : '0%';
+      const w = denom > 0 ? Math.max(1, pctNum) : 0;
       return `
         <div class="f-row">
-          <span class="f-label">${FLAG_LABELS[key]}</span>
-          <div class="f-track"><div class="f-fill" style="width:${w}%;background:${FLAG_COLORS[key]}"></div></div>
-          <span class="f-count" style="color:${FLAG_COLORS[key]}">${n}</span>
-          <span class="f-pct">${pct}% <span style="font-size:10px;color:var(--muted)">${label}</span></span>
+          <div class="f-top">
+            <span class="f-label">${label}</span>
+            <div class="f-right">
+              <span class="f-count">${n}</span>
+              <span class="f-pct">${pctStr} ${denomLabel}</span>
+            </div>
+          </div>
+          <div class="f-track"><div class="f-fill" style="width:${w}%;background:${color}"></div></div>
         </div>`;
     }).join('');
 
     // 3. Donut — rich version with center stat + custom legend
+    const funnelItems = [...FLAGS, 'no_response'];
     const donutCard = document.getElementById('chart-donut').closest('.chart-card');
     donutCard.style.position = 'relative';
     const donutCenter  = document.getElementById('donut-center');
