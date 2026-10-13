@@ -839,10 +839,8 @@ async def _stream_pipeline(urls, company):
                     continue
 
                 name_label = url.rstrip("/").split("/")[-1]  # slug as placeholder
-                yield sse({"event": "status", "message": f"Writing message for {name_label}..."})
 
-                message = await generate_message(session, profile, company)
-
+                # ── Extract title/headline for priority classification ──
                 if profile:
                     name         = f"{profile.get('first_name','')} {profile.get('last_name','')}".strip() or name_label
                     personalized = "Yes"
@@ -860,7 +858,17 @@ async def _stream_pipeline(urls, company):
                     title        = ""
                     headline     = ""
 
+                # ── Classify priority BEFORE generating message ──
                 priority = await classify_priority(session, title, headline)
+
+                # ── Skip low-priority profiles entirely ──
+                if priority == "low":
+                    yield sse({"event": "status", "message": f"Skipping {name} (low priority)"})
+                    sr_no += 1
+                    continue
+
+                yield sse({"event": "status", "message": f"Writing message for {name}..."})
+                message = await generate_message(session, profile, company)
 
                 row = {
                     "event":        "result",
