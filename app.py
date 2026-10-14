@@ -499,47 +499,62 @@ TEMPLATE:
 
 IMPORTANT: Replace [First name] with the actual first name provided in the input. Never output the literal text "[First name]".
 
-CHARACTER BUDGET — this is the most important rule:
-- The fixed parts of the message use ~138 characters: "Hey [name], " + the middle sentence + " Open to a quick chat?"
-- Total target: 270–290 characters
-- That means the opener must be roughly 130–150 characters — use ALL of it
-- Count before you output. If the opener is under 100 characters, it is too short. Rewrite it.
+HOOK SELECTION — use this priority order:
+1. Specific sales achievements, deal sizes, revenue closed, or quota performance.
+2. Career progression: BDR/SDR → AE → Enterprise AE, promotions, or rapid advancement.
+3. Experience building a sales function, entering a new market, or moving upmarket.
+4. A meaningful connection to the target company, including previous experience there or a BU alumni connection.
+5. A distinctive customer segment, sales motion, or industry change.
+6. General work history only when nothing more specific is available.
+Override this order when another verified detail is clearly more relevant or distinctive.
 
-OPENER STYLE:
-- 1–2 sentences that state a specific fact AND connect it to why you want to talk to them
-- The opener must lead into the ask — it should make "I'd love 15 min to hear your take" feel natural, not random
-- No floating observations — don't just drop a fact with no bridge to the message
-- No compliments or spin: do NOT say "is a bold pivot", "speaks volumes", "is impressive", "is rare", "I admire"
-- No filler openers: never "I came across your profile", "I'd love to connect", "I noticed"
-- No AI vocabulary: never use delve, leverage, seamless, robust, synergy, spearhead, dynamic
-- No em dashes (— or --)
-- Write like a person texting, not a press release
+HOOK WRITING RULES:
+- Describe what the person actually did before interpreting it. Lead with the fact.
+  Prefer: "Saw you went from SDR to Enterprise AE at [company]..."
+  Prefer: "Closing $14M+ in public-sector revenue..."
+  Prefer: "Building the outbound motion from scratch at [company]..."
+  Avoid: "Your career progression is a path I want to understand."
+  Avoid: "That transition is a specific skill set I'm trying to learn."
+- Never write: "I'd love to understand your transition", "that's a path I want to map out", "is a transition I want to learn about", or any variation. The fixed closing already handles the ask.
+- Build a natural bridge to the ask. The hook should give a clear reason why Amber wants to speak with this specific person. A direct question works when natural; a concise observation is enough otherwise.
+- One main idea. Choose one detail. Mention two facts only when they form a genuinely meaningful connection. Do not list multiple employers, titles, or technologies in one hook.
+- Write like a person, not a profile analyst. Everyday professional language. No abstract phrases, no elaborate career summaries, no forced enthusiasm.
+- Vary sentence structures. Do not repeatedly begin with "Moving from," "Building," or "Closing."
+- Use only facts supported by the supplied profile. Do not infer deal sizes, motivations, or achievements not mentioned.
 
-Good opener examples (specific fact + natural bridge to the ask):
-- "Went from BDR to AE at Salesforce in under two years — that's the exact path I'm trying to map out." (100 chars ✓ — fact leads to ask)
-- "Three years closing mid-market at HubSpot then a jump to a Series B startup is a path I want to understand better." (114 chars ✓ — sets up why they're asking)
-- "Selling enterprise storage at both Dell and Weka is a niche combo I hadn't seen — curious how you landed there." (111 chars ✓ — observation + genuine curiosity)
-- "Been following what Weka's doing in the AI infrastructure space and saw you've been on the sales side since early days." (119 chars ✓ — context + hook)
+CHARACTER BUDGET:
+- Opener target: 90–125 characters. Allow longer when necessary, but never pad to hit a number.
+- Total message must stay within 300 characters (LinkedIn's limit).
 
-Bad opener examples:
-- "Storage background at Weka is useful for tech sales." (✗ — goes nowhere, no bridge)
-- "Ten years of enterprise storage expertise at Dell and Weka." (✗ — just a fact, no connection)
-- "Your career arc is really interesting." (✗ — vague compliment, no substance)
+BANNED WORDS AND PHRASES:
+- Compliments: impressive, speaks volumes, bold pivot, is rare, I admire, remarkable
+- Filler openers: I came across your profile, I'd love to connect, I noticed
+- AI vocabulary: delve, leverage, seamless, robust, synergy, spearhead, dynamic
+- Em dashes (— or --)
+- Abstract meta-commentary: "is a transition I want to understand", "is a path I'm trying to map out", "is a skill set I want to learn"
 
-WHAT TO PULL FROM THE PROFILE:
-1. Experience descriptions — specific achievements, deal types, territory, team built, quota
-2. Career arc — BDR→AE timeline, fast progression, non-linear path, long tenure at one place
-3. Shared school — BU is an instant hook
-4. Current role specifics — only if something is genuinely notable
-Ignore generic boilerplate in description fields (company copy-paste, vague mission statements).
+Good examples (fact-first, natural bridge):
+- "Saw you went from BDR to AE at Salesforce in under two years — curious how you approached that ramp." (99 chars)
+- "Closing $14M in public-sector deals at Weka is a motion I haven't seen many people do." (87 chars)
+- "Three years at HubSpot then a jump to a Series B — would love to hear what made you pull the trigger." (101 chars)
+- "You've been on the sales side at Weka since early days — want to hear what that growth looked like from the inside." (114 chars)
 
-For company-angle openers (no profile data): write 1–2 sentences about the company's sales motion, market timing, customer target, or differentiation. Still must be 130–150 chars. No puffery.
+Bad examples:
+- "Your career progression is a path I want to understand better." (✗ — interpretation, not description)
+- "Storage background at Weka is useful for tech sales." (✗ — goes nowhere)
+- "Moving from HubSpot to a startup is a transition I'd love to learn about." (✗ — banned meta-commentary)
+
+For company-angle openers (no profile data): write 1–2 sentences about the company's sales motion, market timing, or customer target. Same rules apply — no puffery, fact-first.
+
+FINAL CHECK before returning:
+- Does the hook contain a specific, verifiable detail?
+- Does it sound natural when read aloud?
+- Is it under 300 characters total?
+- Does it avoid all banned phrases?
 
 End with the exact phrase: "Open to a quick chat?"
 Middle section must say exactly: "I'm a recent BU MS grad targeting sales roles at [company] and would love 15 min to hear your take."
-
 COMPANY NAME: Use the company name exactly as provided — same capitalization, same spelling. Do not alter it.
-
 OUTPUT: Return ONLY the final message text. No explanation, no quotes around it, no label."""
 
 
