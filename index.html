@@ -1237,11 +1237,10 @@
       const time = new Date(run.created_at).toLocaleTimeString("en-US", {
         hour: "numeric", minute: "2-digit",
       });
-      const msgs = Array.isArray(run.messages) ? run.messages : [];
-      const count = msgs.length || (run.total_profiles || 0);
+      const count = run.total || 0;
       return `
         <div class="run-card" id="run-${run.id}">
-          <div class="run-card-head" onclick="toggleRun('${run.id}', ${JSON.stringify(msgs).replace(/"/g,'&quot;')})">
+          <div class="run-card-head" onclick="toggleRun('${run.id}')">
             <span class="run-company">${escHtml(run.company || "Unknown")}</span>
             <span class="run-meta">${count} contact${count !== 1 ? "s" : ""} · ${date} at ${time}</span>
             <span class="run-chevron">▼</span>
@@ -1250,36 +1249,45 @@
         </div>`;
     }
 
-    function toggleRun(runId, results) {
+    function renderRunContacts(results) {
+      if (!results || results.length === 0) {
+        return `<div class="history-empty" style="padding:24px">No contact details stored for this run.</div>`;
+      }
+      const rows = results.map((r, i) => {
+        const nameHtml = r.url
+          ? `<a href="${escHtml(r.url)}" target="_blank">${escHtml(r.name || r.url)}</a>`
+          : escHtml(r.name || "—");
+        return `
+          <tr data-message="${escHtml(r.message || "")}">
+            <td style="color:var(--text-muted);font-size:.78rem;width:32px">${i + 1}</td>
+            <td class="rct-name">${nameHtml}</td>
+            <td class="rct-msg">${escHtml(r.message || "")}</td>
+            <td style="white-space:nowrap">
+              ${r.message ? `<button class="rct-copy" onclick="copyRct(this)">Copy</button>` : ""}
+            </td>
+          </tr>`;
+      }).join("");
+      return `
+        <table class="run-contacts-table">
+          <thead><tr>
+            <th>#</th><th>Contact</th><th>Message</th><th></th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    }
+
+    async function toggleRun(runId) {
       const card = document.getElementById(`run-${runId}`);
       const body = document.getElementById(`run-body-${runId}`);
       const isOpen = card.classList.toggle("open");
       if (isOpen && !body._loaded) {
         body._loaded = true;
-        if (!results || results.length === 0) {
-          body.innerHTML = `<div class="history-empty" style="padding:24px">No contact details stored for this run.</div>`;
-        } else {
-          const rows = results.map((r, i) => {
-            const nameHtml = r.url
-              ? `<a href="${escHtml(r.url)}" target="_blank">${escHtml(r.name || r.url)}</a>`
-              : escHtml(r.name || "—");
-            return `
-              <tr data-message="${escHtml(r.message || "")}">
-                <td style="color:var(--text-muted);font-size:.78rem;width:32px">${i + 1}</td>
-                <td class="rct-name">${nameHtml}</td>
-                <td class="rct-msg">${escHtml(r.message || "")}</td>
-                <td style="white-space:nowrap">
-                  ${r.message ? `<button class="rct-copy" onclick="copyRct(this)">Copy</button>` : ""}
-                </td>
-              </tr>`;
-          }).join("");
-          body.innerHTML = `
-            <table class="run-contacts-table">
-              <thead><tr>
-                <th>#</th><th>Contact</th><th>Message</th><th></th>
-              </tr></thead>
-              <tbody>${rows}</tbody>
-            </table>`;
+        body.innerHTML = `<div class="history-loader">Loading…</div>`;
+        try {
+          const contacts = await fetch(`/contacts?run_id=${runId}&limit=200`).then(r => r.json());
+          body.innerHTML = renderRunContacts(Array.isArray(contacts) ? contacts : []);
+        } catch (e) {
+          body.innerHTML = `<div class="history-empty" style="padding:24px">Could not load contacts: ${escHtml(e.message)}</div>`;
         }
       }
     }

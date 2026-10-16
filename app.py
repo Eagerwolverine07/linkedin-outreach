@@ -1004,14 +1004,16 @@ async def history(limit: int = 50):
 
 
 @app.get("/contacts")
-async def get_contacts(company: str = None, limit: int = 200):
-    """Returns contacts from Supabase, optionally filtered by company."""
+async def get_contacts(company: str = None, run_id: int = None, limit: int = 200):
+    """Returns contacts from Supabase, optionally filtered by company or run_id."""
     if not SUPABASE_URL or not SUPABASE_API_KEY:
         return {"error": "Supabase not configured"}
 
     filters = ["order=created_at.desc", f"limit={limit}", "deleted=eq.false"]
     if company:
         filters.append(f"company=eq.{company}")
+    if run_id is not None:
+        filters.append(f"run_id=eq.{run_id}")
 
     url = f"{SUPABASE_URL}/rest/v1/contacts?" + "&".join(filters)
     try:
