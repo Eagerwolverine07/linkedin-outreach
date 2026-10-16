@@ -1214,6 +1214,8 @@
     }
 
     /* ── Run History ── */
+    let _allRuns = [];
+
     async function loadHistory() {
       const container = document.getElementById("run-list-container");
       try {
@@ -1223,11 +1225,22 @@
           container.innerHTML = `<div class="history-empty">No past runs yet. Generate your first batch above.</div>`;
           return;
         }
+        _allRuns = runs;
         document.getElementById("history-count").textContent = `${runs.length} run${runs.length !== 1 ? "s" : ""}`;
-        container.innerHTML = `<div class="run-list">${runs.map(renderRunCard).join("")}</div>`;
+        renderRunList(false);
       } catch (e) {
         container.innerHTML = `<div class="history-empty">Could not load history: ${escHtml(e.message)}</div>`;
       }
+    }
+
+    function renderRunList(showAll) {
+      const container = document.getElementById("run-list-container");
+      const visible = showAll ? _allRuns : _allRuns.slice(0, 5);
+      const hasMore = _allRuns.length > 5;
+      const moreBtn = (!showAll && hasMore)
+        ? `<button onclick="renderRunList(true)" style="margin-top:10px;width:100%;padding:10px;border:1.5px solid var(--border);background:transparent;border-radius:10px;font-size:13px;font-weight:600;color:var(--text-secondary);cursor:pointer;">Show ${_allRuns.length - 5} older run${_allRuns.length - 5 !== 1 ? 's' : ''} ▾</button>`
+        : '';
+      container.innerHTML = `<div class="run-list">${visible.map(renderRunCard).join("")}</div>${moreBtn}`;
     }
 
     function renderRunCard(run) {
@@ -1237,12 +1250,14 @@
       const time = new Date(run.created_at).toLocaleTimeString("en-US", {
         hour: "numeric", minute: "2-digit",
       });
+      // total may be 0 for old runs; we'll update the header after fetching contacts
       const count = run.total || 0;
+      const countLabel = count > 0 ? `${count} contact${count !== 1 ? "s" : ""}` : `—`;
       return `
         <div class="run-card" id="run-${run.id}">
           <div class="run-card-head" onclick="toggleRun('${run.id}')">
             <span class="run-company">${escHtml(run.company || "Unknown")}</span>
-            <span class="run-meta">${count} contact${count !== 1 ? "s" : ""} · ${date} at ${time}</span>
+            <span class="run-meta" id="run-meta-${run.id}">${countLabel} · ${date} at ${time}</span>
             <span class="run-chevron">▼</span>
           </div>
           <div class="run-card-body" id="run-body-${run.id}"></div>
@@ -1285,7 +1300,18 @@
         body.innerHTML = `<div class="history-loader">Loading…</div>`;
         try {
           const contacts = await fetch(`/contacts?run_id=${runId}&limit=200`).then(r => r.json());
-          body.innerHTML = renderRunContacts(Array.isArray(contacts) ? contacts : []);
+          const list = Array.isArray(contacts) ? contacts : [];
+          body.innerHTML = renderRunContacts(list);
+          // Update header count with real fetched count (fixes old runs showing 0)
+          if (list.length > 0) {
+            const meta = document.getElementById(`run-meta-${runId}`);
+            if (meta) {
+              const existing = meta.textContent;
+              const dotIdx = existing.indexOf('·');
+              const datePart = dotIdx > -1 ? existing.slice(dotIdx) : '';
+              meta.textContent = `${list.length} contact${list.length !== 1 ? 's' : ''} ${datePart}`;
+            }
+          }
         } catch (e) {
           body.innerHTML = `<div class="history-empty" style="padding:24px">Could not load contacts: ${escHtml(e.message)}</div>`;
         }
