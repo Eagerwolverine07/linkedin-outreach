@@ -469,7 +469,12 @@
     }
 
     function renderVolChart() {
-      const days = getWeekDays(volWeekOffset);
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const allWeekDays = getWeekDays(volWeekOffset);
+      // For the current week, drop future dates (no data yet)
+      const days = volWeekOffset < 0
+        ? allWeekDays
+        : allWeekDays.filter(d => d <= todayStr);
       const labels = days.map(d => {
         const dt = new Date(d + 'T00:00:00');
         return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
