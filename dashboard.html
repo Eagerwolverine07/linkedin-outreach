@@ -381,7 +381,7 @@
     // Daily map: { "2026-10-12": count }
     const dayMap = {};
     for (const c of contacts) {
-      const key = new Date(c.created_at).toISOString().slice(0, 10);
+      const _d = new Date(c.created_at); const key = `${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-${String(_d.getDate()).padStart(2,'0')}`;
       dayMap[key] = (dayMap[key] || 0) + 1;
     }
     // All days sorted
@@ -463,13 +463,13 @@
       for (let i = 0; i < 7; i++) {
         const d = new Date(monday);
         d.setDate(monday.getDate() + i);
-        days.push(d.toISOString().slice(0, 10));
+        days.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
       }
       return days;
     }
 
     function renderVolChart() {
-      const todayStr = new Date().toISOString().slice(0, 10);
+      const _td = new Date(); const todayStr = `${_td.getFullYear()}-${String(_td.getMonth()+1).padStart(2,'0')}-${String(_td.getDate()).padStart(2,'0')}`;
       const days = getWeekDays(volWeekOffset);
       const labels = days.map(d => {
         const dt = new Date(d + 'T00:00:00');
