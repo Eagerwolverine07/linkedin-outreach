@@ -380,9 +380,13 @@
 
     // Daily map: { "2026-10-12": count }
     const dayMap = {};
+    const flagDayMaps = { accepted: {}, replied: {}, warm_intro: {} };
     for (const c of contacts) {
       const _d = new Date(c.created_at); const key = `${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-${String(_d.getDate()).padStart(2,'0')}`;
       dayMap[key] = (dayMap[key] || 0) + 1;
+      if (c.accepted)   flagDayMaps.accepted[key]   = (flagDayMaps.accepted[key]   || 0) + 1;
+      if (c.replied)    flagDayMaps.replied[key]     = (flagDayMaps.replied[key]    || 0) + 1;
+      if (c.warm_intro) flagDayMaps.warm_intro[key]  = (flagDayMaps.warm_intro[key] || 0) + 1;
     }
     // All days sorted
     const allDays = Object.keys(dayMap).sort();
@@ -403,13 +407,18 @@
       <div class="charts-grid">
 
         <div class="chart-card span-2">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
             <h3 style="margin-bottom:0">Daily Outreach Volume</h3>
             <div style="display:flex;align-items:center;gap:8px">
               <button id="vol-prev" onclick="shiftWeek(-1)" style="border:1.5px solid var(--border);background:var(--card);border-radius:8px;padding:4px 10px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text)">←</button>
               <span id="vol-label" style="font-size:12px;font-weight:600;color:var(--muted);min-width:140px;text-align:center"></span>
               <button id="vol-next" onclick="shiftWeek(1)" style="border:1.5px solid var(--border);background:var(--card);border-radius:8px;padding:4px 10px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text)">→</button>
             </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+            <button id="vol-tog-accepted"   onclick="toggleVolFlag('accepted')"   style="border:1.5px solid #7b6ef6;background:transparent;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer;color:#7b6ef6;transition:all .15s">Accepted</button>
+            <button id="vol-tog-replied"    onclick="toggleVolFlag('replied')"    style="border:1.5px solid #c471ed;background:transparent;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer;color:#c471ed;transition:all .15s">Replied</button>
+            <button id="vol-tog-warm_intro" onclick="toggleVolFlag('warm_intro')" style="border:1.5px solid #ffb347;background:transparent;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer;color:#ffb347;transition:all .15s">Warm Intro</button>
           </div>
           <div class="chart-wrap" style="height:220px"><canvas id="chart-volume"></canvas></div>
         </div>
@@ -451,6 +460,13 @@
     // 1. Daily line chart with week navigation
     let volChart = null;
     let volWeekOffset = 0; // 0 = current week, -1 = last week, etc.
+    const volActiveFlags = new Set(); // which overlay flags are toggled on
+
+    const VOL_FLAG_CONFIG = {
+      accepted:   { label: 'Accepted',   color: '#7b6ef6', bg: 'rgba(123,110,246,0.15)' },
+      replied:    { label: 'Replied',    color: '#c471ed', bg: 'rgba(196,113,237,0.15)' },
+      warm_intro: { label: 'Warm Intro', color: '#ffb347', bg: 'rgba(255,179,71,0.15)'  },
+    };
 
     function getWeekDays(offset) {
       // Monday-based week containing today + offset weeks
@@ -476,7 +492,8 @@
         return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
       });
       // null for future dates so the line ends at today rather than trailing as zeros
-      const data = days.map(d => (volWeekOffset < 0 || d <= todayStr) ? (dayMap[d] || 0) : null);
+      const isFuture = d => volWeekOffset >= 0 && d > todayStr;
+      const data = days.map(d => isFuture(d) ? null : (dayMap[d] || 0));
 
       // Week label
       const start = new Date(days[0] + 'T00:00:00');
@@ -488,27 +505,55 @@
       document.getElementById('vol-next').disabled = volWeekOffset >= 0;
       document.getElementById('vol-next').style.opacity = volWeekOffset >= 0 ? '0.35' : '1';
 
+      // Build datasets: base contacts + any active flag overlays
+      const datasets = [{
+        label: 'Contacts',
+        data,
+        borderColor: 'rgba(160,160,192,0.7)',
+        backgroundColor: 'rgba(160,160,192,0.08)',
+        borderWidth: 2,
+        pointBackgroundColor: 'rgba(160,160,192,0.7)',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        tension: 0.35,
+        fill: true,
+        borderDash: volActiveFlags.size > 0 ? [4,3] : [],
+      }];
+
+      for (const flag of ['accepted', 'replied', 'warm_intro']) {
+        if (!volActiveFlags.has(flag)) continue;
+        const cfg = VOL_FLAG_CONFIG[flag];
+        const flagData = days.map(d => isFuture(d) ? null : (flagDayMaps[flag][d] || 0));
+        datasets.push({
+          label: cfg.label,
+          data: flagData,
+          borderColor: cfg.color,
+          backgroundColor: cfg.bg,
+          borderWidth: 2.5,
+          pointBackgroundColor: cfg.color,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          tension: 0.35,
+          fill: false,
+        });
+      }
+
+      const showLegend = volActiveFlags.size > 0;
+
       if (volChart) volChart.destroy();
       volChart = new Chart(document.getElementById('chart-volume'), {
         type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Contacts',
-            data,
-            borderColor: '#7b6ef6',
-            backgroundColor: 'rgba(123,110,246,0.10)',
-            borderWidth: 2.5,
-            pointBackgroundColor: '#7b6ef6',
-            pointRadius: 5,
-            pointHoverRadius: 7,
-            tension: 0.35,
-            fill: true,
-          }],
-        },
+        data: { labels, datasets },
         options: {
           responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          plugins: {
+            legend: {
+              display: showLegend,
+              position: 'top',
+              align: 'end',
+              labels: { boxWidth: 12, font: { size: 11, weight: '600' }, padding: 12 }
+            }
+          },
           scales: {
             x: { grid: { color: 'rgba(0,0,0,0.06)' } },
             y: { grid: { color: 'rgba(0,0,0,0.06)' }, beginAtZero: true, ticks: { precision: 0 } },
@@ -520,6 +565,24 @@
     window.shiftWeek = function(dir) {
       if (dir === 1 && volWeekOffset >= 0) return;
       volWeekOffset += dir;
+      renderVolChart();
+    };
+
+    window.toggleVolFlag = function(flag) {
+      if (volActiveFlags.has(flag)) {
+        volActiveFlags.delete(flag);
+      } else {
+        volActiveFlags.add(flag);
+      }
+      // Update button appearance
+      const cfg = VOL_FLAG_CONFIG[flag];
+      const btn = document.getElementById(`vol-tog-${flag}`);
+      if (btn) {
+        const active = volActiveFlags.has(flag);
+        btn.style.background = active ? cfg.color : 'transparent';
+        btn.style.color = active ? '#fff' : cfg.color;
+        btn.style.boxShadow = active ? `0 2px 8px ${cfg.bg}` : 'none';
+      }
       renderVolChart();
     };
 
