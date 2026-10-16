@@ -416,9 +416,9 @@
             </div>
           </div>
           <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-            <button id="vol-tog-accepted"   onclick="toggleVolFlag('accepted')"   style="border:1.5px solid #7b6ef6;background:transparent;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer;color:#7b6ef6;transition:all .15s">Accepted</button>
-            <button id="vol-tog-replied"    onclick="toggleVolFlag('replied')"    style="border:1.5px solid #c471ed;background:transparent;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer;color:#c471ed;transition:all .15s">Replied</button>
-            <button id="vol-tog-warm_intro" onclick="toggleVolFlag('warm_intro')" style="border:1.5px solid #ffb347;background:transparent;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer;color:#ffb347;transition:all .15s">Warm Intro</button>
+            <button id="vol-tog-accepted"   onclick="toggleVolFlag('accepted')"   style="border:1.5px solid #7b6ef6;background:transparent;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer;color:#7b6ef6;transition:all .15s">Accepted <span id="vol-ct-accepted" style="opacity:.7"></span></button>
+            <button id="vol-tog-replied"    onclick="toggleVolFlag('replied')"    style="border:1.5px solid #c471ed;background:transparent;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer;color:#c471ed;transition:all .15s">Replied <span id="vol-ct-replied" style="opacity:.7"></span></button>
+            <button id="vol-tog-warm_intro" onclick="toggleVolFlag('warm_intro')" style="border:1.5px solid #ffb347;background:transparent;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer;color:#ffb347;transition:all .15s">Warm Intro <span id="vol-ct-warm_intro" style="opacity:.7"></span></button>
           </div>
           <div class="chart-wrap" style="height:220px"><canvas id="chart-volume"></canvas></div>
         </div>
@@ -459,8 +459,21 @@
 
     // 1. Daily line chart with week navigation
     let volChart = null;
-    let volWeekOffset = 0; // 0 = current week, -1 = last week, etc.
     const volActiveFlags = new Set(); // which overlay flags are toggled on
+
+    // Start on the most recent week that actually has outreach data
+    function getWeekOffsetForDate(dateStr) {
+      const today = new Date();
+      const dow = today.getDay();
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+      monday.setHours(0, 0, 0, 0);
+      const target = new Date(dateStr + 'T00:00:00');
+      const diffMs = target - monday;
+      return Math.floor(diffMs / (7 * 24 * 60 * 60 * 1000));
+    }
+    const lastDataDay = allDays.length > 0 ? allDays[allDays.length - 1] : null;
+    let volWeekOffset = lastDataDay ? Math.min(0, getWeekOffsetForDate(lastDataDay)) : 0;
 
     const VOL_FLAG_CONFIG = {
       accepted:   { label: 'Accepted',   color: '#7b6ef6', bg: 'rgba(123,110,246,0.15)' },
@@ -585,6 +598,13 @@
       }
       renderVolChart();
     };
+
+    // Populate flag counts on the toggle buttons
+    for (const flag of ['accepted', 'replied', 'warm_intro']) {
+      const total_flag = Object.values(flagDayMaps[flag]).reduce((s, v) => s + v, 0);
+      const el = document.getElementById(`vol-ct-${flag}`);
+      if (el && total_flag > 0) el.textContent = `(${total_flag})`;
+    }
 
     renderVolChart();
 
