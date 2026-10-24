@@ -158,16 +158,17 @@
       box-shadow: 0 18px 48px rgba(120,60,20,0.18), 0 1.5px 0 rgba(255,255,255,0.75) inset;
     }
 
-    /* cool card — right */
+    /* cool card — left */
     .module-card.cool {
       background: rgba(230, 242, 255, 0.55);
       border: 1px solid rgba(255,255,255,0.65);
       box-shadow: 0 8px 32px rgba(20,60,120,0.12), 0 1.5px 0 rgba(255,255,255,0.72) inset;
       backdrop-filter: var(--glass-blur);
       -webkit-backdrop-filter: var(--glass-blur);
-      opacity: 0.72;
-      cursor: default;
-      pointer-events: none;
+    }
+    .module-card.cool:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 18px 48px rgba(20,60,120,0.18), 0 1.5px 0 rgba(255,255,255,0.72) inset;
     }
 
     .module-icon {
@@ -341,9 +342,9 @@
 
     <div class="modules">
 
-      <!-- Application Tracker — Coming Soon (cool left side) -->
-      <div class="module-card cool">
-        <span class="module-badge badge-soon">Coming soon</span>
+      <!-- Application Tracker — LIVE (cool left side) -->
+      <a href="/tracker" class="module-card cool">
+        <span class="module-badge badge-live">Live</span>
         <div class="module-icon cool-icon">
           <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -351,13 +352,22 @@
         </div>
         <div>
           <div class="module-name">Application Tracker</div>
-          <div class="module-desc">Log job applications, track status from applied to offer, and match each role to your resume and story bank.</div>
+          <div class="module-desc">Gmail-synced applications. Status tracked from applied to offer, refreshed every morning.</div>
         </div>
-        <div class="soon-block">
-          <span class="soon-label">In the works</span>
-          <span class="soon-hint">Resume tailoring · Role matching · Status kanban</span>
+        <div class="workflow" style="justify-content:flex-start;">
+          <span class="wf-step">Gmail scan</span>
+          <span class="wf-arrow">→</span>
+          <span class="wf-step">Status</span>
+          <span class="wf-arrow">→</span>
+          <span class="wf-step">Track</span>
         </div>
-      </div>
+        <span class="module-cta">
+          Open
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="#1a1035" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </a>
 
       <!-- Outreach — LIVE (warm right side) -->
       <a href="/outreach" class="module-card warm" style="align-items:center; text-align:center;">

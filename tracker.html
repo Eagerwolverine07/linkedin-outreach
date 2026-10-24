@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Application Tracker · Job Search OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --font: 'Plus Jakarta Sans', sans-serif;
+      --text: #1a1035;
+      --muted: #7a7a99;
+      --glass-blur: blur(18px);
+      --blue-dark: #2255aa;
+      --blue-mid:  #44aacc;
+      --blue-light: #a8d0f0;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      color: var(--text);
+      min-height: 100vh;
+      background: #d8e8f5;
+      background-image:
+        radial-gradient(ellipse 80% 70% at 0% 0%,   #a8d0f0 0%, transparent 55%),
+        radial-gradient(ellipse 65% 60% at 100% 100%, #2255aa 0%, transparent 55%),
+        radial-gradient(ellipse 55% 50% at 100% 0%,   #44aacc 0%, transparent 50%);
+    }
+
+    .page {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 36px 24px 60px;
+    }
+
+    /* ── header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--blue-dark);
+      text-decoration: none;
+      opacity: 0.75;
+      transition: opacity 0.18s;
+    }
+    .back-link:hover { opacity: 1; }
+    .page-title {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(105deg, #2255aa 0%, #44aacc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .sync-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(255,255,255,0.75);
+      border-radius: 999px;
+      padding: 4px 12px;
+      backdrop-filter: blur(10px);
+    }
+    .sync-badge span { color: #2255aa; }
+
+    /* ── stat cards ── */
+    .stats {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      flex: 1;
+      min-width: 130px;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(255,255,255,0.75);
+      border-radius: 18px;
+      padding: 18px 20px;
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      box-shadow: 0 4px 20px rgba(20,60,120,0.08);
+    }
+    .stat-card .val {
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-card .lbl {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    /* ── filter bar ── */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-btn {
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(34,85,170,0.20);
+      background: rgba(255,255,255,0.45);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.16s;
+    }
+    .filter-btn:hover,
+    .filter-btn.active {
+      background: rgba(34,85,170,0.12);
+      border-color: rgba(34,85,170,0.35);
+      color: var(--blue-dark);
+    }
+
+    /* ── table card ── */
+    .table-card {
+      background: rgba(255,255,255,0.50);
+      border: 1px solid rgba(255,255,255,0.72);
+      border-radius: 22px;
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      box-shadow: 0 8px 32px rgba(20,60,120,0.10);
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 14px 18px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.25);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(200,220,240,0.35);
+      transition: background 0.14s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.30); }
+
+    tbody td {
+      padding: 14px 18px;
+      font-size: 13.5px;
+      vertical-align: middle;
+    }
+
+    .company-name {
+      font-weight: 700;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .role-name {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* status badges */
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+    .badge-applied      { background: rgba(100,100,140,0.12); color: #44446a; border: 1px solid rgba(100,100,140,0.20); }
+    .badge-screening    { background: rgba(34,85,170,0.12);   color: #2255aa; border: 1px solid rgba(34,85,170,0.22); }
+    .badge-interviewing { background: rgba(200,140,20,0.13);  color: #7a5500; border: 1px solid rgba(200,140,20,0.25); }
+    .badge-offer        { background: rgba(30,160,60,0.13);   color: #145520; border: 1px solid rgba(30,160,60,0.25); }
+    .badge-rejected     { background: rgba(200,50,50,0.10);   color: #8a1515; border: 1px solid rgba(200,50,50,0.20); }
+
+    .date-cell { font-size: 12.5px; color: var(--muted); }
+    .contact-cell { font-size: 12.5px; color: var(--muted); }
+
+    /* empty / loading states */
+    .state-row td {
+      text-align: center;
+      padding: 48px 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(34,85,170,0.20);
+      border-top-color: var(--blue-dark);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── footer ── */
+    .footer {
+      margin-top: 36px;
+      font-size: 11px;
+      color: rgba(100,100,140,0.45);
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- header -->
+    <div class="header">
+      <a href="/" class="back-link">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24">
+          <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Job Search OS
+      </a>
+      <h1 class="page-title">Application Tracker</h1>
+      <div class="sync-badge" id="syncBadge">Synced <span>—</span></div>
+    </div>
+
+    <!-- stats row -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="val" id="statTotal">—</div>
+        <div class="lbl">Total</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="statActive">—</div>
+        <div class="lbl">Active</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="statInterviewing">—</div>
+        <div class="lbl">Interviewing</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="statOffers">—</div>
+        <div class="lbl">Offers</div>
+      </div>
+    </div>
+
+    <!-- filter bar -->
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-btn active" data-status="all">All</button>
+      <button class="filter-btn" data-status="applied">Applied</button>
+      <button class="filter-btn" data-status="screening">Screening</button>
+      <button class="filter-btn" data-status="interviewing">Interviewing</button>
+      <button class="filter-btn" data-status="offer">Offer</button>
+      <button class="filter-btn" data-status="rejected">Rejected</button>
+    </div>
+
+    <!-- table -->
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Company / Role</th>
+            <th>Status</th>
+            <th>Applied</th>
+            <th>Last Activity</th>
+            <th>Contact</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr class="state-row">
+            <td colspan="5"><span class="spinner"></span>Loading applications…</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="footer">Refreshed daily at 11 am · Job Search OS · Amber Sahu · 2026</p>
+  </div>
+
+  <script>
+    let allApps = [];
+    let currentFilter = 'all';
+
+    const BADGE = {
+      applied:      'badge-applied',
+      screening:    'badge-screening',
+      interviewing: 'badge-interviewing',
+      offer:        'badge-offer',
+      rejected:     'badge-rejected',
+    };
+
+    function fmtDate(d) {
+      if (!d) return '—';
+      const dt = new Date(d + 'T00:00:00');
+      return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function renderTable(apps) {
+      const tbody = document.getElementById('tableBody');
+      if (!apps.length) {
+        tbody.innerHTML = `<tr class="state-row"><td colspan="5">No applications${currentFilter !== 'all' ? ' for this status' : ''} yet.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = apps.map(a => `
+        <tr>
+          <td>
+            <div class="company-name">${escHtml(a.company)}</div>
+            ${a.role ? `<div class="role-name">${escHtml(a.role)}</div>` : ''}
+          </td>
+          <td><span class="badge ${BADGE[a.status] || 'badge-applied'}">${escHtml(a.status)}</span></td>
+          <td class="date-cell">${fmtDate(a.applied_date)}</td>
+          <td class="date-cell">${fmtDate(a.last_activity_date)}</td>
+          <td class="contact-cell">${a.contact_name ? escHtml(a.contact_name) : '—'}</td>
+        </tr>
+      `).join('');
+    }
+
+    function updateStats(apps) {
+      const active = apps.filter(a => !['rejected', 'offer'].includes(a.status)).length;
+      const interviewing = apps.filter(a => a.status === 'interviewing').length;
+      const offers = apps.filter(a => a.status === 'offer').length;
+      document.getElementById('statTotal').textContent = apps.length;
+      document.getElementById('statActive').textContent = active;
+      document.getElementById('statInterviewing').textContent = interviewing;
+      document.getElementById('statOffers').textContent = offers;
+    }
+
+    function escHtml(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function applyFilter(status) {
+      currentFilter = status;
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.status === status);
+      });
+      const filtered = status === 'all' ? allApps : allApps.filter(a => a.status === status);
+      renderTable(filtered);
+    }
+
+    document.getElementById('filterBar').addEventListener('click', e => {
+      const btn = e.target.closest('.filter-btn');
+      if (btn) applyFilter(btn.dataset.status);
+    });
+
+    async function loadApps() {
+      try {
+        const res = await fetch('/applications');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        allApps = await res.json();
+        if (allApps.error) throw new Error(allApps.error);
+
+        updateStats(allApps);
+        applyFilter(currentFilter);
+
+        // sync badge — use the most recent updated_at
+        const latest = allApps.reduce((max, a) => (!max || a.updated_at > max ? a.updated_at : max), null);
+        const syncEl = document.getElementById('syncBadge');
+        if (latest) {
+          const d = new Date(latest);
+          syncEl.innerHTML = `Synced <span>${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>`;
+        } else {
+          syncEl.innerHTML = `Synced <span>today</span>`;
+        }
+      } catch (err) {
+        document.getElementById('tableBody').innerHTML =
+          `<tr class="state-row"><td colspan="5">Could not load applications: ${escHtml(err.message)}</td></tr>`;
+        document.getElementById('statTotal').textContent = '—';
+        document.getElementById('statActive').textContent = '—';
+        document.getElementById('statInterviewing').textContent = '—';
+        document.getElementById('statOffers').textContent = '—';
+      }
+    }
+
+    loadApps();
+  </script>
+</body>
+</html>

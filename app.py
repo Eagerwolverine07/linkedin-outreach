@@ -1077,6 +1077,74 @@ async def crm():
 
 
 # ─────────────────────────────────────────────
+# SECTION 9: APPLICATION TRACKER
+# ─────────────────────────────────────────────
+
+@app.get("/tracker", response_class=HTMLResponse)
+async def tracker():
+    """Application tracker — Gmail-synced job applications dashboard."""
+    with open("tracker.html", "r") as f:
+        return HTMLResponse(content=f.read())
+
+
+@app.get("/applications")
+async def get_applications(status: str = None, limit: int = 500):
+    """Returns job applications from Supabase, optionally filtered by status."""
+    if not SUPABASE_URL or not SUPABASE_API_KEY:
+        return {"error": "Supabase not configured"}
+
+    filters = ["order=applied_date.desc.nullslast", f"limit={limit}"]
+    if status and status != "all":
+        filters.append(f"status=eq.{status}")
+
+    url = f"{SUPABASE_URL}/rest/v1/applications?" + "&".join(filters)
+    try:
+        async with aiohttp.ClientSession() as s:
+            async with s.get(url, headers=_sb_headers(),
+                             timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                if resp.status == 200:
+                    return await resp.json()
+                else:
+                    body = await resp.text()
+                    return {"error": f"Supabase {resp.status}", "detail": body[:300]}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.patch("/applications/{app_id}")
+async def update_application(app_id: int, request: Request):
+    """
+    Updates an application's fields.
+    Accepted body fields: status, notes, role, contact_name, contact_email
+    """
+    if not SUPABASE_URL or not SUPABASE_API_KEY:
+        return {"error": "Supabase not configured"}
+
+    body = await request.json()
+    allowed = {"status", "notes", "role", "contact_name", "contact_email"}
+    patch = {k: v for k, v in body.items() if k in allowed}
+    if not patch:
+        return {"error": "No valid fields to update"}
+
+    patch["updated_at"] = "now()"
+
+    url = f"{SUPABASE_URL}/rest/v1/applications?id=eq.{app_id}"
+    headers = {**_sb_headers(), "Prefer": "return=representation"}
+    try:
+        async with aiohttp.ClientSession() as s:
+            async with s.patch(url, headers=headers, json=patch,
+                               timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                if resp.status in (200, 204):
+                    data = await resp.json() if resp.status == 200 else []
+                    return data[0] if data else {"ok": True}
+                else:
+                    body_text = await resp.text()
+                    return {"error": f"Supabase {resp.status}", "detail": body_text[:300]}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+# ─────────────────────────────────────────────
 # SECTION 8: START THE SERVER
 # ─────────────────────────────────────────────
 # uvicorn is the server that runs FastAPI (like gunicorn for Flask).
