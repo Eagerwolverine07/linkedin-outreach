@@ -366,7 +366,7 @@
 
     const acceptRate = total > 0             ? (byFlag.accepted   / total            * 100).toFixed(1) : 0;
     const replyRate  = byFlag.accepted > 0   ? (byFlag.replied    / byFlag.accepted  * 100).toFixed(1) : 0;
-    const callRate   = byFlag.accepted > 0   ? (byFlag.warm_intro / byFlag.accepted  * 100).toFixed(1) : 0;
+    const callRate   = byFlag.replied > 0    ? (byFlag.warm_intro / byFlag.replied   * 100).toFixed(1) : 0;
 
     const byCompany = {};
     for (const c of contacts) {
@@ -400,7 +400,7 @@
         <div class="kpi"><div class="kpi-label">Companies Reached</div><div class="kpi-val" style="color:#29b6a8">${uniqueCompanies}</div><div class="kpi-sub">${uniqueCompanies > 0 ? (total/uniqueCompanies).toFixed(1) : 0} contacts/co</div></div>
         <div class="kpi"><div class="kpi-label">Accepted</div><div class="kpi-val" style="color:#7b6ef6">${byFlag.accepted}</div><div class="kpi-sub">${acceptRate}% of sent</div></div>
         <div class="kpi"><div class="kpi-label">Replied</div><div class="kpi-val" style="color:#c471ed">${byFlag.replied}</div><div class="kpi-sub">${replyRate}% of accepted</div></div>
-        <div class="kpi"><div class="kpi-label">Warm Intro</div><div class="kpi-val" style="color:#ffb347">${byFlag.warm_intro}</div><div class="kpi-sub">${callRate}% of accepted</div></div>
+        <div class="kpi"><div class="kpi-label">Warm Intro</div><div class="kpi-val" style="color:#ffb347">${byFlag.warm_intro}</div><div class="kpi-sub">${callRate}% of replies</div></div>
         <div class="kpi"><div class="kpi-label">No Response</div><div class="kpi-val" style="color:#555570">${byFlag.no_response}</div><div class="kpi-sub">${total > 0 ? (byFlag.no_response/total*100).toFixed(1) : 0}%</div></div>
       </div>
 
