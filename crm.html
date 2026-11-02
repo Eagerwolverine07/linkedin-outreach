@@ -524,7 +524,7 @@
   <div class="stat-card"><div class="label">Total Contacts</div><div class="value grad-text" id="s-total">—</div></div>
   <div class="stat-card"><div class="label">Accepted</div><div class="value f-accepted" id="s-accepted">—</div></div>
   <div class="stat-card"><div class="label">Replied</div><div class="value f-replied" id="s-replied">—</div></div>
-  <div class="stat-card"><div class="label">Warm Intro</div><div class="value f-warm_intro" id="s-warm_intro">—</div></div>
+  <div class="stat-card"><div class="label">Warm Intro / Reply</div><div class="value f-warm_intro" id="s-warm_intro">—</div></div>
   <div class="stat-card"><div class="label">No Response</div><div class="value f-none" id="s-no_response">—</div></div>
 </div>
 
@@ -571,7 +571,10 @@
     document.getElementById('s-total').textContent      = c.length;
     document.getElementById('s-accepted').textContent   = c.filter(x => x.accepted).length;
     document.getElementById('s-replied').textContent    = c.filter(x => x.replied).length;
-    document.getElementById('s-warm_intro').textContent = c.filter(x => x.warm_intro).length;
+    const warmCount = c.filter(x => x.warm_intro).length;
+    const repliedCount = c.filter(x => x.replied).length;
+    const warmPct = repliedCount > 0 ? Math.round((warmCount / repliedCount) * 100) : 0;
+    document.getElementById('s-warm_intro').textContent = repliedCount > 0 ? `${warmPct}%` : '—';
     document.getElementById('s-no_response').textContent = c.filter(x => !x.accepted && !x.replied && !x.warm_intro).length;
   }
 
