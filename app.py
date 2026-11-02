@@ -1121,7 +1121,7 @@ async def update_application(app_id: int, request: Request):
         return {"error": "Supabase not configured"}
 
     body = await request.json()
-    allowed = {"status", "notes", "role", "contact_name", "contact_email"}
+    allowed = {"status", "notes", "role", "contact_name", "contact_email", "referral"}
     patch = {k: v for k, v in body.items() if k in allowed}
     if not patch:
         return {"error": "No valid fields to update"}

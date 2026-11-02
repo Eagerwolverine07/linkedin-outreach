@@ -31,7 +31,7 @@
     }
 
     .page {
-      max-width: 1040px;
+      max-width: 1100px;
       margin: 0 auto;
       padding: 36px 24px 60px;
     }
@@ -86,7 +86,7 @@
     }
     .stat-card {
       flex: 1;
-      min-width: 130px;
+      min-width: 120px;
       background: rgba(255,255,255,0.55);
       border: 1px solid rgba(255,255,255,0.75);
       border-radius: 18px;
@@ -107,6 +107,7 @@
       color: var(--muted);
       font-weight: 500;
     }
+    .stat-card.referral-card .val { color: #6b42c8; }
 
     /* ── filter bar ── */
     .filter-bar {
@@ -133,6 +134,11 @@
       background: rgba(34,85,170,0.12);
       border-color: rgba(34,85,170,0.35);
       color: var(--blue-dark);
+    }
+    .filter-btn[data-status="referral"].active {
+      background: rgba(107,66,200,0.12);
+      border-color: rgba(107,66,200,0.35);
+      color: #6b42c8;
     }
 
     /* ── table card ── */
@@ -203,6 +209,40 @@
     .badge-offer        { background: rgba(30,160,60,0.13);   color: #145520; border: 1px solid rgba(30,160,60,0.25); }
     .badge-rejected     { background: rgba(200,50,50,0.10);   color: #8a1515; border: 1px solid rgba(200,50,50,0.20); }
 
+    /* referral toggle button */
+    .referral-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1.5px solid rgba(107,66,200,0.25);
+      background: transparent;
+      color: rgba(107,66,200,0.45);
+      cursor: pointer;
+      transition: all 0.16s;
+      white-space: nowrap;
+    }
+    .referral-btn:hover {
+      border-color: rgba(107,66,200,0.5);
+      color: #6b42c8;
+      background: rgba(107,66,200,0.06);
+    }
+    .referral-btn.on {
+      background: rgba(107,66,200,0.13);
+      border-color: rgba(107,66,200,0.40);
+      color: #6b42c8;
+    }
+    .referral-btn.saving {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    .referral-btn svg { flex-shrink: 0; }
+
     .date-cell { font-size: 12.5px; color: var(--muted); }
     .contact-cell { font-size: 12.5px; color: var(--muted); }
 
@@ -269,6 +309,10 @@
         <div class="val" id="statOffers">—</div>
         <div class="lbl">Offers</div>
       </div>
+      <div class="stat-card referral-card">
+        <div class="val" id="statReferrals">—</div>
+        <div class="lbl">Referrals</div>
+      </div>
     </div>
 
     <!-- filter bar -->
@@ -279,6 +323,7 @@
       <button class="filter-btn" data-status="interviewing">Interviewing</button>
       <button class="filter-btn" data-status="offer">Offer</button>
       <button class="filter-btn" data-status="rejected">Rejected</button>
+      <button class="filter-btn" data-status="referral">⭐ Referral</button>
     </div>
 
     <!-- table -->
@@ -288,6 +333,7 @@
           <tr>
             <th>Company / Role</th>
             <th>Status</th>
+            <th>Referral</th>
             <th>Applied</th>
             <th>Last Activity</th>
             <th>Contact</th>
@@ -295,7 +341,7 @@
         </thead>
         <tbody id="tableBody">
           <tr class="state-row">
-            <td colspan="5"><span class="spinner"></span>Loading applications…</td>
+            <td colspan="6"><span class="spinner"></span>Loading applications…</td>
           </tr>
         </tbody>
       </table>
@@ -322,19 +368,29 @@
       return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
 
+    function referralBtnHtml(appId, isOn) {
+      const cls = 'referral-btn' + (isOn ? ' on' : '');
+      const icon = isOn
+        ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`
+        : `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+      const label = isOn ? 'Referral' : 'Mark';
+      return `<button class="${cls}" data-id="${appId}" data-referral="${isOn}" onclick="toggleReferral(this)">${icon} ${label}</button>`;
+    }
+
     function renderTable(apps) {
       const tbody = document.getElementById('tableBody');
       if (!apps.length) {
-        tbody.innerHTML = `<tr class="state-row"><td colspan="5">No applications${currentFilter !== 'all' ? ' for this status' : ''} yet.</td></tr>`;
+        tbody.innerHTML = `<tr class="state-row"><td colspan="6">No applications${currentFilter !== 'all' ? ' for this filter' : ''} yet.</td></tr>`;
         return;
       }
       tbody.innerHTML = apps.map(a => `
-        <tr>
+        <tr data-id="${a.id}">
           <td>
             <div class="company-name">${escHtml(a.company)}</div>
             ${a.role ? `<div class="role-name">${escHtml(a.role)}</div>` : ''}
           </td>
           <td><span class="badge ${BADGE[a.status] || 'badge-applied'}">${escHtml(a.status)}</span></td>
+          <td>${referralBtnHtml(a.id, !!a.referral)}</td>
           <td class="date-cell">${fmtDate(a.applied_date)}</td>
           <td class="date-cell">${fmtDate(a.last_activity_date)}</td>
           <td class="contact-cell">${a.contact_name ? escHtml(a.contact_name) : '—'}</td>
@@ -346,10 +402,12 @@
       const active = apps.filter(a => !['rejected', 'offer'].includes(a.status)).length;
       const interviewing = apps.filter(a => a.status === 'interviewing').length;
       const offers = apps.filter(a => a.status === 'offer').length;
+      const referrals = apps.filter(a => a.referral).length;
       document.getElementById('statTotal').textContent = apps.length;
       document.getElementById('statActive').textContent = active;
       document.getElementById('statInterviewing').textContent = interviewing;
       document.getElementById('statOffers').textContent = offers;
+      document.getElementById('statReferrals').textContent = referrals;
     }
 
     function escHtml(s) {
@@ -361,7 +419,10 @@
       document.querySelectorAll('.filter-btn').forEach(b => {
         b.classList.toggle('active', b.dataset.status === status);
       });
-      const filtered = status === 'all' ? allApps : allApps.filter(a => a.status === status);
+      let filtered;
+      if (status === 'all') filtered = allApps;
+      else if (status === 'referral') filtered = allApps.filter(a => a.referral);
+      else filtered = allApps.filter(a => a.status === status);
       renderTable(filtered);
     }
 
@@ -369,6 +430,36 @@
       const btn = e.target.closest('.filter-btn');
       if (btn) applyFilter(btn.dataset.status);
     });
+
+    async function toggleReferral(btn) {
+      const appId = btn.dataset.id;
+      const currentVal = btn.dataset.referral === 'true';
+      const newVal = !currentVal;
+
+      btn.classList.add('saving');
+
+      try {
+        const res = await fetch(`/applications/${appId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ referral: newVal }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        // update local data
+        const app = allApps.find(a => a.id == appId);
+        if (app) app.referral = newVal;
+
+        // update the button in place
+        btn.outerHTML = referralBtnHtml(appId, newVal);
+        updateStats(allApps);
+      } catch (err) {
+        btn.classList.remove('saving');
+        alert('Could not save: ' + err.message);
+      }
+    }
+
+    window.toggleReferral = toggleReferral;
 
     async function loadApps() {
       try {
@@ -380,7 +471,7 @@
         updateStats(allApps);
         applyFilter(currentFilter);
 
-        // sync badge — use the most recent updated_at
+        // sync badge
         const latest = allApps.reduce((max, a) => (!max || a.updated_at > max ? a.updated_at : max), null);
         const syncEl = document.getElementById('syncBadge');
         if (latest) {
@@ -391,11 +482,12 @@
         }
       } catch (err) {
         document.getElementById('tableBody').innerHTML =
-          `<tr class="state-row"><td colspan="5">Could not load applications: ${escHtml(err.message)}</td></tr>`;
+          `<tr class="state-row"><td colspan="6">Could not load applications: ${escHtml(err.message)}</td></tr>`;
         document.getElementById('statTotal').textContent = '—';
         document.getElementById('statActive').textContent = '—';
         document.getElementById('statInterviewing').textContent = '—';
         document.getElementById('statOffers').textContent = '—';
+        document.getElementById('statReferrals').textContent = '—';
       }
     }
 
