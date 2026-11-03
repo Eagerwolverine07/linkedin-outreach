@@ -524,7 +524,9 @@ HOOK WRITING RULES:
 
 CHARACTER BUDGET:
 - Opener target: 90–125 characters. Allow longer when necessary, but never pad to hit a number.
-- Total message must stay within 300 characters (LinkedIn's limit).
+- Total message target: 230–280 characters. This is the sweet spot — enough to show a real hook, not so much it looks like a wall of text in a LinkedIn DM.
+- If your draft is under 200 characters, your hook is not specific enough. Go back and add one concrete detail — a company name, a career move, a market angle. Do not pad with filler.
+- If your draft exceeds 280 characters, trim the opener. Cut adjectives and restate the hook more directly. Never exceed 300 characters.
 
 BANNED WORDS AND PHRASES:
 - Compliments: impressive, speaks volumes, bold pivot, is rare, I admire, remarkable
@@ -549,7 +551,7 @@ For company-angle openers (no profile data): write 1–2 sentences about the com
 FINAL CHECK before returning:
 - Does the hook contain a specific, verifiable detail?
 - Does it sound natural when read aloud?
-- Is it under 300 characters total?
+- Is it between 230–280 characters? If under 200, add a specific detail. If over 280, trim the opener.
 - Does it avoid all banned phrases?
 
 End with the exact phrase: "Open to a quick chat?"
@@ -629,8 +631,8 @@ async def generate_message(session, profile, company_name):
                 # If the LLM dropped the greeting, prepend it
                 if not message.lower().startswith("hey"):
                     message = f"Hey {first_name}, {message}"
-                if len(message) > 300:
-                    message = message[:297] + "..."
+                if len(message) > 280:
+                    message = message[:277] + "..."
                 print(f"[Groq] OK len={len(message)}")
                 return message
             else:
