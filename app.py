@@ -625,28 +625,40 @@ async def generate_message(session, profile, company_name):
         "max_tokens":  400,
     }
 
-    print(f"[Groq] Calling model={GROQ_MODEL} key_set={bool(GROQ_API_KEY)}")
-    try:
-        async with session.post(GROQ_URL, headers=headers, json=payload,
-                                timeout=aiohttp.ClientTimeout(total=30)) as resp:
-            raw = await resp.text()
-            print(f"[Groq] status={resp.status} body_preview={raw[:200]}")
-            if resp.status == 200:
-                data    = json.loads(raw)
-                msg_obj = data["choices"][0]["message"]
-                message = (msg_obj.get("content") or "").strip()
-                # If the LLM dropped the greeting, prepend it
-                if not message.lower().startswith("hey"):
-                    message = f"Hey {first_name}, {message}"
-                if len(message) > 280:
-                    message = message[:277] + "..."
-                print(f"[Groq] OK len={len(message)}")
-                return message
-            else:
-                print(f"[Groq] Error {resp.status}: {raw}")
-    except Exception as e:
-        import traceback
-        print(f"[Groq] Exception: {e}\n{traceback.format_exc()}")
+    import re as _re
+    for attempt in range(3):
+        print(f"[Groq] Calling model={GROQ_MODEL} key_set={bool(GROQ_API_KEY)} attempt={attempt+1}")
+        try:
+            async with session.post(GROQ_URL, headers=headers, json=payload,
+                                    timeout=aiohttp.ClientTimeout(total=30)) as resp:
+                raw = await resp.text()
+                print(f"[Groq] status={resp.status} body_preview={raw[:200]}")
+                if resp.status == 200:
+                    data    = json.loads(raw)
+                    msg_obj = data["choices"][0]["message"]
+                    message = (msg_obj.get("content") or "").strip()
+                    # If the LLM dropped the greeting, prepend it
+                    if not message.lower().startswith("hey"):
+                        message = f"Hey {first_name}, {message}"
+                    if len(message) > 280:
+                        message = message[:277] + "..."
+                    print(f"[Groq] OK len={len(message)}")
+                    return message
+                elif resp.status == 429:
+                    # Parse wait time from Groq error, e.g. "try again in 2.38s"
+                    wait = 10.0
+                    m = _re.search(r'try again in ([\d.]+)s', raw)
+                    if m:
+                        wait = float(m.group(1)) + 0.5
+                    print(f"[Groq] 429 rate limit — waiting {wait:.1f}s before retry")
+                    await asyncio.sleep(wait)
+                else:
+                    print(f"[Groq] Error {resp.status}: {raw}")
+                    break
+        except Exception as e:
+            import traceback
+            print(f"[Groq] Exception: {e}\n{traceback.format_exc()}")
+            break
 
     return f"Hey {first_name}, [message generation failed — retry]"
 
