@@ -542,10 +542,10 @@ BANNED WORDS AND PHRASES:
 - Abstract meta-commentary: "is a transition I want to understand", "is a path I'm trying to map out", "is a skill set I want to learn"
 
 Good examples (fact-first, natural bridge):
-- "Saw you went from BDR to AE at Salesforce in under two years — curious how you approached that ramp." (99 chars)
-- "Closing $14M in public-sector deals at Weka is a motion I haven't seen many people do." (87 chars)
-- "Three years at HubSpot then a jump to a Series B — would love to hear what made you pull the trigger." (101 chars)
-- "You've been on the sales side at Weka since early days — want to hear what that growth looked like from the inside." (114 chars)
+- "Saw you went from BDR to AE at Salesforce in under two years, curious how you approached that ramp."
+- "Closing $14M in public-sector deals at Weka is a motion I haven't seen many people do."
+- "Three years at HubSpot then a jump to a Series B, would love to hear what made you pull the trigger."
+- "You've been on the sales side at Weka since early days, want to hear what that growth looked like from the inside."
 
 Bad examples:
 - "Your career progression is a path I want to understand better." (✗ — interpretation, not description)
@@ -622,7 +622,7 @@ async def generate_message(session, profile, company_name):
             {"role": "user",   "content": user_content},
         ],
         "temperature": 0.7,
-        "max_tokens":  300,
+        "max_tokens":  400,
     }
 
     print(f"[Groq] Calling model={GROQ_MODEL} key_set={bool(GROQ_API_KEY)}")
