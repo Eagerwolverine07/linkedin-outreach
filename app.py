@@ -1108,11 +1108,42 @@ async def tracker():
         return HTMLResponse(content=f.read())
 
 
+STALE_APPLICATION_DAYS = 21
+
+
+async def _auto_reject_stale_applications():
+    """
+    Postings with no movement for 3+ weeks are treated as automatic rejects.
+    Only touches rows still at 'applied' (never screening/interviewing/offer), and keys off
+    last_activity_date, so manually changing a status (which bumps that date) resets the clock.
+    """
+    from datetime import date, datetime, timedelta, timezone
+    cutoff = (date.today() - timedelta(days=STALE_APPLICATION_DAYS)).isoformat()
+    url = (f"{SUPABASE_URL}/rest/v1/applications"
+           f"?status=eq.applied&last_activity_date=lt.{cutoff}")
+    patch = {"status": "rejected", "updated_at": datetime.now(timezone.utc).isoformat()}
+    headers = {**_sb_headers(), "Prefer": "return=representation"}
+    try:
+        async with aiohttp.ClientSession() as s:
+            async with s.patch(url, headers=headers, json=patch,
+                               timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                if resp.status == 200:
+                    rows = await resp.json()
+                    if rows:
+                        print(f"[Tracker] Auto-rejected {len(rows)} stale application(s) (> {STALE_APPLICATION_DAYS}d)")
+                else:
+                    print(f"[Tracker] Auto-reject failed {resp.status}: {(await resp.text())[:200]}")
+    except Exception as e:
+        print(f"[Tracker] Auto-reject error: {e}")
+
+
 @app.get("/applications")
 async def get_applications(status: str = None, limit: int = 500):
     """Returns job applications from Supabase, optionally filtered by status."""
     if not SUPABASE_URL or not SUPABASE_API_KEY:
         return {"error": "Supabase not configured"}
+
+    await _auto_reject_stale_applications()
 
     filters = ["order=applied_date.desc.nullslast", f"limit={limit}"]
     if status and status != "all":
