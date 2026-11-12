@@ -279,6 +279,20 @@
       box-shadow: 0 4px 14px rgba(34,85,170,0.25);
     }
     .add-btn:hover { filter: brightness(1.08); }
+    .dl-btn {
+      margin-left: auto;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(34,85,170,0.30);
+      background: rgba(255,255,255,0.55);
+      color: var(--blue-dark);
+      cursor: pointer;
+    }
+    .dl-btn:hover { background: rgba(34,85,170,0.12); }
+    .dl-btn + .add-btn { margin-left: 0; }
     .modal-backdrop {
       position: fixed; inset: 0;
       background: rgba(20,30,60,0.35);
@@ -399,6 +413,7 @@
       <button class="filter-btn" data-status="offer">Offer</button>
       <button class="filter-btn" data-status="rejected">Rejected</button>
       <button class="filter-btn" data-status="referral">⭐ Referral</button>
+      <button class="dl-btn" id="dlBtn" onclick="downloadCsv()">⬇ Download CSV</button>
       <button class="add-btn" id="addBtn" onclick="openAddModal()">+ Add</button>
     </div>
 
@@ -604,12 +619,51 @@
       document.querySelectorAll('.filter-btn').forEach(b => {
         b.classList.toggle('active', b.dataset.status === status);
       });
-      let filtered;
-      if (status === 'all') filtered = allApps;
-      else if (status === 'referral') filtered = allApps.filter(a => a.referral);
-      else filtered = allApps.filter(a => normStatus(a.status) === status);
-      renderTable(filtered);
+      renderTable(getFiltered());
     }
+
+    function getFiltered() {
+      if (currentFilter === 'all') return allApps;
+      if (currentFilter === 'referral') return allApps.filter(a => a.referral);
+      return allApps.filter(a => normStatus(a.status) === currentFilter);
+    }
+
+    function csvCell(v) {
+      let s = v === null || v === undefined ? '' : String(v);
+      // neutralise spreadsheet formula injection
+      if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+
+    function downloadCsv() {
+      const rows = getFiltered();
+      if (!rows.length) { alert('Nothing to download for this filter.'); return; }
+      const cols = [
+        ['company', 'Company'], ['role', 'Role'], ['status', 'Status'],
+        ['referral', 'Referral'], ['applied_date', 'Applied'],
+        ['last_activity_date', 'Last Activity'], ['contact_name', 'Contact'],
+        ['contact_email', 'Contact Email'], ['notes', 'Notes'], ['source', 'Source'],
+      ];
+      const lines = [cols.map(c => csvCell(c[1])).join(',')];
+      rows.forEach(a => {
+        lines.push(cols.map(([k]) => {
+          if (k === 'status') return csvCell(normStatus(a.status));
+          if (k === 'referral') return csvCell(a.referral ? 'Yes' : 'No');
+          return csvCell(a[k]);
+        }).join(','));
+      });
+      const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const stamp = new Date().toISOString().slice(0, 10);
+      link.href = url;
+      link.download = `applications-${currentFilter}-${stamp}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+    window.downloadCsv = downloadCsv;
 
     document.getElementById('filterBar').addEventListener('click', e => {
       const btn = e.target.closest('.filter-btn');
