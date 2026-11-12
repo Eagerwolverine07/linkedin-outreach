@@ -1161,8 +1161,7 @@ async def create_application(request: Request):
         "source":             "manual",
         "referral":           False,
         # stage flags persist independently of status (e.g. interviewed, then rejected)
-        "had_screening":      bool(body.get("had_screening")) or status in ("screening", "interviewing", "offer"),
-        "had_interview":      bool(body.get("had_interview")) or status in ("interviewing", "offer"),
+        "had_interview":      bool(body.get("had_interview")) or status in ("screening", "interviewing", "offer"),
     }
 
     url = f"{SUPABASE_URL}/rest/v1/applications"

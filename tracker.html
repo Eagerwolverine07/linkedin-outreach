@@ -415,12 +415,9 @@
       </div>
       <div class="stat-card">
         <div class="val" id="statInterviewing">—</div>
-        <div class="lbl">Interviewing now</div>
+        <div class="lbl">Interviewing</div>
       </div>
-      <div class="stat-card">
-        <div class="val" id="statInterviewed">—</div>
-        <div class="lbl">Ever interviewed</div>
-      </div>
+
       <div class="stat-card">
         <div class="val" id="statOffers">—</div>
         <div class="lbl">Offers</div>
@@ -439,7 +436,6 @@
       <button class="filter-btn" data-status="interviewing">Interviewing</button>
       <button class="filter-btn" data-status="offer">Offer</button>
       <button class="filter-btn" data-status="rejected">Rejected</button>
-      <button class="filter-btn" data-status="interviewed">Ever interviewed</button>
       <button class="filter-btn" data-status="referral">⭐ Referral</button>
       <button class="dl-btn" id="dlBtn" onclick="downloadCsv()">⬇ Download CSV</button>
       <button class="add-btn" id="addBtn" onclick="openAddModal()">+ Add</button>
@@ -462,8 +458,7 @@
           <option value="rejected">Rejected</option>
         </select>
         <div class="check-row">
-          <label><input type="checkbox" id="fScreen" /> Had a screening</label>
-          <label><input type="checkbox" id="fInterview" /> Had an interview</label>
+          <label><input type="checkbox" id="fInterview" /> Had a screening / interview</label>
         </div>
         <label for="fDate">Date</label>
         <input id="fDate" type="date" />
@@ -552,8 +547,7 @@
         const today = new Date().toISOString().slice(0, 10);
         // moving to a stage also records it permanently, so a later "rejected" keeps the history
         const patch = { status: newStatus, last_activity_date: today };
-        if (['screening', 'interviewing', 'offer'].includes(newStatus)) patch.had_screening = true;
-        if (['interviewing', 'offer'].includes(newStatus)) patch.had_interview = true;
+        if (['screening', 'interviewing', 'offer'].includes(newStatus)) patch.had_interview = true;
         const res = await fetch(`/applications/${appId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -572,9 +566,8 @@
     }
 
     function stageChipsHtml(a) {
-      const sc = !!a.had_screening, iv = !!a.had_interview;
+      const iv = !!a.had_interview;
       return `<div class="stage-chips">
-        <button class="chip${sc ? ' on' : ''}" data-id="${a.id}" data-field="had_screening" onclick="toggleStage(this)">Screened</button>
         <button class="chip iv${iv ? ' on' : ''}" data-id="${a.id}" data-field="had_interview" onclick="toggleStage(this)">Interviewed</button>
       </div>`;
     }
@@ -586,8 +579,6 @@
       if (!app) return;
       const newVal = !app[field];
       const patch = { [field]: newVal };
-      // an interview implies a screening happened first
-      if (field === 'had_interview' && newVal && !app.had_screening) patch.had_screening = true;
       btn.classList.add('saving');
       try {
         const res = await fetch(`/applications/${appId}`, {
@@ -610,7 +601,6 @@
     function openAddModal() {
       ['fCompany', 'fRole', 'fContact', 'fNotes'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('fStatus').value = 'screening';
-      document.getElementById('fScreen').checked = false;
       document.getElementById('fInterview').checked = false;
       document.getElementById('fDate').value = new Date().toISOString().slice(0, 10);
       document.getElementById('addModal').classList.add('open');
@@ -631,7 +621,6 @@
             company,
             role: document.getElementById('fRole').value.trim() || null,
             status: document.getElementById('fStatus').value,
-            had_screening: document.getElementById('fScreen').checked,
             had_interview: document.getElementById('fInterview').checked,
             date: document.getElementById('fDate').value || null,
             contact_name: document.getElementById('fContact').value.trim() || null,
@@ -678,13 +667,12 @@
 
     function updateStats(apps) {
       const active = apps.filter(a => !['rejected', 'offer'].includes(a.status)).length;
-      const interviewing = apps.filter(a => normStatus(a.status) === 'interviewing').length;
+      const interviewing = apps.filter(a => ['screening', 'interviewing'].includes(normStatus(a.status))).length;
       const offers = apps.filter(a => a.status === 'offer').length;
       const referrals = apps.filter(a => a.referral).length;
       document.getElementById('statTotal').textContent = apps.length;
       document.getElementById('statActive').textContent = active;
       document.getElementById('statInterviewing').textContent = interviewing;
-      document.getElementById('statInterviewed').textContent = apps.filter(a => a.had_interview).length;
       document.getElementById('statOffers').textContent = offers;
       document.getElementById('statReferrals').textContent = referrals;
     }
@@ -704,7 +692,6 @@
     function getFiltered() {
       if (currentFilter === 'all') return allApps;
       if (currentFilter === 'referral') return allApps.filter(a => a.referral);
-      if (currentFilter === 'interviewed') return allApps.filter(a => a.had_interview);
       return allApps.filter(a => normStatus(a.status) === currentFilter);
     }
 
@@ -720,7 +707,7 @@
       if (!rows.length) { alert('Nothing to download for this filter.'); return; }
       const cols = [
         ['company', 'Company'], ['role', 'Role'], ['status', 'Status'],
-        ['referral', 'Referral'], ['had_screening', 'Screened'], ['had_interview', 'Interviewed'], ['applied_date', 'Applied'],
+        ['referral', 'Referral'], ['had_interview', 'Interviewed'], ['applied_date', 'Applied'],
         ['last_activity_date', 'Last Activity'], ['contact_name', 'Contact'],
         ['contact_email', 'Contact Email'], ['notes', 'Notes'], ['source', 'Source'],
       ];
@@ -728,7 +715,7 @@
       rows.forEach(a => {
         lines.push(cols.map(([k]) => {
           if (k === 'status') return csvCell(normStatus(a.status));
-          if (k === 'referral' || k === 'had_screening' || k === 'had_interview') return csvCell(a[k] ? 'Yes' : 'No');
+          if (k === 'referral' || k === 'had_interview') return csvCell(a[k] ? 'Yes' : 'No');
           return csvCell(a[k]);
         }).join(','));
       });
@@ -805,7 +792,6 @@
         document.getElementById('statTotal').textContent = '—';
         document.getElementById('statActive').textContent = '—';
         document.getElementById('statInterviewing').textContent = '—';
-        document.getElementById('statInterviewed').textContent = '—';
         document.getElementById('statOffers').textContent = '—';
         document.getElementById('statReferrals').textContent = '—';
       }
