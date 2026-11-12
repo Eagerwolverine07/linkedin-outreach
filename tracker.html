@@ -332,6 +332,29 @@
     .btn-save { background: linear-gradient(105deg, #2255aa 0%, #44aacc 100%); border: none; color: #fff; }
     .btn-save:disabled { opacity: 0.5; }
 
+    /* stage flag chips */
+    .stage-chips { display: flex; gap: 6px; }
+    .chip {
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1.5px solid rgba(34,85,170,0.22);
+      background: transparent;
+      color: rgba(34,85,170,0.40);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.16s;
+    }
+    .chip:hover { border-color: rgba(34,85,170,0.5); color: var(--blue-dark); }
+    .chip.on { background: rgba(34,85,170,0.13); border-color: rgba(34,85,170,0.40); color: var(--blue-dark); }
+    .chip.on.iv { background: rgba(200,140,20,0.15); border-color: rgba(200,140,20,0.45); color: #7a5500; }
+    .chip.saving { opacity: 0.5; pointer-events: none; }
+    .modal .check-row { display: flex; gap: 18px; margin-top: 12px; }
+    .modal .check-row label { display: flex; align-items: center; gap: 6px; margin: 0; text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--text); }
+    .modal .check-row input { width: auto; }
+
     .date-cell { font-size: 12.5px; color: var(--muted); }
     .contact-cell { font-size: 12.5px; color: var(--muted); }
 
@@ -392,7 +415,11 @@
       </div>
       <div class="stat-card">
         <div class="val" id="statInterviewing">—</div>
-        <div class="lbl">Interviewing</div>
+        <div class="lbl">Interviewing now</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="statInterviewed">—</div>
+        <div class="lbl">Ever interviewed</div>
       </div>
       <div class="stat-card">
         <div class="val" id="statOffers">—</div>
@@ -412,6 +439,7 @@
       <button class="filter-btn" data-status="interviewing">Interviewing</button>
       <button class="filter-btn" data-status="offer">Offer</button>
       <button class="filter-btn" data-status="rejected">Rejected</button>
+      <button class="filter-btn" data-status="interviewed">Ever interviewed</button>
       <button class="filter-btn" data-status="referral">⭐ Referral</button>
       <button class="dl-btn" id="dlBtn" onclick="downloadCsv()">⬇ Download CSV</button>
       <button class="add-btn" id="addBtn" onclick="openAddModal()">+ Add</button>
@@ -433,6 +461,10 @@
           <option value="offer">Offer</option>
           <option value="rejected">Rejected</option>
         </select>
+        <div class="check-row">
+          <label><input type="checkbox" id="fScreen" /> Had a screening</label>
+          <label><input type="checkbox" id="fInterview" /> Had an interview</label>
+        </div>
         <label for="fDate">Date</label>
         <input id="fDate" type="date" />
         <label for="fContact">Contact</label>
@@ -453,6 +485,7 @@
           <tr>
             <th>Company / Role</th>
             <th>Status</th>
+            <th>Progress</th>
             <th>Referral</th>
             <th>Applied</th>
             <th>Last Activity</th>
@@ -461,7 +494,7 @@
         </thead>
         <tbody id="tableBody">
           <tr class="state-row">
-            <td colspan="6"><span class="spinner"></span>Loading applications…</td>
+            <td colspan="7"><span class="spinner"></span>Loading applications…</td>
           </tr>
         </tbody>
       </table>
@@ -517,14 +550,18 @@
       sel.classList.add('saving');
       try {
         const today = new Date().toISOString().slice(0, 10);
+        // moving to a stage also records it permanently, so a later "rejected" keeps the history
+        const patch = { status: newStatus, last_activity_date: today };
+        if (['screening', 'interviewing', 'offer'].includes(newStatus)) patch.had_screening = true;
+        if (['interviewing', 'offer'].includes(newStatus)) patch.had_interview = true;
         const res = await fetch(`/applications/${appId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus, last_activity_date: today }),
+          body: JSON.stringify(patch),
         });
         const data = await res.json();
         if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
-        if (app) { app.status = newStatus; app.last_activity_date = today; }
+        if (app) Object.assign(app, patch);
         updateStats(allApps);
         applyFilter(currentFilter);
       } catch (err) {
@@ -534,9 +571,47 @@
       }
     }
 
+    function stageChipsHtml(a) {
+      const sc = !!a.had_screening, iv = !!a.had_interview;
+      return `<div class="stage-chips">
+        <button class="chip${sc ? ' on' : ''}" data-id="${a.id}" data-field="had_screening" onclick="toggleStage(this)">Screened</button>
+        <button class="chip iv${iv ? ' on' : ''}" data-id="${a.id}" data-field="had_interview" onclick="toggleStage(this)">Interviewed</button>
+      </div>`;
+    }
+
+    async function toggleStage(btn) {
+      const appId = btn.dataset.id;
+      const field = btn.dataset.field;
+      const app = allApps.find(a => a.id == appId);
+      if (!app) return;
+      const newVal = !app[field];
+      const patch = { [field]: newVal };
+      // an interview implies a screening happened first
+      if (field === 'had_interview' && newVal && !app.had_screening) patch.had_screening = true;
+      btn.classList.add('saving');
+      try {
+        const res = await fetch(`/applications/${appId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(patch),
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+        Object.assign(app, patch);
+        updateStats(allApps);
+        applyFilter(currentFilter);
+      } catch (err) {
+        btn.classList.remove('saving');
+        alert('Could not save: ' + err.message);
+      }
+    }
+    window.toggleStage = toggleStage;
+
     function openAddModal() {
       ['fCompany', 'fRole', 'fContact', 'fNotes'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('fStatus').value = 'screening';
+      document.getElementById('fScreen').checked = false;
+      document.getElementById('fInterview').checked = false;
       document.getElementById('fDate').value = new Date().toISOString().slice(0, 10);
       document.getElementById('addModal').classList.add('open');
       document.getElementById('fCompany').focus();
@@ -556,6 +631,8 @@
             company,
             role: document.getElementById('fRole').value.trim() || null,
             status: document.getElementById('fStatus').value,
+            had_screening: document.getElementById('fScreen').checked,
+            had_interview: document.getElementById('fInterview').checked,
             date: document.getElementById('fDate').value || null,
             contact_name: document.getElementById('fContact').value.trim() || null,
             notes: document.getElementById('fNotes').value.trim() || null,
@@ -580,7 +657,7 @@
     function renderTable(apps) {
       const tbody = document.getElementById('tableBody');
       if (!apps.length) {
-        tbody.innerHTML = `<tr class="state-row"><td colspan="6">No applications${currentFilter !== 'all' ? ' for this filter' : ''} yet.</td></tr>`;
+        tbody.innerHTML = `<tr class="state-row"><td colspan="7">No applications${currentFilter !== 'all' ? ' for this filter' : ''} yet.</td></tr>`;
         return;
       }
       tbody.innerHTML = apps.map(a => `
@@ -590,6 +667,7 @@
             ${a.role ? `<div class="role-name">${escHtml(a.role)}</div>` : ''}
           </td>
           <td>${statusSelectHtml(a)}</td>
+          <td>${stageChipsHtml(a)}</td>
           <td>${referralBtnHtml(a.id, !!a.referral)}</td>
           <td class="date-cell">${fmtDate(a.applied_date)}</td>
           <td class="date-cell">${fmtDate(a.last_activity_date)}</td>
@@ -606,6 +684,7 @@
       document.getElementById('statTotal').textContent = apps.length;
       document.getElementById('statActive').textContent = active;
       document.getElementById('statInterviewing').textContent = interviewing;
+      document.getElementById('statInterviewed').textContent = apps.filter(a => a.had_interview).length;
       document.getElementById('statOffers').textContent = offers;
       document.getElementById('statReferrals').textContent = referrals;
     }
@@ -625,6 +704,7 @@
     function getFiltered() {
       if (currentFilter === 'all') return allApps;
       if (currentFilter === 'referral') return allApps.filter(a => a.referral);
+      if (currentFilter === 'interviewed') return allApps.filter(a => a.had_interview);
       return allApps.filter(a => normStatus(a.status) === currentFilter);
     }
 
@@ -640,7 +720,7 @@
       if (!rows.length) { alert('Nothing to download for this filter.'); return; }
       const cols = [
         ['company', 'Company'], ['role', 'Role'], ['status', 'Status'],
-        ['referral', 'Referral'], ['applied_date', 'Applied'],
+        ['referral', 'Referral'], ['had_screening', 'Screened'], ['had_interview', 'Interviewed'], ['applied_date', 'Applied'],
         ['last_activity_date', 'Last Activity'], ['contact_name', 'Contact'],
         ['contact_email', 'Contact Email'], ['notes', 'Notes'], ['source', 'Source'],
       ];
@@ -648,7 +728,7 @@
       rows.forEach(a => {
         lines.push(cols.map(([k]) => {
           if (k === 'status') return csvCell(normStatus(a.status));
-          if (k === 'referral') return csvCell(a.referral ? 'Yes' : 'No');
+          if (k === 'referral' || k === 'had_screening' || k === 'had_interview') return csvCell(a[k] ? 'Yes' : 'No');
           return csvCell(a[k]);
         }).join(','));
       });
@@ -721,10 +801,11 @@
         }
       } catch (err) {
         document.getElementById('tableBody').innerHTML =
-          `<tr class="state-row"><td colspan="6">Could not load applications: ${escHtml(err.message)}</td></tr>`;
+          `<tr class="state-row"><td colspan="7">Could not load applications: ${escHtml(err.message)}</td></tr>`;
         document.getElementById('statTotal').textContent = '—';
         document.getElementById('statActive').textContent = '—';
         document.getElementById('statInterviewing').textContent = '—';
+        document.getElementById('statInterviewed').textContent = '—';
         document.getElementById('statOffers').textContent = '—';
         document.getElementById('statReferrals').textContent = '—';
       }

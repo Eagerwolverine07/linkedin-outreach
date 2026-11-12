@@ -1160,6 +1160,9 @@ async def create_application(request: Request):
         "notes":              (body.get("notes") or None),
         "source":             "manual",
         "referral":           False,
+        # stage flags persist independently of status (e.g. interviewed, then rejected)
+        "had_screening":      bool(body.get("had_screening")) or status in ("screening", "interviewing", "offer"),
+        "had_interview":      bool(body.get("had_interview")) or status in ("interviewing", "offer"),
     }
 
     url = f"{SUPABASE_URL}/rest/v1/applications"
@@ -1188,7 +1191,7 @@ async def update_application(app_id: int, request: Request):
 
     body = await request.json()
     allowed = {"status", "notes", "role", "contact_name", "contact_email", "referral",
-               "last_activity_date"}
+               "last_activity_date", "had_screening", "had_interview"}
     patch = {k: v for k, v in body.items() if k in allowed}
     if not patch:
         return {"error": "No valid fields to update"}
