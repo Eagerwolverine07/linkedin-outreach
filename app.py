@@ -1132,6 +1132,51 @@ async def get_applications(status: str = None, limit: int = 500):
         return {"error": str(e)}
 
 
+@app.post("/applications")
+async def create_application(request: Request):
+    """
+    Manually adds an application (e.g. a screening or interview not caught by the Gmail sync).
+    Body: company (required), role, status, date, contact_name, notes
+    """
+    if not SUPABASE_URL or not SUPABASE_API_KEY:
+        return {"error": "Supabase not configured"}
+
+    body = await request.json()
+    company = (body.get("company") or "").strip()
+    if not company:
+        return {"error": "Company is required"}
+    status = body.get("status") or "applied"
+    if status not in {"applied", "screening", "interviewing", "offer", "rejected"}:
+        return {"error": f"Invalid status: {status}"}
+
+    date = body.get("date") or None
+    row = {
+        "company":            company,
+        "role":               (body.get("role") or None),
+        "status":             status,
+        "applied_date":       date,
+        "last_activity_date": date,
+        "contact_name":       (body.get("contact_name") or None),
+        "notes":              (body.get("notes") or None),
+        "source":             "manual",
+        "referral":           False,
+    }
+
+    url = f"{SUPABASE_URL}/rest/v1/applications"
+    headers = {**_sb_headers(), "Prefer": "return=representation"}
+    try:
+        async with aiohttp.ClientSession() as s:
+            async with s.post(url, headers=headers, json=row,
+                              timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                if resp.status in (200, 201):
+                    data = await resp.json()
+                    return data[0] if data else {"ok": True}
+                body_text = await resp.text()
+                return {"error": f"Supabase {resp.status}", "detail": body_text[:300]}
+    except Exception as e:
+        return {"error": str(e)}
+
+
 @app.patch("/applications/{app_id}")
 async def update_application(app_id: int, request: Request):
     """
@@ -1142,7 +1187,8 @@ async def update_application(app_id: int, request: Request):
         return {"error": "Supabase not configured"}
 
     body = await request.json()
-    allowed = {"status", "notes", "role", "contact_name", "contact_email", "referral"}
+    allowed = {"status", "notes", "role", "contact_name", "contact_email", "referral",
+               "last_activity_date"}
     patch = {k: v for k, v in body.items() if k in allowed}
     if not patch:
         return {"error": "No valid fields to update"}

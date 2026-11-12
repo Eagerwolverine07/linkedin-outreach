@@ -243,6 +243,81 @@
     }
     .referral-btn svg { flex-shrink: 0; }
 
+    /* inline status dropdown */
+    .status-select {
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 999px;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      text-align: center;
+    }
+    .status-select.saving { opacity: 0.5; pointer-events: none; }
+    .status-select.badge-applied      { background: rgba(100,100,140,0.12); color: #44446a; border: 1px solid rgba(100,100,140,0.20); }
+    .status-select.badge-screening    { background: rgba(34,85,170,0.12);   color: #2255aa; border: 1px solid rgba(34,85,170,0.22); }
+    .status-select.badge-interviewing { background: rgba(200,140,20,0.13);  color: #7a5500; border: 1px solid rgba(200,140,20,0.25); }
+    .status-select.badge-offer        { background: rgba(30,160,60,0.13);   color: #145520; border: 1px solid rgba(30,160,60,0.25); }
+    .status-select.badge-rejected     { background: rgba(200,50,50,0.10);   color: #8a1515; border: 1px solid rgba(200,50,50,0.20); }
+
+    /* add button + modal */
+    .add-btn {
+      margin-left: auto;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 7px 18px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(105deg, #2255aa 0%, #44aacc 100%);
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(34,85,170,0.25);
+    }
+    .add-btn:hover { filter: brightness(1.08); }
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(20,30,60,0.35);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center; justify-content: center;
+      z-index: 50; padding: 16px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      width: 100%; max-width: 440px;
+      background: rgba(255,255,255,0.92);
+      border: 1px solid rgba(255,255,255,0.8);
+      border-radius: 22px;
+      padding: 26px;
+      box-shadow: 0 20px 60px rgba(20,60,120,0.25);
+    }
+    .modal h2 { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
+    .modal label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 12px 0 4px; }
+    .modal input, .modal select, .modal textarea {
+      width: 100%;
+      font-family: var(--font);
+      font-size: 13.5px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(34,85,170,0.22);
+      background: #fff;
+      color: var(--text);
+    }
+    .modal textarea { resize: vertical; min-height: 64px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+    .modal-actions button {
+      font-family: var(--font); font-size: 13px; font-weight: 700;
+      padding: 8px 20px; border-radius: 999px; cursor: pointer;
+    }
+    .btn-cancel { background: transparent; border: 1px solid rgba(34,85,170,0.25); color: var(--muted); }
+    .btn-save { background: linear-gradient(105deg, #2255aa 0%, #44aacc 100%); border: none; color: #fff; }
+    .btn-save:disabled { opacity: 0.5; }
+
     .date-cell { font-size: 12.5px; color: var(--muted); }
     .contact-cell { font-size: 12.5px; color: var(--muted); }
 
@@ -324,6 +399,36 @@
       <button class="filter-btn" data-status="offer">Offer</button>
       <button class="filter-btn" data-status="rejected">Rejected</button>
       <button class="filter-btn" data-status="referral">⭐ Referral</button>
+      <button class="add-btn" id="addBtn" onclick="openAddModal()">+ Add</button>
+    </div>
+
+    <!-- add modal -->
+    <div class="modal-backdrop" id="addModal">
+      <div class="modal">
+        <h2>Add application / interview</h2>
+        <label for="fCompany">Company *</label>
+        <input id="fCompany" type="text" placeholder="e.g. Metaview" />
+        <label for="fRole">Role</label>
+        <input id="fRole" type="text" placeholder="e.g. Sales Development Representative" />
+        <label for="fStatus">Stage</label>
+        <select id="fStatus">
+          <option value="applied">Applied</option>
+          <option value="screening">Screening</option>
+          <option value="interviewing">Interviewing</option>
+          <option value="offer">Offer</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <label for="fDate">Date</label>
+        <input id="fDate" type="date" />
+        <label for="fContact">Contact</label>
+        <input id="fContact" type="text" placeholder="Recruiter / interviewer name" />
+        <label for="fNotes">Notes</label>
+        <textarea id="fNotes" placeholder="Round, interviewer, prep notes…"></textarea>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+          <button class="btn-save" id="saveBtn" onclick="saveNewApp()">Save</button>
+        </div>
+      </div>
     </div>
 
     <!-- table -->
@@ -377,6 +482,86 @@
       return `<button class="${cls}" data-id="${appId}" data-referral="${isOn}" onclick="toggleReferral(this)">${icon} ${label}</button>`;
     }
 
+    const STATUSES = ['applied', 'screening', 'interviewing', 'offer', 'rejected'];
+
+    // older rows may use "interview"; treat as "interviewing"
+    function normStatus(s) { return s === 'interview' ? 'interviewing' : (s || 'applied'); }
+
+    function statusSelectHtml(a) {
+      const cur = normStatus(a.status);
+      const opts = STATUSES.map(s =>
+        `<option value="${s}"${s === cur ? ' selected' : ''}>${s}</option>`).join('');
+      return `<select class="status-select ${BADGE[cur] || 'badge-applied'}" data-id="${a.id}" onchange="changeStatus(this)">${opts}</select>`;
+    }
+
+    async function changeStatus(sel) {
+      const appId = sel.dataset.id;
+      const newStatus = sel.value;
+      const app = allApps.find(a => a.id == appId);
+      const prev = app ? normStatus(app.status) : 'applied';
+      sel.classList.add('saving');
+      try {
+        const today = new Date().toISOString().slice(0, 10);
+        const res = await fetch(`/applications/${appId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus, last_activity_date: today }),
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+        if (app) { app.status = newStatus; app.last_activity_date = today; }
+        updateStats(allApps);
+        applyFilter(currentFilter);
+      } catch (err) {
+        sel.value = prev;
+        sel.classList.remove('saving');
+        alert('Could not save: ' + err.message);
+      }
+    }
+
+    function openAddModal() {
+      ['fCompany', 'fRole', 'fContact', 'fNotes'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('fStatus').value = 'screening';
+      document.getElementById('fDate').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('addModal').classList.add('open');
+      document.getElementById('fCompany').focus();
+    }
+    function closeAddModal() { document.getElementById('addModal').classList.remove('open'); }
+
+    async function saveNewApp() {
+      const company = document.getElementById('fCompany').value.trim();
+      if (!company) { alert('Company is required'); return; }
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      try {
+        const res = await fetch('/applications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            company,
+            role: document.getElementById('fRole').value.trim() || null,
+            status: document.getElementById('fStatus').value,
+            date: document.getElementById('fDate').value || null,
+            contact_name: document.getElementById('fContact').value.trim() || null,
+            notes: document.getElementById('fNotes').value.trim() || null,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+        closeAddModal();
+        await loadApps();
+      } catch (err) {
+        alert('Could not save: ' + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    window.changeStatus = changeStatus;
+    window.openAddModal = openAddModal;
+    window.closeAddModal = closeAddModal;
+    window.saveNewApp = saveNewApp;
+
     function renderTable(apps) {
       const tbody = document.getElementById('tableBody');
       if (!apps.length) {
@@ -389,7 +574,7 @@
             <div class="company-name">${escHtml(a.company)}</div>
             ${a.role ? `<div class="role-name">${escHtml(a.role)}</div>` : ''}
           </td>
-          <td><span class="badge ${BADGE[a.status] || 'badge-applied'}">${escHtml(a.status)}</span></td>
+          <td>${statusSelectHtml(a)}</td>
           <td>${referralBtnHtml(a.id, !!a.referral)}</td>
           <td class="date-cell">${fmtDate(a.applied_date)}</td>
           <td class="date-cell">${fmtDate(a.last_activity_date)}</td>
@@ -400,7 +585,7 @@
 
     function updateStats(apps) {
       const active = apps.filter(a => !['rejected', 'offer'].includes(a.status)).length;
-      const interviewing = apps.filter(a => a.status === 'interviewing').length;
+      const interviewing = apps.filter(a => normStatus(a.status) === 'interviewing').length;
       const offers = apps.filter(a => a.status === 'offer').length;
       const referrals = apps.filter(a => a.referral).length;
       document.getElementById('statTotal').textContent = apps.length;
@@ -422,7 +607,7 @@
       let filtered;
       if (status === 'all') filtered = allApps;
       else if (status === 'referral') filtered = allApps.filter(a => a.referral);
-      else filtered = allApps.filter(a => a.status === status);
+      else filtered = allApps.filter(a => normStatus(a.status) === status);
       renderTable(filtered);
     }
 
