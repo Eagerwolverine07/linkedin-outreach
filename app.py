@@ -21,12 +21,20 @@ Why SSE (Server-Sent Events) instead of a regular response:
 """
 
 import os
+import sys
 import json
 import asyncio
 import aiohttp
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, StreamingResponse
 from dotenv import load_dotenv
+
+# Flush every print immediately so Render shows pipeline logs live (and they survive a kill).
+try:
+    sys.stdout.reconfigure(line_buffering=True)
+    sys.stderr.reconfigure(line_buffering=True)
+except Exception:
+    pass
 
 # Load API keys from the .env file
 load_dotenv()
@@ -838,6 +846,30 @@ async def log_contacts_to_supabase(run_id, company: str, results: list):
 #   data: {"key": "value"}\n\n
 # Each message must end with two newlines.
 
+@app.get("/ping")
+async def ping():
+    """Lightweight endpoint used by the pipeline's keepalive."""
+    return {"ok": True}
+
+
+async def _keepalive_loop():
+    """
+    Render's free plan shuts an instance down after 15 minutes without an incoming
+    request, and an open streaming response does not count. A long run (e.g. 49 profiles
+    ~ 15+ min because of the 45s pauses between batches) was being killed mid-run.
+    Hitting our own public URL every 4 minutes keeps the instance alive until the run ends.
+    """
+    base = (os.getenv("RENDER_EXTERNAL_URL") or "https://linkedin-outreach-paas.onrender.com").rstrip("/")
+    while True:
+        await asyncio.sleep(240)
+        try:
+            async with aiohttp.ClientSession() as s:
+                async with s.get(f"{base}/ping", timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                    print(f"[Keepalive] ping status={resp.status}")
+        except Exception as e:
+            print(f"[Keepalive] ping failed: {e}")
+
+
 @app.post("/generate")
 async def generate(request: Request):
     body    = await request.json()
@@ -857,13 +889,23 @@ async def generate(request: Request):
 
     # StreamingResponse runs the generator and sends each yielded string to the browser
     return StreamingResponse(
-        _stream_pipeline(urls, company),
+        _stream_with_keepalive(urls, company),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no",   # tells Render/nginx not to buffer the stream
         },
     )
+
+
+async def _stream_with_keepalive(urls, company):
+    """Runs the pipeline while a background task keeps the Render instance awake."""
+    keepalive = asyncio.create_task(_keepalive_loop())
+    try:
+        async for chunk in _stream_pipeline(urls, company):
+            yield chunk
+    finally:
+        keepalive.cancel()
 
 
 async def _stream_pipeline(urls, company):
@@ -912,9 +954,14 @@ async def _stream_pipeline(urls, company):
             missed = [u for u, p in batch_profiles.items() if p is None]
             if missed:
                 yield sse({"event": "status", "message": f"Tier 1 missed {len(missed)} profile(s), trying Tier 2..."})
-                for url in missed:
-                    profile = await scrape_profile_tier2(session, url)
+                # Run Tier 2 for all misses at once (was one-by-one: up to 5 actors x 60s
+                # per profile, which made a bad batch take 10+ minutes).
+                tier2_results = await asyncio.gather(
+                    *[scrape_profile_tier2(session, u) for u in missed])
+                for url, profile in zip(missed, tier2_results):
                     batch_profiles[url] = profile  # stays None → company-angle opener
+                recovered = sum(1 for p in tier2_results if p)
+                print(f"[Pipeline] batch {batch_index+1}: Tier 1 missed {len(missed)}, Tier 2 recovered {recovered}")
 
             # ── Generate messages for this batch ──
             for url in batch:
@@ -937,7 +984,13 @@ async def _stream_pipeline(urls, company):
                     headline     = ""
 
                 # ── Classify priority BEFORE generating message ──
-                priority = await classify_priority(session, title, headline)
+                # No profile data (every scraper missed) → nothing to classify. Don't ask the
+                # LLM about a blank title (it could answer "low" and the contact would be
+                # silently dropped); keep the contact with a company-angle message instead.
+                if profile:
+                    priority = await classify_priority(session, title, headline)
+                else:
+                    priority = "medium"
 
                 # ── Skip low-priority profiles entirely ──
                 if priority == "low":
