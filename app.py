@@ -1278,17 +1278,30 @@ async def create_application(request: Request):
 async def update_application(app_id: int, request: Request):
     """
     Updates an application's fields.
-    Accepted body fields: status, notes, role, contact_name, contact_email
+    Accepted body fields: status, notes, role, company, contact_name, contact_email,
+    applied_date, last_activity_date, referral, had_screening, had_interview
     """
     if not SUPABASE_URL or not SUPABASE_API_KEY:
         return {"error": "Supabase not configured"}
 
     body = await request.json()
     allowed = {"status", "notes", "role", "contact_name", "contact_email", "referral",
-               "last_activity_date", "had_screening", "had_interview"}
+               "last_activity_date", "had_screening", "had_interview",
+               "company", "applied_date"}
     patch = {k: v for k, v in body.items() if k in allowed}
     if not patch:
         return {"error": "No valid fields to update"}
+
+    if "company" in patch:
+        patch["company"] = (patch["company"] or "").strip()
+        if not patch["company"]:
+            return {"error": "Company is required"}
+    if "status" in patch and patch["status"] not in {"applied", "screening", "interviewing", "offer", "rejected"}:
+        return {"error": f"Invalid status: {patch['status']}"}
+    # blank text / date fields clear the value instead of saving an empty string
+    for k in ("role", "contact_name", "contact_email", "notes", "applied_date", "last_activity_date"):
+        if k in patch and isinstance(patch[k], str) and not patch[k].strip():
+            patch[k] = None
 
     patch["updated_at"] = "now()"
 

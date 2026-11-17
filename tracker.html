@@ -355,6 +355,20 @@
     .modal .check-row label { display: flex; align-items: center; gap: 6px; margin: 0; text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--text); }
     .modal .check-row input { width: auto; }
 
+    .edit-btn {
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1.5px solid rgba(34,85,170,0.25);
+      background: transparent;
+      color: var(--blue-dark);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .edit-btn:hover { background: rgba(34,85,170,0.10); border-color: rgba(34,85,170,0.5); }
+
     .date-cell { font-size: 12.5px; color: var(--muted); }
     .contact-cell { font-size: 12.5px; color: var(--muted); }
 
@@ -444,7 +458,7 @@
     <!-- add modal -->
     <div class="modal-backdrop" id="addModal">
       <div class="modal">
-        <h2>Add application / interview</h2>
+        <h2 id="modalTitle">Add application / interview</h2>
         <label for="fCompany">Company *</label>
         <input id="fCompany" type="text" placeholder="e.g. Metaview" />
         <label for="fRole">Role</label>
@@ -460,15 +474,19 @@
         <div class="check-row">
           <label><input type="checkbox" id="fInterview" /> Had a screening / interview</label>
         </div>
-        <label for="fDate">Date</label>
+        <label for="fDate" id="fDateLabel">Date</label>
         <input id="fDate" type="date" />
+        <div id="fLastWrap" style="display:none">
+          <label for="fLast">Last activity</label>
+          <input id="fLast" type="date" />
+        </div>
         <label for="fContact">Contact</label>
         <input id="fContact" type="text" placeholder="Recruiter / interviewer name" />
         <label for="fNotes">Notes</label>
         <textarea id="fNotes" placeholder="Round, interviewer, prep notes…"></textarea>
         <div class="modal-actions">
           <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
-          <button class="btn-save" id="saveBtn" onclick="saveNewApp()">Save</button>
+          <button class="btn-save" id="saveBtn" onclick="saveApp()">Save</button>
         </div>
       </div>
     </div>
@@ -485,11 +503,12 @@
             <th>Applied</th>
             <th>Last Activity</th>
             <th>Contact</th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="tableBody">
           <tr class="state-row">
-            <td colspan="7"><span class="spinner"></span>Loading applications…</td>
+            <td colspan="8"><span class="spinner"></span>Loading applications…</td>
           </tr>
         </tbody>
       </table>
@@ -598,7 +617,34 @@
     }
     window.toggleStage = toggleStage;
 
+    let editingId = null;   // null = adding a new entry, otherwise the id being edited
+
+    function setModalMode(editing) {
+      document.getElementById('modalTitle').textContent = editing ? 'Edit application' : 'Add application / interview';
+      document.getElementById('fDateLabel').textContent = editing ? 'Applied date' : 'Date';
+      document.getElementById('fLastWrap').style.display = editing ? 'block' : 'none';
+    }
+
+    function openEditModal(appId) {
+      const a = allApps.find(x => x.id == appId);
+      if (!a) return;
+      editingId = a.id;
+      setModalMode(true);
+      document.getElementById('fCompany').value = a.company || '';
+      document.getElementById('fRole').value = a.role || '';
+      document.getElementById('fStatus').value = normStatus(a.status);
+      document.getElementById('fInterview').checked = !!a.had_interview;
+      document.getElementById('fDate').value = (a.applied_date || '').slice(0, 10);
+      document.getElementById('fLast').value = (a.last_activity_date || '').slice(0, 10);
+      document.getElementById('fContact').value = a.contact_name || '';
+      document.getElementById('fNotes').value = a.notes || '';
+      document.getElementById('addModal').classList.add('open');
+      document.getElementById('fCompany').focus();
+    }
+
     function openAddModal() {
+      editingId = null;
+      setModalMode(false);
       ['fCompany', 'fRole', 'fContact', 'fNotes'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('fStatus').value = 'screening';
       document.getElementById('fInterview').checked = false;
@@ -608,25 +654,45 @@
     }
     function closeAddModal() { document.getElementById('addModal').classList.remove('open'); }
 
-    async function saveNewApp() {
+    async function saveApp() {
       const company = document.getElementById('fCompany').value.trim();
       if (!company) { alert('Company is required'); return; }
       const btn = document.getElementById('saveBtn');
       btn.disabled = true;
       try {
-        const res = await fetch('/applications', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            company,
-            role: document.getElementById('fRole').value.trim() || null,
-            status: document.getElementById('fStatus').value,
-            had_interview: document.getElementById('fInterview').checked,
-            date: document.getElementById('fDate').value || null,
-            contact_name: document.getElementById('fContact').value.trim() || null,
-            notes: document.getElementById('fNotes').value.trim() || null,
-          }),
-        });
+        const status = document.getElementById('fStatus').value;
+        const role = document.getElementById('fRole').value.trim() || null;
+        const contact_name = document.getElementById('fContact').value.trim() || null;
+        const notes = document.getElementById('fNotes').value.trim() || null;
+        const had_interview = document.getElementById('fInterview').checked
+          || ['screening', 'interviewing', 'offer'].includes(status);
+        let res;
+        if (editingId === null) {
+          res = await fetch('/applications', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              company, role, status, had_interview, contact_name, notes,
+              date: document.getElementById('fDate').value || null,
+            }),
+          });
+        } else {
+          const old = allApps.find(x => x.id == editingId);
+          const patch = {
+            company, role, status, had_interview, contact_name, notes,
+            applied_date: document.getElementById('fDate').value || null,
+            last_activity_date: document.getElementById('fLast').value || null,
+          };
+          // moving to a new stage counts as activity today unless the date was edited by hand
+          if (old && normStatus(old.status) !== status && patch.last_activity_date === (old.last_activity_date || null)) {
+            patch.last_activity_date = new Date().toISOString().slice(0, 10);
+          }
+          res = await fetch(`/applications/${editingId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(patch),
+          });
+        }
         const data = await res.json();
         if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
         closeAddModal();
@@ -641,12 +707,13 @@
     window.changeStatus = changeStatus;
     window.openAddModal = openAddModal;
     window.closeAddModal = closeAddModal;
-    window.saveNewApp = saveNewApp;
+    window.saveApp = saveApp;
+    window.openEditModal = openEditModal;
 
     function renderTable(apps) {
       const tbody = document.getElementById('tableBody');
       if (!apps.length) {
-        tbody.innerHTML = `<tr class="state-row"><td colspan="7">No applications${currentFilter !== 'all' ? ' for this filter' : ''} yet.</td></tr>`;
+        tbody.innerHTML = `<tr class="state-row"><td colspan="8">No applications${currentFilter !== 'all' ? ' for this filter' : ''} yet.</td></tr>`;
         return;
       }
       tbody.innerHTML = apps.map(a => `
@@ -661,6 +728,7 @@
           <td class="date-cell">${fmtDate(a.applied_date)}</td>
           <td class="date-cell">${fmtDate(a.last_activity_date)}</td>
           <td class="contact-cell">${a.contact_name ? escHtml(a.contact_name) : '—'}</td>
+          <td><button class="edit-btn" onclick="openEditModal(${a.id})">Edit</button></td>
         </tr>
       `).join('');
     }
@@ -788,7 +856,7 @@
         }
       } catch (err) {
         document.getElementById('tableBody').innerHTML =
-          `<tr class="state-row"><td colspan="7">Could not load applications: ${escHtml(err.message)}</td></tr>`;
+          `<tr class="state-row"><td colspan="8">Could not load applications: ${escHtml(err.message)}</td></tr>`;
         document.getElementById('statTotal').textContent = '—';
         document.getElementById('statActive').textContent = '—';
         document.getElementById('statInterviewing').textContent = '—';
