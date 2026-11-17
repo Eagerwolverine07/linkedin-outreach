@@ -346,7 +346,7 @@
 
   async function init() {
     const [contacts, runs] = await Promise.all([
-      fetch('/contacts?limit=1000').then(r => r.json()).catch(() => []),
+      fetch('/contacts?limit=5000').then(r => r.json()).catch(() => []),
       fetch('/history?limit=100').then(r => r.json()).catch(() => []),
     ]);
 

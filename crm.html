@@ -554,7 +554,7 @@
 
   async function loadContacts() {
     try {
-      const res  = await fetch('/contacts?limit=500');
+      const res  = await fetch('/contacts?limit=5000');
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       ALL_CONTACTS = Array.isArray(data) ? data : [];

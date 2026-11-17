@@ -1148,7 +1148,7 @@
       const url = tr.dataset.url;
       // Find the contact id by URL from the server
       try {
-        const res = await fetch(`/contacts?limit=500`);
+        const res = await fetch(`/contacts?limit=5000`);
         if (res.ok) {
           const contacts = await res.json();
           const match = contacts.find(c => c.url === url);

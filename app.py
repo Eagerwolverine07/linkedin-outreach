@@ -1083,22 +1083,33 @@ async def get_contacts(company: str = None, run_id: int = None, limit: int = 200
     if not SUPABASE_URL or not SUPABASE_API_KEY:
         return {"error": "Supabase not configured"}
 
-    filters = ["order=created_at.desc", f"limit={limit}", "deleted=eq.false"]
+    # id.desc as a tie-breaker keeps paging stable (contacts from one batch share created_at)
+    filters = ["order=created_at.desc,id.desc", "deleted=eq.false"]
     if company:
         filters.append(f"company=eq.{company}")
     if run_id is not None:
         filters.append(f"run_id=eq.{run_id}")
 
-    url = f"{SUPABASE_URL}/rest/v1/contacts?" + "&".join(filters)
+    # Supabase returns at most ~1000 rows per request, so page through until we have `limit`.
+    PAGE = 1000
+    rows, offset = [], 0
     try:
         async with aiohttp.ClientSession() as s:
-            async with s.get(url, headers=_sb_headers(),
-                             timeout=aiohttp.ClientTimeout(total=15)) as resp:
-                if resp.status == 200:
-                    return await resp.json()
-                else:
-                    body = await resp.text()
-                    return {"error": f"Supabase {resp.status}", "detail": body[:300]}
+            while len(rows) < limit:
+                size = min(PAGE, limit - len(rows))
+                url = (f"{SUPABASE_URL}/rest/v1/contacts?" + "&".join(filters)
+                       + f"&limit={size}&offset={offset}")
+                async with s.get(url, headers=_sb_headers(),
+                                 timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                    if resp.status not in (200, 206):
+                        body = await resp.text()
+                        return {"error": f"Supabase {resp.status}", "detail": body[:300]}
+                    page = await resp.json()
+                rows.extend(page)
+                if len(page) < size:
+                    break
+                offset += size
+        return rows
     except Exception as e:
         return {"error": str(e)}
 
