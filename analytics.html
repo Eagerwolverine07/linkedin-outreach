@@ -68,11 +68,9 @@
     <div class="funnel" id="funnel"></div>
   </div>
 
-  <div class="grid g4">
+  <div class="grid g2">
     <div class="card"><div class="big" id="mResp">–</div><div class="lbl">Response rate</div><div class="sub">Reached screening, interview or offer, or has a response date</div></div>
     <div class="card"><div class="big" id="mInt">–</div><div class="lbl">Interview rate</div><div class="sub">Screened or interviewed ÷ applications</div></div>
-    <div class="card"><div class="big" id="mOffer">–</div><div class="lbl">Interview-to-offer rate</div><div class="sub" id="mOfferSub"></div></div>
-    <div class="card"><div class="big" id="mMed">–</div><div class="lbl">Median days to response</div><div class="sub" id="mMedSub"></div></div>
   </div>
 
   <div class="grid g2">
@@ -99,7 +97,7 @@
     <table><thead><tr><th>Company / role</th><th>Applied</th><th>Days waiting</th></tr></thead><tbody id="staleBody"></tbody></table>
   </div>
 
-  <p class="note">Not tracked yet: follow-up completion rate (no follow-up dates are recorded) and average days per stage (status changes aren't timestamped). Median days to response uses the "first response" date, which is recorded from now on and can be edited per application in the tracker.</p>
+  <p class="note">Not tracked yet: follow-up completion rate and average days per stage.</p>
 </div>
 
 <script>
@@ -149,13 +147,6 @@ function render(apps) {
 
   $('mResp').textContent = pct(resp.length, total);
   $('mInt').textContent = pct(interviewed.length, total);
-  $('mOffer').textContent = interviewed.length ? pct(offers.length, interviewed.length) : '–';
-  $('mOfferSub').textContent = `${offers.length} offer(s) from ${interviewed.length} interviewed`;
-
-  const days = apps.filter(a => a.first_response_date && a.applied_date)
-    .map(a => Math.round((day(a.first_response_date) - day(a.applied_date)) / 864e5)).filter(n => n >= 0).sort((x,y) => x-y);
-  if (days.length) { const m = Math.floor(days.length/2); $('mMed').textContent = days.length % 2 ? days[m] : ((days[m-1]+days[m])/2).toFixed(1).replace('.0',''); }
-  $('mMedSub').textContent = days.length ? `Based on ${days.length} application(s) with a response date` : 'No response dates recorded yet. Set one in the tracker’s Edit form.';
 
   // weekly
   const weeks = []; let w = mondayOf(today);
