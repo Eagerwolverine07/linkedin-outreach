@@ -26,7 +26,7 @@ import json
 import asyncio
 import aiohttp
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, Response
 from dotenv import load_dotenv
 
 # Flush every print immediately so Render shows pipeline logs live (and they survive a kill).
@@ -60,6 +60,12 @@ async def home():
 async def index():
     with open("index.html", "r") as f:
         return HTMLResponse(content=f.read())
+
+@app.get("/app.css")
+async def stylesheet():
+    """Shared design system for every page. One file, one source of truth."""
+    with open("app.css", "r") as f:
+        return Response(content=f.read(), media_type="text/css")
 
 @app.get("/debug")
 async def debug():

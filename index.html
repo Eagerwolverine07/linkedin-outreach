@@ -6,757 +6,242 @@
   <title>LinkedIn Outreach Pipeline</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/app.css" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+    /* Aliases kept so inline styles inside the JS templates resolve. */
     :root {
-      --grad-start: #ffb347;
-      --grad-mid:   #c471ed;
-      --grad-end:   #7b6ef6;
-      --grad: linear-gradient(135deg, var(--grad-start), var(--grad-mid), var(--grad-end));
-      --bg: #f5e6d8;
-      --surface: rgba(255,255,255,0.55);
-      --card: rgba(255,255,255,0.52);
-      --border: rgba(255,255,255,0.6);
-      --text-primary: #1a1035;
-      --text-secondary: #7c7a8e;
-      --text-muted: #b0adc0;
-      --glass-shadow: 0 8px 32px rgba(120,80,40,0.10), 0 1.5px 0 rgba(255,255,255,0.7) inset;
-      --glass-blur: blur(18px);
+      --text-primary: var(--ink);
+      --text-secondary: var(--ink-mid);
+      --text-muted: var(--ink-soft);
     }
 
-    body {
-      font-family: "Plus Jakarta Sans", sans-serif;
-      background: #f5e6d8;
-      background-image:
-        radial-gradient(ellipse 70% 55% at 100% 0%, #f0b488 0%, transparent 50%),
-        radial-gradient(ellipse 55% 50% at 100% 100%, #c94f72 0%, transparent 50%),
-        radial-gradient(ellipse 50% 45% at 0% 100%,  #7744aa 0%, transparent 50%);
-      background-attachment: fixed;
-      min-height: 100vh;
-      color: var(--text-primary);
-      padding: 0 0 80px;
-    }
+    /* ── compose form ── */
+    .form-card { padding: 26px; margin-bottom: 40px; }
+    .form-card .field-label:not(:first-child) { margin-top: 22px; }
 
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 40px 20px 0;
-    }
-
-    /* ── Nav ── */
-    .nav {
-      display: flex;
-      justify-content: center;
-      padding: 18px 0;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      pointer-events: none;
-    }
-    .nav-capsule {
-      pointer-events: all;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 5px;
-      border-radius: 999px;
-      background: rgba(253,240,224,0.78);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.65);
-      box-shadow: 0 4px 24px rgba(120,80,20,0.12), 0 1px 0 rgba(255,255,255,0.7) inset;
-    }
-    .nav-pill {
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      color: var(--text-secondary);
-      font-size: 13px;
-      font-weight: 600;
-      padding: 7px 16px;
-      border-radius: 999px;
-      border: none;
-      background: transparent;
-      transition: all .2s;
-      white-space: nowrap;
-      cursor: pointer;
-      font-family: "Plus Jakarta Sans", sans-serif;
-    }
-    .nav-pill:hover { color: var(--text-primary); background: rgba(255,255,255,0.5); }
-    .nav-pill.active {
-      background: transparent;
-      color: var(--text-primary);
-      border: 1.5px solid transparent;
-      background-image: linear-gradient(rgba(253,240,224,0.0), rgba(253,240,224,0.0)),
-                        var(--grad);
-      background-origin: border-box;
-      background-clip: padding-box, border-box;
-      box-shadow: 0 1px 6px rgba(196,113,237,0.18);
-    }
-
-    /* ── Header ── */
-    .header {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .header h1 {
-      font-size: 2.75rem;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-      color: var(--text-primary);
-      margin-bottom: 10px;
-    }
-
-    .header h1 .grad-word {
-      background: var(--grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .header p {
-      font-size: 0.9375rem;
-      color: var(--text-secondary);
-      font-weight: 400;
-    }
-
-    /* ── Form card ── */
-    .form-card {
-      background: var(--card);
-      border-radius: 20px;
-      padding: 32px;
-      margin-bottom: 32px;
-      box-shadow: 0 8px 32px rgba(120,80,40,0.10), 0 1.5px 0 rgba(255,255,255,0.7) inset;
-      border: 1px solid var(--border);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-    }
-
-    .field-label {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-      display: block;
-    }
-
-    .company-input {
-      width: 100%;
-      border: none;
-      border-bottom: 1.5px solid var(--border);
-      background: transparent;
-      padding: 8px 0 10px;
-      font-size: 1rem;
-      font-family: inherit;
-      color: var(--text-primary);
-      outline: none;
-      margin-bottom: 28px;
-      transition: border-color 0.2s;
-      font-weight: 500;
-    }
-
-    .company-input::placeholder { color: var(--text-muted); font-weight: 400; }
-    .company-input:focus { border-bottom-color: #c471ed; }
-
-    /* ── URL chip input ── */
     .chip-field-wrap {
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 12px;
-      min-height: 80px;
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
-      align-content: flex-start;
+      gap: 7px;
+      align-items: flex-start;
+      min-height: 96px;
+      padding: 11px 12px;
+      background: var(--surface);
+      border: 1px solid var(--rule-strong);
+      border-radius: var(--radius);
       cursor: text;
-      transition: border-color 0.2s;
-      margin-bottom: 8px;
-      background: rgba(255,255,255,0.4);
+      transition: border-color .12s ease, box-shadow .12s ease;
+    }
+    .chip-field-wrap:focus-within {
+      border-color: var(--ink);
+      box-shadow: 0 0 0 3px rgba(21,32,46,.08);
     }
 
-    .chip-field-wrap:focus-within { border-color: #c471ed; }
-
-    .url-chip {
+    .chip {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      background: linear-gradient(135deg, rgba(255,179,71,0.12), rgba(196,113,237,0.12));
-      border: 1px solid rgba(196,113,237,0.25);
-      border-radius: 6px;
-      padding: 3px 8px 3px 6px;
-      font-size: 0.78rem;
-      color: var(--text-primary);
-      font-weight: 500;
-      max-width: 260px;
+      gap: 6px;
+      max-width: 100%;
+      padding: 4px 6px 4px 10px;
+      font-size: 12.5px;
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      border: 1px solid var(--rule);
+      color: var(--ink-mid);
+      cursor: default;
     }
-
-    .url-chip .li-icon {
-      width: 14px;
-      height: 14px;
-      border-radius: 3px;
-      background: #0077b5;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .url-chip .li-icon svg { display: block; }
-
-    .url-chip .chip-text {
+    .chip-text {
+      font-family: var(--mono);
+      font-size: 12px;
+      max-width: 230px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-
-    .url-chip .chip-remove {
+    .chip-remove {
+      border: 0;
       background: none;
-      border: none;
+      color: var(--ink-soft);
       cursor: pointer;
-      color: var(--text-muted);
-      font-size: 0.9rem;
+      font-size: 14px;
       line-height: 1;
-      padding: 0 0 0 2px;
-      flex-shrink: 0;
-      transition: color 0.15s;
+      padding: 2px 3px;
+      border-radius: 3px;
     }
-
-    .url-chip .chip-remove:hover { color: #c471ed; }
+    .chip-remove:hover { color: var(--ink); background: var(--rule); }
 
     .chip-textarea {
-      border: none;
-      outline: none;
-      background: transparent;
-      font-family: inherit;
-      font-size: 0.875rem;
-      color: var(--text-primary);
-      resize: none;
       flex: 1;
-      min-width: 180px;
-      min-height: 28px;
+      min-width: 190px;
+      border: 0 !important;
+      background: none !important;
+      padding: 4px 2px !important;
+      box-shadow: none !important;
+      resize: none;
+      font-family: var(--mono);
+      font-size: 13px;
       line-height: 1.6;
     }
+    .chip-textarea:focus { outline: none; box-shadow: none !important; }
 
-    .chip-textarea::placeholder { color: var(--text-muted); }
-
-    .url-hint {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-bottom: 24px;
-    }
-
-    .url-count {
-      font-weight: 600;
-      color: #c471ed;
-    }
-
-    /* ── Generate button ── */
     .btn-generate {
-      width: 100%;
-      background: var(--grad);
-      background-size: 200% 200%;
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: 14px 24px;
-      font-size: 0.9375rem;
-      font-weight: 700;
-      font-family: inherit;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.15s;
       position: relative;
       overflow: hidden;
+      width: 100%;
+      padding: 13px 20px;
+      margin-top: 22px;
     }
-
-    .btn-generate:hover:not(:disabled) {
-      opacity: 0.92;
-      transform: translateY(-1px);
-    }
-
-    .btn-generate:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .btn-stop {
-      padding: 14px 20px;
-      border-radius: 12px;
-      border: 1.5px solid rgba(239,68,68,0.4);
-      background: rgba(239,68,68,0.07);
-      color: #ef4444;
-      font-family: var(--font);
-      font-size: 0.875rem;
-      font-weight: 700;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background .15s, border-color .15s;
-    }
-    .btn-stop:hover {
-      background: rgba(239,68,68,0.14);
-      border-color: #ef4444;
-    }
-
-    /* progress fill overlay */
-    .btn-generate .btn-progress {
+    .btn-stop { margin-top: 22px; }
+    .btn-progress {
       position: absolute;
-      inset: 0;
-      background: rgba(255,255,255,0.15);
-      width: 0%;
-      transition: width 0.4s ease;
+      inset: 0 auto 0 0;
+      width: 0;
+      background: var(--signal);
+      transition: width .35s ease;
     }
+    .btn-label { position: relative; z-index: 1; }
 
-    .btn-generate .btn-label {
-      position: relative;
-      z-index: 1;
-    }
-
-    /* ── Status ticker ── */
+    /* ── run ticker ── */
     .status-ticker {
       display: none;
       align-items: center;
-      gap: 8px;
-      padding: 10px 0 0;
-      font-size: 0.8125rem;
-      color: var(--text-secondary);
+      gap: 9px;
+      margin-top: 16px;
+      padding: 11px 14px;
+      font-size: 13px;
+      color: var(--ink-mid);
+      background: var(--surface-2);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
     }
-
-    .status-ticker.visible { display: flex; }
-
+    .status-ticker.active { display: flex; }
     .ticker-dot {
-      width: 6px;
-      height: 6px;
+      width: 7px; height: 7px;
       border-radius: 50%;
-      background: var(--grad);
-      background: linear-gradient(135deg, #ffb347, #c471ed);
-      flex-shrink: 0;
-      animation: pulse 1.2s ease-in-out infinite;
+      background: var(--signal);
+      animation: pulse 1.3s ease-in-out infinite;
     }
+    @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .3 } }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.4; transform: scale(0.7); }
-    }
+    .error-box { display: none; margin-bottom: 24px; }
+    .error-box.active { display: block; }
 
-    /* ── Error ── */
-    .error-box {
-      display: none;
-      background: #fff5f5;
-      border: 1px solid #fecaca;
-      border-radius: 10px;
-      padding: 12px 16px;
-      color: #b91c1c;
-      font-size: 0.875rem;
-      margin-bottom: 20px;
-    }
+    /* ── results ── */
+    .results-section { display: none; margin-bottom: 44px; }
+    .results-section.active { display: block; }
 
-    .error-box.visible { display: block; }
-
-    /* ── Results ── */
-    .results-section { display: none; }
-    .results-section.visible { display: block; }
-
-    .results-header {
+    .results-header, .history-header {
       display: flex;
       align-items: baseline;
-      gap: 12px;
+      justify-content: space-between;
+      gap: 14px;
+      padding-bottom: 10px;
       margin-bottom: 16px;
+      border-bottom: 1px solid var(--rule);
     }
-
-    .results-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--text-primary);
+    .results-title, .history-title {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
     }
-
-    .results-count {
-      font-size: 0.8125rem;
-      color: var(--text-secondary);
-      font-weight: 500;
+    .results-count, .history-count {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--ink-soft);
     }
-
-    /* ── Table ── */
-    .table-card {
-      background: var(--card);
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      box-shadow: 0 8px 32px rgba(120,80,40,0.10), 0 1.5px 0 rgba(255,255,255,0.7) inset;
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      overflow: hidden;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.875rem;
-    }
-
-    thead {
-      background: linear-gradient(to right, rgba(255,179,71,0.06), rgba(196,113,237,0.06));
-      border-bottom: 1px solid var(--border);
-    }
-
-    th {
-      padding: 13px 16px;
-      text-align: left;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      white-space: nowrap;
-    }
-
-    td {
-      padding: 16px 16px;
-      vertical-align: top;
-      border-bottom: 1px solid #f5f0fc;
-    }
-
-    tr:last-child td { border-bottom: none; }
-
-    tbody tr {
-      transition: background 0.15s;
-    }
-
-    tbody tr:hover td { background: #fdfaff; }
-
-    /* gradient left accent per row */
-    tbody tr td:first-child {
-      position: relative;
-    }
-
-    tbody tr td:first-child::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 20%;
-      bottom: 20%;
-      width: 3px;
-      border-radius: 0 2px 2px 0;
-      background: var(--grad);
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
-    tbody tr:hover td:first-child::before { opacity: 1; }
 
     .td-sr {
-      color: var(--text-muted);
-      font-size: 0.8rem;
-      font-weight: 600;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--ink-soft);
       width: 36px;
     }
+    .name-text { font-weight: 500; }
+    .td-url a { font-size: 13px; color: var(--ink-mid); }
+    .td-message { min-width: 300px; }
+    .message-text { font-size: 13.5px; line-height: 1.6; color: var(--ink); }
 
-    .td-name {
-      min-width: 130px;
-    }
+    /* Badges: only a real personalisation earns the accent. */
+    .badge-yes  { background: var(--signal-tint); border-color: var(--signal-rule); color: var(--signal); }
+    .badge-warn { background: var(--stall-tint);  border-color: #E0D2A6;            color: var(--stall); }
+    .badge-no   { background: var(--closed-tint); border-color: var(--rule-strong); color: var(--closed); }
 
-    .name-text {
-      font-weight: 700;
-      color: var(--text-primary);
-      font-size: 0.9rem;
-    }
+    .priority-badge { font-family: var(--sans); }
+    .pri-high   { background: var(--stall-tint);  border-color: #E0D2A6;            color: var(--stall); font-weight: 600; }
+    .pri-medium { background: var(--surface);     border-color: var(--rule-strong); color: var(--ink-mid); }
+    .pri-low    { background: var(--closed-tint); border-color: var(--rule-strong); color: var(--closed); }
 
-    .td-pers { width: 100px; }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      padding: 3px 9px;
-      border-radius: 20px;
-    }
-
-    .badge-yes {
-      background: linear-gradient(135deg, rgba(255,179,71,0.15), rgba(196,113,237,0.15));
-      color: #9333ea;
-      border: 1px solid rgba(196,113,237,0.3);
-    }
-
-    .badge-no {
-      background: #f5f5f5;
-      color: var(--text-muted);
-      border: 1px solid #e5e5e5;
-    }
-
-    .badge-warn {
-      background: #fff7ed;
-      color: #c2410c;
-      border: 1px solid #fed7aa;
-    }
-
-    .td-url a {
-      color: #7b6ef6;
-      text-decoration: none;
-      font-size: 0.8rem;
-      font-weight: 500;
-      white-space: nowrap;
-    }
-
-    .td-url a:hover { text-decoration: underline; }
-
-    .td-message { min-width: 300px; max-width: 420px; }
-
-    .message-text {
-      color: var(--text-primary);
-      line-height: 1.6;
-      font-size: 0.875rem;
-    }
-
-    .char-bar-wrap {
-      margin-top: 8px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
+    /* Character budget: a bar that only speaks up when you go over. */
+    .char-bar-wrap { display: flex; align-items: center; gap: 9px; margin-top: 9px; }
     .char-bar-track {
       flex: 1;
+      max-width: 130px;
       height: 3px;
-      background: #ede8f5;
-      border-radius: 99px;
+      background: var(--rule);
+      border-radius: 2px;
       overflow: hidden;
     }
-
     .char-bar-fill {
       height: 100%;
-      border-radius: 99px;
-      background: var(--grad);
-      transition: width 0.4s ease;
+      background: var(--ink-soft);
+      transition: width .3s ease;
     }
-
-    .char-bar-fill.over { background: linear-gradient(to right, #f97316, #ef4444); }
-
+    .char-bar-fill.over { background: #9C3B26; }
     .char-label {
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: var(--text-muted);
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--ink-soft);
       white-space: nowrap;
     }
+    .char-label.over { color: #9C3B26; font-weight: 500; }
 
-    .char-label.over { color: #ef4444; }
-
-    /* ── Priority badge ── */
-    .priority-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 3px 9px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      white-space: nowrap;
-      border: 1px solid;
-    }
-    .pri-high   { color: #e85d04; border-color: rgba(232,93,4,0.3);   background: rgba(232,93,4,0.08); }
-    .pri-medium { color: #7b6ef6; border-color: rgba(123,110,246,0.3); background: rgba(123,110,246,0.08); }
-    .pri-low    { color: #9090aa; border-color: rgba(144,144,170,0.3); background: rgba(144,144,170,0.08); }
-    .td-priority { width: 90px; }
-
-    /* ── Trash button ── */
-    .btn-trash {
-      background: transparent;
-      border: 1.5px solid rgba(239,68,68,0.25);
-      border-radius: 8px;
-      color: rgba(239,68,68,0.5);
-      font-size: 14px;
-      padding: 5px 8px;
-      cursor: pointer;
-      transition: border-color .15s, color .15s, background .15s;
-      line-height: 1;
-    }
-    .btn-trash:hover {
-      border-color: #ef4444;
-      color: #ef4444;
-      background: rgba(239,68,68,0.06);
-    }
-
-    .td-copy { width: 70px; text-align: center; }
-
-    .btn-copy {
-      background: transparent;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      color: var(--text-secondary);
-      padding: 5px 11px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      transition: all 0.15s;
-      white-space: nowrap;
-    }
-
-    .btn-copy:hover {
-      border-color: #c471ed;
-      color: #c471ed;
-    }
-
-    .btn-copy.copied {
-      background: linear-gradient(135deg, rgba(255,179,71,0.12), rgba(196,113,237,0.12));
-      border-color: #c471ed;
-      color: #9333ea;
-    }
-
-    /* ── Row entrance animation ── */
-    @keyframes rowIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .row-new {
-      animation: rowIn 0.3s ease forwards;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .row-new { animation: none; }
-    }
-
-    /* ── Run History ── */
-    .history-section {
-      margin-top: 48px;
-    }
-    .history-header {
-      display: flex;
-      align-items: baseline;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .history-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-    .history-count {
-      font-size: 0.8125rem;
-      color: var(--text-secondary);
-      font-weight: 500;
-    }
-    .run-list { display: flex; flex-direction: column; gap: 10px; }
+    /* ── past runs ── */
+    .history-section { margin-bottom: 24px; }
+    .run-list { display: flex; flex-direction: column; gap: 8px; }
 
     .run-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius-lg);
       overflow: hidden;
-      box-shadow: 0 8px 32px rgba(120,80,40,0.10), 0 1.5px 0 rgba(255,255,255,0.7) inset;
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
     }
     .run-card-head {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 14px 20px;
+      gap: 14px;
+      padding: 13px 18px;
       cursor: pointer;
       user-select: none;
-      transition: background .15s;
+      transition: background .12s ease;
     }
-    .run-card-head:hover { background: rgba(255,255,255,0.7); }
-    .run-card-head .run-company {
-      font-weight: 700;
-      font-size: 0.9375rem;
-      color: var(--text-primary);
-      flex: 1;
-    }
-    .run-card-head .run-meta {
-      font-size: 0.78rem;
-      color: var(--text-secondary);
+    .run-card-head:hover { background: var(--surface-2); }
+    .run-company { flex: 1; font-size: 14.5px; font-weight: 600; }
+    .run-meta {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink-soft);
       white-space: nowrap;
     }
-    .run-card-head .run-chevron {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      transition: transform .2s;
+    .run-chevron {
+      font-size: 10px;
+      color: var(--ink-soft);
+      transition: transform .18s ease;
     }
     .run-card.open .run-chevron { transform: rotate(180deg); }
 
-    .run-card-body {
-      display: none;
-      border-top: 1px solid var(--border);
-    }
+    .run-card-body { display: none; border-top: 1px solid var(--rule); }
     .run-card.open .run-card-body { display: block; }
 
-    .run-contacts-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.8375rem;
-    }
-    .run-contacts-table thead {
-      background: linear-gradient(to right, rgba(255,179,71,0.05), rgba(196,113,237,0.05));
-    }
-    .run-contacts-table th {
-      padding: 10px 16px;
-      text-align: left;
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: .07em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-    }
-    .run-contacts-table td {
-      padding: 12px 16px;
-      border-bottom: 1px solid #f5f0fc;
-      vertical-align: top;
-    }
-    .run-contacts-table tr:last-child td { border-bottom: none; }
-    .run-contacts-table tbody tr:hover td { background: #fdfaff; }
-    .rct-name a { color: var(--text-primary); font-weight: 600; text-decoration: none; }
-    .rct-name a:hover { color: #7b6ef6; }
-    .rct-msg {
-      color: var(--text-secondary);
-      line-height: 1.55;
-      max-width: 400px;
-    }
-    .rct-copy {
-      background: transparent;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      color: var(--text-secondary);
-      padding: 4px 10px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all .15s;
-    }
-    .rct-copy:hover { border-color: #c471ed; color: #c471ed; }
-    .rct-copy.copied { background: linear-gradient(135deg,rgba(255,179,71,.12),rgba(196,113,237,.12)); border-color:#c471ed; color:#9333ea; }
+    .run-contacts-table thead th { background: var(--surface-2); font-size: 11.5px; }
+    .run-contacts-table td { padding: 11px 16px; font-size: 13px; }
+    .rct-name { font-weight: 500; white-space: nowrap; }
+    .rct-msg { color: var(--ink-mid); line-height: 1.55; }
 
-    .history-empty {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--text-secondary);
-      font-size: 0.875rem;
-    }
-    .history-loader {
-      text-align: center;
-      padding: 24px;
-      color: var(--text-muted);
-      font-size: 0.875rem;
-    }
-
-    /* ── Mobile ── */
-    @media (max-width: 600px) {
-      .header h1 { font-size: 2rem; }
-      .form-card { padding: 24px 18px; }
-      .td-message { min-width: 200px; }
-      table { font-size: 0.8rem; }
+    @media (max-width: 720px) {
+      .form-card { padding: 20px; }
+      .td-message { min-width: 0; }
+      .chip-text { max-width: 150px; }
     }
   </style>
 </head>
@@ -764,23 +249,23 @@
   <nav class="nav">
     <div class="nav-capsule">
       <a href="/" class="nav-pill">Home</a>
-      <div class="nav-divider"></div>
-      <a href="/outreach" class="nav-pill active">Pipeline</a>
+      <a href="/tracker" class="nav-pill">Applications</a>
+      <a href="/outreach" class="nav-pill active">Outreach</a>
       <a href="/dashboard" class="nav-pill">Dashboard</a>
-      <a href="/crm" class="nav-pill">CRM</a>
+      <a href="/crm" class="nav-pill">Contacts</a>
     </div>
   </nav>
 
   <div class="container">
 
     <header class="header">
-      <h1>LinkedIn <span class="grad-word">Outreach</span> Pipeline</h1>
-      <p>Paste profile URLs → get personalized connection messages</p>
+      <h1>Outreach</h1>
+      <p>Paste LinkedIn profile URLs and get a connection message written for each person, under LinkedIn's 300-character limit.</p>
     </header>
 
     <div class="form-card">
 
-      <label class="field-label" for="company-input">Company Name</label>
+      <label class="field-label" for="company-input">Company</label>
       <input
         type="text"
         id="company-input"
@@ -789,7 +274,7 @@
         autocomplete="off"
       />
 
-      <label class="field-label">LinkedIn Profile URLs</label>
+      <label class="field-label">LinkedIn profile URLs</label>
       <div class="chip-field-wrap" id="chip-field" onclick="document.getElementById('chip-input').focus()">
         <!-- chips injected here by JS -->
         <textarea
@@ -800,7 +285,7 @@
         ></textarea>
       </div>
       <p class="url-hint">
-        <span id="url-count-text">No URLs added yet.</span>
+        <span id="url-count-text">Add one URL per line.</span>
         Duplicates removed automatically.
       </p>
 
@@ -810,7 +295,7 @@
           <span class="btn-label" id="btn-label">Generate Messages</span>
         </button>
         <button class="btn-stop" id="stop-btn" onclick="stopPipeline()" style="display:none">
-          ⏹ Stop
+          Stop
         </button>
       </div>
 
@@ -825,7 +310,7 @@
 
     <div class="results-section" id="results-section">
       <div class="results-header">
-        <span class="results-title">Personalized messages</span>
+        <span class="results-title">Messages</span>
         <span class="results-count" id="results-count"></span>
       </div>
       <div class="table-card">
@@ -834,11 +319,11 @@
             <tr>
               <th>#</th>
               <th>Name</th>
-              <th>Personalized</th>
+              <th>Personal detail</th>
               <th>Priority</th>
               <th>LinkedIn</th>
               <th>Message</th>
-              <th>Copy</th>
+              <th></th>
               <th></th>
             </tr>
           </thead>
@@ -850,7 +335,7 @@
     <!-- ── Past Runs ── -->
     <div class="history-section">
       <div class="history-header">
-        <span class="history-title">Past Runs</span>
+        <span class="history-title">Past runs</span>
         <span class="history-count" id="history-count"></span>
       </div>
       <div id="run-list-container">
@@ -892,7 +377,7 @@
       // Update count label
       const n = chipUrls.length;
       urlCountText.innerHTML = n === 0
-        ? "No URLs added yet."
+        ? "Add one URL per line."
         : `<span class="url-count">${n} URL${n !== 1 ? "s" : ""} added.</span>`;
     }
 
@@ -1105,7 +590,7 @@
 
       const pri = row.priority || "medium";
       const priLabel = pri.charAt(0).toUpperCase() + pri.slice(1);
-      const priDot = pri === "high" ? "🔴" : pri === "medium" ? "🟡" : "⚪";
+      const priDot = '<i class="pill-dot"></i>';
 
       const tr = document.createElement("tr");
       tr.className = "row-new";
@@ -1118,10 +603,10 @@
           <span class="badge ${badgeClass}">${badgeLabel}</span>
         </td>
         <td class="td-priority">
-          <span class="priority-badge pri-${pri}">${priDot} ${priLabel}</span>
+          <span class="priority-badge pri-${pri}">${priDot}${priLabel}</span>
         </td>
         <td class="td-url">
-          <a href="${escHtml(row.url)}" target="_blank" rel="noopener">View ↗</a>
+          <a href="${escHtml(row.url)}" target="_blank" rel="noopener">Profile</a>
         </td>
         <td class="td-message">
           <div class="message-text">${escHtml(row.message)}</div>
@@ -1222,7 +707,7 @@
         const res  = await fetch("/history?limit=50");
         const runs = await res.json();
         if (!Array.isArray(runs) || runs.length === 0) {
-          container.innerHTML = `<div class="history-empty">No past runs yet. Generate your first batch above.</div>`;
+          container.innerHTML = `<div class="history-empty">No runs yet. Add a company and some profile URLs above to write your first batch.</div>`;
           return;
         }
         _allRuns = runs;
