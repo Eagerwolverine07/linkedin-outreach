@@ -44,6 +44,11 @@
   .cmp>div{flex:1;border-radius:12px;padding:12px;background:rgba(255,255,255,.6)}
   .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px;background:rgba(34,85,170,.1);color:var(--blue)}
   a.lnk{color:var(--blue);font-weight:600;text-decoration:none;font-size:12px}
+  .leg{font-size:11px;font-weight:600;color:var(--muted);margin-left:10px}
+  .leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 8px;vertical-align:-1px}
+  .d1{background:#1b3f8f} .d2{background:#9bbcf0}
+  .stk{width:100%;max-width:38px;display:flex;flex-direction:column;justify-content:flex-end;border-radius:6px 6px 2px 2px;overflow:hidden;min-height:2px}
+  .stk b{display:block;width:100%}
   .note{font-size:11px;color:var(--muted);margin-top:14px;line-height:1.5}
 </style>
 </head>
@@ -75,27 +80,27 @@
       <div class="cmp" id="refCmp"></div><div class="sub" id="refSub"></div></div>
   </div>
 
-  <div class="grid" style="grid-template-columns:1fr">
-    <div class="card"><h2>Applications per week</h2><div class="bars" id="weekBars"></div><div class="sub" id="weekSub"></div></div>
+  <div class="grid" style="grid-template-columns:minmax(180px,1fr) 4fr">
+    <div class="card"><h2>Ghosting</h2><div class="big" id="gRate">–</div>
+      <div class="lbl">Never got a screening or interview</div>
+      <div class="sub" id="gSub"></div></div>
+    <div class="card"><h2>Applications per week <span class="leg"><i class="d1"></i>Referral <i class="d2"></i>No referral</span></h2><div class="bars" id="weekBars"></div><div class="sub" id="weekSub"></div></div>
   </div>
 
   <div class="grid g2">
     <div class="card"><h2>Where applications end up</h2><div id="stageBreak"></div>
       <div class="sub">Rejected rows with no screening or interview flag count as "no response" (includes 21-day auto-rejects).</div></div>
-    <div class="card"><h2>Ghosting</h2><div class="big" id="gRate">–</div>
-      <div class="lbl">Never got a screening or interview</div>
-      <div class="sub" id="gSub"></div></div>
+    <div class="card"><h2>By role category</h2><table><thead><tr><th>Category</th><th>Apps</th><th>Interviews</th><th>Rate</th></tr></thead><tbody id="roleBody"></tbody></table></div>
   </div>
 
   <div class="grid g2">
-    <div class="card"><h2>By role category</h2><table><thead><tr><th>Category</th><th>Apps</th><th>Interviews</th><th>Rate</th></tr></thead><tbody id="roleBody"></tbody></table></div>
     <div class="card"><h2>Applications by month</h2><div class="bars" id="monthBars"></div></div>
-  </div>
-
-  <div class="card">
+    <div class="card">
     <h2>Needs attention: applied, no reply in 14+ days</h2>
     <table><thead><tr><th>Company / role</th><th>Applied</th><th>Days waiting</th></tr></thead><tbody id="staleBody"></tbody></table>
+    </div>
   </div>
+
 
   <p class="note">Not tracked yet: follow-up completion rate and average days per stage.</p>
 </div>
@@ -152,9 +157,11 @@ function render(apps) {
   const weeks = []; let w = mondayOf(today);
   for (let i = 0; i < 10; i++) { weeks.unshift(new Date(w)); w.setDate(w.getDate() - 7); }
   const wc = weeks.map(ws => apps.filter(a => { const d = day(a.applied_date); return d && d >= ws && d < new Date(ws.getTime() + 7*864e5); }).length);
-  bars($('weekBars'), weeks.map((ws, i) => ({ v: wc[i], l: (ws.getMonth()+1) + '/' + ws.getDate() })));
+  const wr = weeks.map(ws => apps.filter(a => { const d = day(a.applied_date); return a.referral && d && d >= ws && d < new Date(ws.getTime() + 7*864e5); }).length);
+  const wmax = Math.max(1, ...wc);
+  $('weekBars').innerHTML = weeks.map((ws, i) => `<div class="bcol"><div class="bv">${wc[i]}</div><div class="stk" style="height:${Math.round(100 * wc[i] / wmax)}%"><b style="background:#9bbcf0;flex:${wc[i]-wr[i]}"></b><b style="background:#1b3f8f;flex:${wr[i]}"></b></div><div class="bl">${(ws.getMonth()+1)}/${ws.getDate()}</div></div>`).join('');
   const last4 = wc.slice(-4).reduce((a,b)=>a+b,0);
-  $('weekSub').textContent = `Weeks starting Monday. Last 4 weeks average ${(last4/4).toFixed(1)} per week.`;
+  $('weekSub').textContent = `Weeks starting Monday. Last 4 weeks average ${(last4/4).toFixed(1)} per week. Dark = referral applications.`;
 
   // referral vs cold
   const refs = apps.filter(a => a.referral), cold = apps.filter(a => !a.referral);
