@@ -5,397 +5,284 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Job Search OS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/app.css" />
   <style>
-    :root {
-      --font: 'Plus Jakarta Sans', sans-serif;
-      --text: #1a1035;
-      --muted: #7a7a99;
-      --glass-blur: blur(18px);
+    /* ── masthead ── */
+    .masthead {
+      border-bottom: 1px solid var(--rule);
+      margin-bottom: 56px;
     }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: var(--font);
-      color: var(--text);
-      min-height: 100vh;
-      overflow: hidden; /* full-screen split, no scroll */
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ══════════════════════════════════════════
-       SPLIT BACKGROUND
-       Left half  = warm  (outreach palette)
-       Right half = cool  (tracker palette)
-       Diagonal seam runs top-right → bottom-left
-    ══════════════════════════════════════════ */
-    .bg {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-    }
-
-    /* cool left panel (tracker) */
-    .bg-left {
-      position: absolute;
-      inset: 0;
-      background: #d8e8f5;
-      background-image:
-        radial-gradient(ellipse 80% 70% at 0% 0%,   #a8d0f0 0%, transparent 55%),
-        radial-gradient(ellipse 65% 60% at 0% 100%,  #2255aa 0%, transparent 55%),
-        radial-gradient(ellipse 55% 50% at 50% 0%,   #44aacc 0%, transparent 50%);
-      clip-path: polygon(0 0, 56% 0, 44% 100%, 0 100%);
-    }
-
-    /* warm right panel (outreach) */
-    .bg-right {
-      position: absolute;
-      inset: 0;
-      background: #f5e6d8;
-      background-image:
-        radial-gradient(ellipse 80% 70% at 100% 0%,   #f9d4b0 0%, transparent 55%),
-        radial-gradient(ellipse 65% 60% at 100% 100%,  #7744aa 0%, transparent 55%),
-        radial-gradient(ellipse 55% 50% at 50% 100%,  #c94f72 0%, transparent 50%);
-      clip-path: polygon(56% 0, 100% 0, 100% 100%, 44% 100%);
-    }
-
-    /* blended seam overlay — sits between the two halves, feathers the edge */
-    .bg-seam {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        105deg,
-        transparent 38%,
-        rgba(255,255,255,0.38) 47%,
-        rgba(255,255,255,0.38) 53%,
-        transparent 62%
-      );
-      pointer-events: none;
-    }
-
-    /* ── layout ── */
-    .page {
-      position: relative;
-      z-index: 1;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 20px;
-      gap: 0;
-    }
-
-    /* ── hero ── */
-    .hero {
-      text-align: center;
-      margin-bottom: 48px;
-    }
-    .hero-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 14px;
-    }
-    .hero-title {
-      font-size: 44px;
-      font-weight: 800;
-      line-height: 1.08;
-      /* gradient that spans warm → cool, mirroring the split */
-      background: linear-gradient(105deg, #7744aa 0%, #1a1035 40%, #2255aa 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 12px;
-    }
-    .hero-sub {
-      font-size: 15px;
-      color: var(--muted);
-      font-weight: 400;
-      max-width: 360px;
+    .masthead-inner {
+      max-width: 1120px;
       margin: 0 auto;
-      line-height: 1.6;
-    }
-
-    /* ── cards row ── */
-    .modules {
+      padding: 18px 28px;
       display: flex;
-      gap: 24px;
-      align-items: stretch;
-      flex-wrap: wrap;
-      justify-content: center;
-      width: 100%;
-      max-width: 740px;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .masthead-name { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+    .masthead-date {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--ink-soft);
     }
 
-    .module-card {
-      border-radius: 24px;
-      padding: 30px 26px 26px;
-      width: 310px;
+    /* ── opening line ── */
+    .lede { margin-bottom: 36px; }
+    .lede h1 { font-size: 34px; margin-bottom: 8px; }
+    .lede p { font-size: 16px; color: var(--ink-mid); max-width: 56ch; }
+
+    /* ── headline figures: the one bold moment ── */
+    .ledger {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--ink);
+      border-bottom: 1px solid var(--rule);
+      margin-bottom: 56px;
+    }
+    .ledger-item {
+      padding: 22px 24px 24px 0;
+      border-right: 1px solid var(--rule);
+    }
+    .ledger-item:last-child { border-right: 0; }
+    .ledger-item:not(:first-child) { padding-left: 24px; }
+    .ledger-fig {
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 42px;
+      line-height: 1;
+      font-weight: 400;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+    }
+    .ledger-fig.pending { color: var(--rule-strong); }
+    .ledger-fig.signal  { color: var(--signal); }
+    .ledger-lbl {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--ink-mid);
+    }
+
+    /* ── modules: bordered panels, no shadow, no lift ── */
+    .modules {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 8px;
+    }
+    .module {
       display: flex;
       flex-direction: column;
-      gap: 14px;
-      position: relative;
-      transition: transform 0.22s ease, box-shadow 0.22s ease;
+      padding: 26px;
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius-lg);
       text-decoration: none;
       color: inherit;
+      transition: border-color .14s ease;
     }
+    .module:hover { border-color: var(--ink); }
+    .module:hover .module-open { color: var(--ink); }
 
-    /* warm card — left */
-    .module-card.warm {
-      background: rgba(255, 245, 235, 0.58);
-      border: 1px solid rgba(255,255,255,0.68);
-      box-shadow: 0 8px 32px rgba(120,60,20,0.12), 0 1.5px 0 rgba(255,255,255,0.75) inset;
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-    }
-    .module-card.warm:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 18px 48px rgba(120,60,20,0.18), 0 1.5px 0 rgba(255,255,255,0.75) inset;
-    }
-
-    /* cool card — left */
-    .module-card.cool {
-      background: rgba(230, 242, 255, 0.55);
-      border: 1px solid rgba(255,255,255,0.65);
-      box-shadow: 0 8px 32px rgba(20,60,120,0.12), 0 1.5px 0 rgba(255,255,255,0.72) inset;
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-    }
-    .module-card.cool:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 18px 48px rgba(20,60,120,0.18), 0 1.5px 0 rgba(255,255,255,0.72) inset;
-    }
-
-    .module-icon {
-      width: 46px;
-      height: 46px;
-      border-radius: 13px;
+    .module-top {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
     }
-    .module-icon.warm-icon {
-      background: linear-gradient(135deg, #c471ed 0%, #7b6ef6 100%);
-      box-shadow: 0 4px 14px rgba(123,110,246,0.38);
-    }
-    .module-icon.cool-icon {
-      background: linear-gradient(135deg, #5ab0e8 0%, #2255aa 100%);
-      box-shadow: 0 4px 14px rgba(34,85,170,0.30);
-    }
-
-    .module-badge {
-      position: absolute;
-      top: 18px;
-      right: 18px;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 3px 9px;
-      border-radius: 999px;
-    }
-    .badge-live {
-      background: rgba(80,190,100,0.15);
-      color: #1e6e35;
-      border: 1px solid rgba(80,190,100,0.32);
-    }
-    .badge-soon {
-      background: rgba(34,85,170,0.10);
-      color: #2255aa;
-      border: 1px solid rgba(34,85,170,0.20);
-    }
-
-    .module-name {
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--text);
-      line-height: 1.2;
-    }
+    .module-name { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
     .module-desc {
-      font-size: 13px;
-      color: var(--muted);
+      margin-top: 8px;
+      font-size: 14px;
+      color: var(--ink-mid);
       line-height: 1.6;
       flex: 1;
     }
-
-    .module-stats {
+    .module-figs {
       display: flex;
-      gap: 18px;
-      padding-top: 14px;
-      border-top: 1px solid rgba(255,255,255,0.52);
+      flex-wrap: wrap;
+      gap: 22px;
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--rule);
     }
-    .stat { display: flex; flex-direction: column; gap: 2px; }
-    .stat-val { font-size: 18px; font-weight: 700; color: var(--text); }
-    .stat-lbl { font-size: 11px; color: var(--muted); font-weight: 500; }
+    .module-fig { display: flex; flex-direction: column; gap: 3px; }
+    .module-fig b {
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 19px;
+      font-weight: 500;
+      line-height: 1;
+    }
+    .module-fig b.pending { color: var(--rule-strong); }
+    .module-fig b.signal  { color: var(--signal); }
+    .module-fig span { font-size: 12px; color: var(--ink-soft); }
 
-    /* outreach wordmark — matches screenshot exactly */
-    .wordmark {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0px;
-      text-align: center;
-    }
-    .wordmark-line {
-      font-size: 26px;
-      font-weight: 800;
-      line-height: 1.15;
-      color: #12102a;
-      letter-spacing: -0.02em;
-    }
-    .wordmark-outreach {
-      font-size: 34px;
-      font-weight: 800;
-      line-height: 1.1;
-      letter-spacing: -0.02em;
-      background: linear-gradient(100deg, #e8845a 0%, #cc5588 45%, #8844dd 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    /* workflow strip */
-    .workflow {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding-top: 14px;
-      border-top: 1px solid rgba(255,255,255,0.52);
-    }
-    .wf-step {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text);
-      opacity: 0.75;
-      white-space: nowrap;
-    }
-    .wf-arrow {
-      font-size: 11px;
-      color: var(--muted);
-      opacity: 0.6;
-      flex-shrink: 0;
-    }
-
-    .module-cta {
+    .module-open {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-      margin-top: 2px;
+      gap: 7px;
+      margin-top: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink-mid);
+      transition: color .14s ease;
     }
-    .module-cta svg { transition: transform 0.2s; }
-    .module-card:hover .module-cta svg { transform: translateX(3px); }
+    .module-open svg { flex-shrink: 0; }
 
-    .soon-block {
-      padding-top: 14px;
-      border-top: 1px solid rgba(255,255,255,0.45);
+    .quick {
       display: flex;
-      flex-direction: column;
-      gap: 5px;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 28px;
+      padding-top: 18px;
+      border-top: 1px solid var(--rule);
+      font-size: 14px;
     }
-    .soon-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: #2255aa;
-      opacity: 0.7;
-    }
-    .soon-hint {
-      font-size: 11px;
-      color: var(--muted);
-      opacity: 0.8;
-    }
+    .quick a { color: var(--ink-mid); text-decoration: none; }
+    .quick a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 
-    /* ── footer ── */
-    .footer {
-      margin-top: 44px;
-      font-size: 11px;
-      color: rgba(100,100,140,0.5);
-      text-align: center;
-      letter-spacing: 0.04em;
+    @media (max-width: 860px) {
+      .modules { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 720px) {
+      .masthead-inner { padding: 16px 18px; }
+      .masthead { margin-bottom: 36px; }
+      .lede h1 { font-size: 27px; }
+      .ledger { grid-template-columns: 1fr 1fr; }
+      .ledger-item { padding: 18px 16px 18px 0; }
+      .ledger-item:nth-child(2n) { border-right: 0; }
+      .ledger-item:nth-child(n+3) { border-top: 1px solid var(--rule); }
+      .ledger-fig { font-size: 34px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- split background -->
-  <div class="bg">
-    <div class="bg-left"></div>
-    <div class="bg-right"></div>
-    <div class="bg-seam"></div>
-  </div>
-
-  <div class="page">
-
-    <div class="hero">
-      <p class="hero-label">Amber Sahu · Job Search OS</p>
-      <h1 class="hero-title">Your search,<br>in one place.</h1>
-      <p class="hero-sub">Track outreach, manage applications, and stay on top of every opportunity.</p>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <span class="masthead-name">Job Search OS</span>
+      <span class="masthead-date" id="today"></span>
     </div>
+  </header>
+
+  <main class="page">
+
+    <div class="lede">
+      <h1>Where things stand</h1>
+      <p>Applications, outreach and every conversation in between.</p>
+    </div>
+
+    <section class="ledger" aria-label="Current totals">
+      <div class="ledger-item">
+        <div class="ledger-fig pending" id="fig-apps">—</div>
+        <div class="ledger-lbl">applications</div>
+      </div>
+      <div class="ledger-item">
+        <div class="ledger-fig pending" id="fig-active">—</div>
+        <div class="ledger-lbl">still active</div>
+      </div>
+      <div class="ledger-item">
+        <div class="ledger-fig pending" id="fig-contacts">—</div>
+        <div class="ledger-lbl">people contacted</div>
+      </div>
+      <div class="ledger-item">
+        <div class="ledger-fig pending" id="fig-warm">—</div>
+        <div class="ledger-lbl">warm intros</div>
+      </div>
+    </section>
 
     <div class="modules">
 
-      <!-- Application Tracker — LIVE (cool left side) -->
-      <a href="/tracker" class="module-card cool">
-        <span class="module-badge badge-live">Live</span>
-        <div class="module-icon cool-icon">
-          <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+      <a href="/tracker" class="module">
+        <div class="module-top">
+          <div class="module-name">Applications</div>
         </div>
-        <div>
-          <div class="module-name">Application Tracker</div>
-          <div class="module-desc">Gmail-synced applications. Status tracked from applied to offer, refreshed every morning.</div>
+        <p class="module-desc">Every role you have applied to, pulled from Gmail each morning and tracked from applied through to offer.</p>
+        <div class="module-figs">
+          <div class="module-fig"><b class="pending" id="m-apps">—</b><span>tracked</span></div>
+          <div class="module-fig"><b class="pending" id="m-interviewing">—</b><span>interviewing</span></div>
+          <div class="module-fig"><b class="pending" id="m-referrals">—</b><span>referrals</span></div>
         </div>
-        <div class="workflow" style="justify-content:flex-start;">
-          <span class="wf-step">Gmail scan</span>
-          <span class="wf-arrow">→</span>
-          <span class="wf-step">Status</span>
-          <span class="wf-arrow">→</span>
-          <span class="wf-step">Track</span>
-        </div>
-        <span class="module-cta">
-          Open
-          <svg width="15" height="15" fill="none" viewBox="0 0 24 24">
-            <path d="M5 12h14M13 6l6 6-6 6" stroke="#1a1035" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <span class="module-open">
+          Open applications
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
       </a>
 
-      <!-- Outreach — LIVE (warm right side) -->
-      <a href="/outreach" class="module-card warm" style="align-items:center; text-align:center;">
-        <div class="wordmark">
-          <span class="wordmark-outreach">Outreach</span>
+      <a href="/outreach" class="module">
+        <div class="module-top">
+          <div class="module-name">Outreach</div>
         </div>
-        <div style="font-size:13px; color:#5a5070; text-align:center; line-height:1.6; flex:0;">AI-powered LinkedIn outreach that writes personalized messages and tracks every connection.</div>
-        <div class="workflow" style="justify-content:center; border-top:1px solid rgba(255,255,255,0.52); padding-top:14px; width:100%;">
-          <span class="wf-step">LinkedIn URL</span>
-          <span class="wf-arrow">→</span>
-          <span class="wf-step">Message</span>
-          <span class="wf-arrow">→</span>
-          <span class="wf-step">Track</span>
+        <p class="module-desc">Paste a LinkedIn profile and get a connection message written for that person. Replies are tracked as they come in.</p>
+        <div class="module-figs">
+          <div class="module-fig"><b class="pending" id="m-contacts">—</b><span>contacted</span></div>
+          <div class="module-fig"><b class="pending" id="m-companies">—</b><span>companies</span></div>
+          <div class="module-fig"><b class="pending" id="m-replied">—</b><span>replied</span></div>
         </div>
-        <span class="module-cta" style="margin-top:2px; justify-content:center; width:100%;">
-          Open
-          <svg width="15" height="15" fill="none" viewBox="0 0 24 24">
-            <path d="M5 12h14M13 6l6 6-6 6" stroke="#1a1035" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <span class="module-open">
+          Open outreach
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
       </a>
 
     </div>
 
-    <p class="footer">Job Search OS · Built for Amber · 2026</p>
+    <nav class="quick" aria-label="More">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/crm">Contacts</a>
+    </nav>
 
-  </div>
+    <p class="footer">Built for Amber Sahu. Applications refresh daily at 11am.</p>
 
+  </main>
+
+<script>
+  document.getElementById('today').textContent =
+    new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+  const put = (id, value, signal) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = value;
+    el.classList.remove('pending');
+    if (signal && value > 0) el.classList.add('signal');
+  };
+
+  // Figures are a convenience here, so a failed fetch leaves the dashes in
+  // place rather than taking the page down with it.
+  (async () => {
+    try {
+      const apps = await (await fetch('/applications')).json();
+      if (!Array.isArray(apps)) return;
+      const active = apps.filter(a => !['rejected', 'offer'].includes(a.status)).length;
+      put('fig-apps', apps.length);
+      put('fig-active', active);
+      put('m-apps', apps.length);
+      put('m-interviewing', apps.filter(a => a.status === 'interviewing').length, true);
+      put('m-referrals', apps.filter(a => a.referral).length, true);
+    } catch (e) { /* dashes stay */ }
+  })();
+
+  (async () => {
+    try {
+      const rows = await (await fetch('/contacts?limit=5000')).json();
+      if (!Array.isArray(rows)) return;
+      put('fig-contacts', rows.length);
+      put('fig-warm', rows.filter(c => c.warm_intro).length, true);
+      put('m-contacts', rows.length);
+      put('m-companies', new Set(rows.map(c => c.company).filter(Boolean)).size);
+      put('m-replied', rows.filter(c => c.replied).length, true);
+    } catch (e) { /* dashes stay */ }
+  })();
+</script>
 
 </body>
 </html>

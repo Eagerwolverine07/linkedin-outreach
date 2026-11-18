@@ -5,293 +5,219 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Outreach Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/app.css" />
   <style>
     :root {
-      --grad:    linear-gradient(135deg, #ffb347 0%, #c471ed 55%, #7b6ef6 100%);
-      --bg:      #fdf6e8;
-      --surface: rgba(255,255,255,0.55);
-      --card:    rgba(255,255,255,0.52);
-      --border:  rgba(255,255,255,0.6);
-      --text:    #1a1035;
-      --muted:   #9090aa;
-      --radius:  16px;
-      --font:    'Plus Jakarta Sans', sans-serif;
-      --c-sent:        #a0a0c0;
-      --c-accepted:    #7b6ef6;
-      --c-replied:     #c471ed;
-      --c-call:        #ffb347;
-      --c-noresp:      #c8c8d8;
-      --glass-shadow: 0 8px 32px rgba(120,80,40,0.10), 0 1.5px 0 rgba(255,255,255,0.7) inset;
-      --glass-blur:   blur(18px);
+      --text: var(--ink);
+      --muted: var(--ink-mid);
+      --border: var(--rule-strong);
+      --card: var(--surface);
+      --radius: 6px;
+
+      /* Funnel ramp: the deeper the engagement, the deeper the green.
+         No-response stays neutral — it is the absence of news. */
+      --f1: #C2D3C9;  /* contacted  */
+      --f2: #8CB2A0;  /* accepted   */
+      --f3: #4D8A6C;  /* replied    */
+      --f4: #1C6B4A;  /* warm intro */
+      --f0: #DAD8D2;  /* no response */
     }
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    .kpi-sub { margin-top: 3px; }
 
-    body {
-      font-family: var(--font);
-      background: #f5e6d8;
-      background-image:
-        radial-gradient(ellipse 70% 55% at 100% 0%, #f0b488 0%, transparent 50%),
-        radial-gradient(ellipse 55% 50% at 100% 100%, #c94f72 0%, transparent 50%),
-        radial-gradient(ellipse 50% 45% at 0% 100%,  #7744aa 0%, transparent 50%);
-      background-attachment: fixed;
-      color: var(--text);
-      min-height: 100vh;
-      font-size: 14px;
-    }
-
-    /* ── nav ── */
-    .nav {
-      display: flex;
-      justify-content: center;
-      padding: 18px 0;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      pointer-events: none;
-    }
-    .nav-capsule {
-      pointer-events: all;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 5px;
-      border-radius: 999px;
-      background: rgba(253,240,224,0.78);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.65);
-      box-shadow: 0 4px 24px rgba(120,80,20,0.12), 0 1px 0 rgba(255,255,255,0.7) inset;
-    }
-    .nav-pill {
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 600;
-      padding: 7px 16px;
-      border-radius: 999px;
-      border: none;
-      background: transparent;
-      transition: all .2s;
-      white-space: nowrap;
-      cursor: pointer;
-      font-family: var(--font);
-    }
-    .nav-pill:hover { color: var(--text); background: rgba(255,255,255,0.5); }
-    .nav-pill.active {
-      background: transparent;
-      color: var(--text);
-      -webkit-text-fill-color: var(--text);
-      border: 1.5px solid transparent;
-      background-image: linear-gradient(rgba(253,240,224,0.0), rgba(253,240,224,0.0)),
-                        var(--grad);
-      background-origin: border-box;
-      background-clip: padding-box, border-box;
-      box-shadow: 0 1px 6px rgba(196,113,237,0.18);
-    }
-    .nav-divider {
-      width: 1px; height: 18px;
-      background: rgba(150,120,60,0.2);
-      margin: 0 2px;
-      flex-shrink: 0;
-    }
-
-    /* ── page ── */
-    .page { padding: 28px 28px 60px; max-width: 1280px; margin: 0 auto; }
-
-    /* ── skeleton shimmer ── */
-    @keyframes shimmer {
-      0%   { background-position: -600px 0; }
-      100% { background-position:  600px 0; }
-    }
-    .skel {
-      background: linear-gradient(90deg, rgba(200,180,120,0.18) 25%, rgba(240,220,160,0.28) 50%, rgba(200,180,120,0.18) 75%);
-      background-size: 600px 100%;
-      animation: shimmer 1.4s infinite linear;
-      border-radius: 8px;
-    }
-
-    /* skeleton KPI row */
-    .skel-kpi-row {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 14px;
-      margin-bottom: 28px;
-    }
-    @media (max-width: 900px) { .skel-kpi-row { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 560px) { .skel-kpi-row { grid-template-columns: repeat(2, 1fr); } }
-
-    .skel-kpi {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      box-shadow: var(--glass-shadow);
-    }
-    .skel-kpi .skel-label { height: 10px; width: 60%; }
-    .skel-kpi .skel-val   { height: 34px; width: 45%; }
-    .skel-kpi .skel-sub   { height: 10px; width: 50%; }
-
-    /* skeleton chart cards */
-    .skel-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-    }
-    .skel-grid .span-2 { grid-column: span 2; }
-    @media (max-width: 820px) {
-      .skel-grid { grid-template-columns: 1fr; }
-      .skel-grid .span-2 { grid-column: span 1; }
-    }
-
-    .skel-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 22px 24px;
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      box-shadow: var(--glass-shadow);
-    }
-    .skel-card .skel-heading { height: 11px; width: 38%; margin-bottom: 20px; }
-    .skel-card .skel-chart   { border-radius: 8px; }
-
-    /* ── KPI strip (real) ── */
-    .kpi-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 14px;
-      margin-bottom: 28px;
-    }
-    .kpi {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px 20px;
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      box-shadow: var(--glass-shadow);
-    }
-    .kpi .kpi-label {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-    .kpi .kpi-val {
-      font-size: 32px;
-      font-weight: 800;
-      line-height: 1;
-    }
-    .kpi .kpi-sub {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-    .kpi-val.grad {
-      background: var(--grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    /* ── chart grid (real) ── */
+    /* ── charts ── */
     .charts-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 18px;
+      gap: 20px;
     }
-    .charts-grid .span-2 { grid-column: span 2; }
-    @media (max-width: 820px) {
-      .charts-grid { grid-template-columns: 1fr; }
-      .charts-grid .span-2 { grid-column: span 1; }
-    }
+    .span-2 { grid-column: span 2; }
 
-    .chart-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 22px 24px;
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      box-shadow: var(--glass-shadow);
-    }
-    .chart-card h3 {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      color: var(--muted);
-      margin-bottom: 18px;
-    }
+    .chart-card { padding: 22px 24px 24px; }
+    .chart-card h2 { font-size: 17px; }
+    .chart-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
     .chart-wrap { position: relative; }
-    .chart-wrap canvas { width: 100% !important; }
 
-    /* ── funnel bars ── */
+    .chart-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .chart-head h3 { margin-bottom: 0; }
+
+    .week-nav { display: flex; align-items: center; gap: 4px; }
+    .week-btn {
+      width: 28px; height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--rule-strong);
+      background: var(--surface);
+      border-radius: var(--radius);
+      cursor: pointer;
+      color: var(--ink-mid);
+      font-size: 13px;
+      line-height: 1;
+    }
+    .week-btn:hover { border-color: var(--ink-mid); color: var(--ink); }
+    .week-label {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink-mid);
+      min-width: 124px;
+      text-align: center;
+    }
+
+    .series-toggles { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 16px; }
+    .series-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 11px;
+      font-family: var(--sans);
+      font-size: 12.5px;
+      font-weight: 450;
+      color: var(--ink-mid);
+      background: var(--surface);
+      border: 1px solid var(--rule-strong);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background .12s ease, border-color .12s ease, color .12s ease;
+    }
+    .series-btn:hover { border-color: var(--ink-mid); color: var(--ink); }
+    .series-btn .swatch {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--swatch, var(--ink-soft));
+      flex-shrink: 0;
+    }
+    .series-btn.on {
+      color: var(--ink);
+      font-weight: 500;
+      border-color: var(--ink);
+      background: var(--surface-2);
+    }
+    .series-btn .ct {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--ink-soft);
+    }
+
+    /* ── funnel ── */
     .funnel-header { margin-bottom: 20px; }
-    .funnel-header h2 { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
-    .funnel-header p  { font-size: 13px; color: var(--muted); }
-    .funnel-bars { display: flex; flex-direction: column; gap: 18px; }
-    .f-row { display: flex; flex-direction: column; gap: 6px; }
-    .f-top { display: flex; align-items: baseline; justify-content: space-between; }
-    .f-label { font-size: 14px; font-weight: 700; color: var(--text); }
-    .f-right { display: flex; align-items: baseline; gap: 6px; }
-    .f-count { font-size: 20px; font-weight: 800; color: var(--text); }
-    .f-pct   { font-size: 13px; color: var(--muted); }
-    .f-track { width: 100%; height: 10px; background: rgba(150,120,60,.12); border-radius: 999px; overflow: hidden; }
-    .f-fill  { height: 100%; border-radius: 999px; transition: width .7s cubic-bezier(.4,0,.2,1); }
+    .funnel-header p { margin-top: 5px; font-size: 13.5px; color: var(--ink-mid); }
+    .funnel-bars { display: flex; flex-direction: column; gap: 15px; }
+
+    .f-top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+    .f-label { font-size: 13.5px; font-weight: 500; }
+    .f-label .f-n {
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+      color: var(--ink-mid);
+      font-weight: 400;
+      margin-left: 7px;
+    }
+    .f-pct { font-size: 13px; color: var(--ink-mid); }
+    .f-track {
+      height: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .f-fill { height: 100%; transition: width .4s ease; }
+    .f-denom { font-size: 11.5px; color: var(--ink-soft); margin-top: 5px; }
+
+    /* ── donut ── */
+    .donut-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      pointer-events: none;
+    }
+    .donut-n {
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 24px;
+      font-weight: 500;
+      line-height: 1;
+      color: var(--ink);
+    }
+    .donut-l { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+
+    .donut-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+      justify-content: center;
+      margin-top: 16px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 7px; font-size: 13px; }
+    .legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
 
     /* ── company table ── */
-    .co-table { width: 100%; border-collapse: collapse; }
-    .co-table th {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      color: var(--muted);
-      padding: 0 0 10px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
+    .co-table td { padding: 11px 16px; font-size: 13.5px; }
+    .co-table thead th { padding: 10px 16px; }
+    .co-table .num {
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+      color: var(--ink-mid);
     }
-    .co-table th:not(:first-child) { text-align: right; }
-    .co-table td {
-      padding: 10px 0;
-      font-size: 13px;
-      border-bottom: 1px solid var(--border);
-      vertical-align: middle;
-    }
-    .co-table tr:last-child td { border-bottom: none; }
-    .co-table td:not(:first-child) { text-align: right; }
-    .co-bar-cell { padding-right: 16px; }
+    .co-table .num.is-signal { color: var(--signal); }
+    .co-table .num.is-zero { color: var(--ink-soft); }
+    .co-bar-cell { width: 140px; }
     .co-inline-track {
-      display: inline-block;
-      width: 80px; height: 4px;
-      background: rgba(0,0,0,.08);
-      border-radius: 3px;
-      vertical-align: middle;
+      display: block;
+      height: 6px;
+      background: var(--surface-2);
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      overflow: hidden;
     }
-    .co-inline-fill { display: block; height: 100%; border-radius: 3px; background: var(--grad); }
+    .co-inline-fill { display: block; height: 100%; background: var(--f2); }
 
-    /* ── empty ── */
-    .empty-msg {
-      text-align: center;
-      padding: 80px 20px;
-      color: var(--muted);
-      font-size: 15px;
+    /* ── skeleton ── */
+    .skel-kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      border: 1px solid var(--rule);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 36px;
+      background: var(--surface);
     }
-    .empty-msg strong { display: block; font-size: 20px; color: var(--text); margin-bottom: 8px; }
+    .skel-kpi { padding: 18px 20px; border-right: 1px solid var(--rule); }
+    .skel-kpi:last-child { border-right: 0; }
+    .skel-val { height: 26px; width: 60%; margin-bottom: 10px; }
+    .skel-label { height: 12px; width: 80%; }
+    .skel-sub { height: 10px; width: 50%; margin-top: 7px; }
+    .skel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .skel-card {
+      padding: 22px 24px;
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius-lg);
+    }
+    .skel-heading { height: 15px; width: 180px; margin-bottom: 18px; }
+    .skel-chart { height: 180px; }
+
+    @media (max-width: 860px) {
+      .charts-grid, .skel-grid { grid-template-columns: 1fr; }
+      .span-2 { grid-column: span 1; }
+      .week-label { min-width: 0; }
+    }
   </style>
 </head>
 <body>
@@ -299,14 +225,19 @@
 <nav class="nav">
   <div class="nav-capsule">
     <a href="/" class="nav-pill">Home</a>
-    <div class="nav-divider"></div>
-    <a href="/outreach" class="nav-pill">Pipeline</a>
+    <a href="/tracker" class="nav-pill">Applications</a>
+    <a href="/outreach" class="nav-pill">Outreach</a>
     <a href="/dashboard" class="nav-pill active">Dashboard</a>
-    <a href="/crm" class="nav-pill">CRM</a>
+    <a href="/crm" class="nav-pill">Contacts</a>
   </div>
 </nav>
 
 <div class="page" id="page">
+
+  <header class="header">
+    <h1>Outreach</h1>
+    <p>How far your connection requests travel, and which companies answer.</p>
+  </header>
 
   <!-- ── Skeleton ── -->
   <div id="skeleton">
@@ -333,16 +264,18 @@
 </div>
 
 <script>
+  // One hue, four depths: the further down the funnel, the deeper the green.
   const FLAG_COLORS = {
-    accepted: '#7b6ef6', replied: '#c471ed',
-    warm_intro: '#ffb347', no_response: '#c8c8d8',
+    accepted: '#8CB2A0', replied: '#4D8A6C',
+    warm_intro: '#1C6B4A', no_response: '#DAD8D2',
   };
-  const FLAG_LABELS = { accepted: 'Accepted', replied: 'Replied', warm_intro: 'Warm Intro', no_response: 'No Response' };
+  const FLAG_LABELS = { accepted: 'Accepted', replied: 'Replied', warm_intro: 'Warm intro', no_response: 'No response' };
   const FLAGS = ['accepted','replied','warm_intro'];
 
-  Chart.defaults.color = '#9090aa';
-  Chart.defaults.borderColor = 'rgba(0,0,0,0.06)';
-  Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+  Chart.defaults.color = '#656F7B';
+  Chart.defaults.borderColor = '#E4E2DB';
+  Chart.defaults.font.family = "'IBM Plex Sans', system-ui, sans-serif";
+  Chart.defaults.font.size = 12;
 
   async function init() {
     const [contacts, runs] = await Promise.all([
@@ -396,56 +329,56 @@
 
     document.getElementById('content').innerHTML = `
       <div class="kpi-row">
-        <div class="kpi"><div class="kpi-label">Total Contacts</div><div class="kpi-val grad">${total}</div><div class="kpi-sub">${runCount} run${runCount !== 1 ? 's' : ''}</div></div>
-        <div class="kpi"><div class="kpi-label">Companies Reached</div><div class="kpi-val" style="color:#29b6a8">${uniqueCompanies}</div><div class="kpi-sub">${uniqueCompanies > 0 ? (total/uniqueCompanies).toFixed(1) : 0} contacts/co</div></div>
-        <div class="kpi"><div class="kpi-label">Accepted</div><div class="kpi-val" style="color:#7b6ef6">${byFlag.accepted}</div><div class="kpi-sub">${acceptRate}% of sent</div></div>
-        <div class="kpi"><div class="kpi-label">Replied</div><div class="kpi-val" style="color:#c471ed">${byFlag.replied}</div><div class="kpi-sub">${replyRate}% of accepted</div></div>
-        <div class="kpi"><div class="kpi-label">Warm Intro</div><div class="kpi-val" style="color:#ffb347">${byFlag.warm_intro}</div><div class="kpi-sub">${callRate}% of replies</div></div>
-        <div class="kpi"><div class="kpi-label">No Response</div><div class="kpi-val" style="color:#555570">${byFlag.no_response}</div><div class="kpi-sub">${total > 0 ? (byFlag.no_response/total*100).toFixed(1) : 0}%</div></div>
+        <div class="kpi"><div class="kpi-val">${total}</div><div class="kpi-label">Contacted</div><div class="kpi-sub">${runCount} run${runCount !== 1 ? 's' : ''}</div></div>
+        <div class="kpi"><div class="kpi-val">${uniqueCompanies}</div><div class="kpi-label">Companies</div><div class="kpi-sub">${uniqueCompanies > 0 ? (total/uniqueCompanies).toFixed(1) : 0} per company</div></div>
+        <div class="kpi ${byFlag.accepted ? '' : 'is-zero'}"><div class="kpi-val">${byFlag.accepted}</div><div class="kpi-label">Accepted</div><div class="kpi-sub">${acceptRate}% of contacted</div></div>
+        <div class="kpi ${byFlag.replied ? '' : 'is-zero'}"><div class="kpi-val">${byFlag.replied}</div><div class="kpi-label">Replied</div><div class="kpi-sub">${replyRate}% of accepted</div></div>
+        <div class="kpi ${byFlag.warm_intro ? 'is-signal' : 'is-zero'}"><div class="kpi-val">${byFlag.warm_intro}</div><div class="kpi-label">Warm intros</div><div class="kpi-sub">${callRate}% of replies</div></div>
+        <div class="kpi is-quiet"><div class="kpi-val">${byFlag.no_response}</div><div class="kpi-label">No response</div><div class="kpi-sub">${total > 0 ? (byFlag.no_response/total*100).toFixed(1) : 0}% of contacted</div></div>
       </div>
 
       <div class="charts-grid">
 
         <div class="chart-card span-2">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-            <h3 style="margin-bottom:0">Daily Outreach Volume</h3>
-            <div style="display:flex;align-items:center;gap:8px">
-              <button id="vol-prev" onclick="shiftWeek(-1)" style="border:1.5px solid var(--border);background:var(--card);border-radius:8px;padding:4px 10px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text)">←</button>
-              <span id="vol-label" style="font-size:12px;font-weight:600;color:var(--muted);min-width:140px;text-align:center"></span>
-              <button id="vol-next" onclick="shiftWeek(1)" style="border:1.5px solid var(--border);background:var(--card);border-radius:8px;padding:4px 10px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text)">→</button>
+          <div class="chart-head">
+            <h3>Daily volume</h3>
+            <div class="week-nav">
+              <button class="week-btn" id="vol-prev" onclick="shiftWeek(-1)" aria-label="Previous week">&lsaquo;</button>
+              <span class="week-label" id="vol-label"></span>
+              <button class="week-btn" id="vol-next" onclick="shiftWeek(1)" aria-label="Next week">&rsaquo;</button>
             </div>
           </div>
-          <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-            <button id="vol-tog-accepted"   onclick="toggleVolFlag('accepted')"   style="border:1.5px solid #7b6ef6;background:transparent;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer;color:#7b6ef6;transition:all .15s">Accepted <span id="vol-ct-accepted" style="opacity:.7"></span></button>
-            <button id="vol-tog-replied"    onclick="toggleVolFlag('replied')"    style="border:1.5px solid #c471ed;background:transparent;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer;color:#c471ed;transition:all .15s">Replied <span id="vol-ct-replied" style="opacity:.7"></span></button>
-            <button id="vol-tog-warm_intro" onclick="toggleVolFlag('warm_intro')" style="border:1.5px solid #ffb347;background:transparent;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer;color:#ffb347;transition:all .15s">Warm Intro <span id="vol-ct-warm_intro" style="opacity:.7"></span></button>
+          <div class="series-toggles">
+            <button class="series-btn" id="vol-tog-accepted" onclick="toggleVolFlag('accepted')" style="--swatch:#8CB2A0"><i class="swatch"></i>Accepted <span class="ct" id="vol-ct-accepted"></span></button>
+            <button class="series-btn" id="vol-tog-replied" onclick="toggleVolFlag('replied')" style="--swatch:#4D8A6C"><i class="swatch"></i>Replied <span class="ct" id="vol-ct-replied"></span></button>
+            <button class="series-btn" id="vol-tog-warm_intro" onclick="toggleVolFlag('warm_intro')" style="--swatch:#1C6B4A"><i class="swatch"></i>Warm intro <span class="ct" id="vol-ct-warm_intro"></span></button>
           </div>
           <div class="chart-wrap" style="height:220px"><canvas id="chart-volume"></canvas></div>
         </div>
 
         <div class="chart-card">
           <div class="funnel-header">
-            <h2>From connection to opportunity</h2>
-            <p>Where your outreach turns into meaningful conversations.</p>
+            <h2>Where the funnel narrows</h2>
+            <p>Each stage as a share of the one before it.</p>
           </div>
           <div class="funnel-bars" id="funnel-bars"></div>
         </div>
 
         <div class="chart-card">
-          <h3>Status Breakdown</h3>
-          <div style="position:relative;height:200px"><canvas id="chart-donut"></canvas></div>
-          <div id="donut-center" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;display:none">
-            <div id="donut-center-n" style="font-size:26px;font-weight:800;line-height:1"></div>
-            <div id="donut-center-l" style="font-size:11px;color:var(--muted);font-weight:600;margin-top:3px"></div>
+          <h3>Where contacts stand</h3>
+          <div class="chart-wrap" style="height:200px"><canvas id="chart-donut"></canvas></div>
+          <div id="donut-center" class="donut-center" style="display:none">
+            <div id="donut-center-n" class="donut-n"></div>
+            <div id="donut-center-l" class="donut-l"></div>
           </div>
-          <div id="donut-legend" style="display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:14px;justify-content:center"></div>
+          <div id="donut-legend" class="donut-legend"></div>
         </div>
 
         <div class="chart-card span-2">
-          <h3>By Company</h3>
+          <h3>By company</h3>
           <table class="co-table">
             <thead><tr>
-              <th>Company</th><th>Contacts</th><th>Accepted</th><th>Replied</th><th>Call Booked</th><th class="co-bar-cell">Volume</th>
+              <th>Company</th><th>Contacts</th><th>Accepted</th><th>Replied</th><th>Warm intro</th><th class="co-bar-cell">Share of volume</th>
             </tr></thead>
             <tbody id="co-tbody"></tbody>
           </table>
@@ -476,9 +409,9 @@
     let volWeekOffset = lastDataDay ? Math.min(0, getWeekOffsetForDate(lastDataDay)) : 0;
 
     const VOL_FLAG_CONFIG = {
-      accepted:   { label: 'Accepted',   color: '#7b6ef6', bg: 'rgba(123,110,246,0.15)' },
-      replied:    { label: 'Replied',    color: '#c471ed', bg: 'rgba(196,113,237,0.15)' },
-      warm_intro: { label: 'Warm Intro', color: '#ffb347', bg: 'rgba(255,179,71,0.15)'  },
+      accepted:   { label: 'Accepted',    color: '#8CB2A0', bg: 'rgba(140,178,160,0.14)' },
+      replied:    { label: 'Replied',     color: '#4D8A6C', bg: 'rgba(77,138,108,0.14)'  },
+      warm_intro: { label: 'Warm intro',  color: '#1C6B4A', bg: 'rgba(28,107,74,0.14)'   },
     };
 
     function getWeekDays(offset) {
@@ -522,10 +455,10 @@
       const datasets = [{
         label: 'Contacts',
         data,
-        borderColor: 'rgba(160,160,192,0.7)',
-        backgroundColor: 'rgba(160,160,192,0.08)',
+        borderColor: '#9AA3AE',
+        backgroundColor: 'rgba(154,163,174,0.08)',
         borderWidth: 2,
-        pointBackgroundColor: 'rgba(160,160,192,0.7)',
+        pointBackgroundColor: '#9AA3AE',
         pointRadius: 4,
         pointHoverRadius: 6,
         tension: 0.35,
@@ -592,9 +525,7 @@
       const btn = document.getElementById(`vol-tog-${flag}`);
       if (btn) {
         const active = volActiveFlags.has(flag);
-        btn.style.background = active ? cfg.color : 'transparent';
-        btn.style.color = active ? '#fff' : cfg.color;
-        btn.style.boxShadow = active ? `0 2px 8px ${cfg.bg}` : 'none';
+        btn.classList.toggle('on', active);
       }
       renderVolChart();
     };
@@ -610,10 +541,10 @@
 
     // 2. Funnel — 4 stages, each with correct denominator
     const funnelStages = [
-      { label: 'Contacted',  n: total,              denom: total,              denomLabel: '100% of contacts', color: '#a0a0c0' },
-      { label: 'Accepted',   n: byFlag.accepted,    denom: total,              denomLabel: '% of contacts',    color: '#7b6ef6' },
-      { label: 'Replied',    n: byFlag.replied,     denom: byFlag.accepted,    denomLabel: '% of accepted',    color: '#c471ed' },
-      { label: 'Warm intro', n: byFlag.warm_intro,  denom: byFlag.replied,     denomLabel: '% of replies',     color: '#ffb347' },
+      { label: 'Contacted',  n: total,              denom: total,           denomLabel: 'everyone reached',   color: '#C2D3C9' },
+      { label: 'Accepted',   n: byFlag.accepted,    denom: total,           denomLabel: 'of those contacted', color: '#8CB2A0' },
+      { label: 'Replied',    n: byFlag.replied,     denom: byFlag.accepted, denomLabel: 'of those accepted',  color: '#4D8A6C' },
+      { label: 'Warm intro', n: byFlag.warm_intro,  denom: byFlag.replied,  denomLabel: 'of those who replied', color: '#1C6B4A' },
     ];
     document.getElementById('funnel-bars').innerHTML = funnelStages.map(({ label, n, denom, denomLabel, color }) => {
       const pctNum = denom > 0 ? (n / denom * 100) : 0;
@@ -622,15 +553,22 @@
       return `
         <div class="f-row">
           <div class="f-top">
-            <span class="f-label">${label}</span>
+            <span class="f-label">${label}<span class="f-n">${n}</span></span>
             <span class="f-pct">${pctStr}</span>
           </div>
           <div class="f-track"><div class="f-fill" style="width:${w}%;background:${color}"></div></div>
+          <div class="f-denom">${denomLabel}</div>
         </div>`;
     }).join('');
 
-    // 3. Donut — rich version with center stat + custom legend
-    const funnelItems = [...FLAGS];
+    // 3. Donut — four states a contact can be in, each one exclusive of the
+    //    others, so the slices add up to the total in the middle.
+    const DONUT = [
+      { key: 'no_response', label: 'No response',    n: byFlag.no_response,                  color: FLAG_COLORS.no_response },
+      { key: 'accepted',    label: 'Accepted only',  n: byFlag.accepted - byFlag.replied,    color: FLAG_COLORS.accepted },
+      { key: 'replied',     label: 'Replied',        n: byFlag.replied - byFlag.warm_intro,  color: FLAG_COLORS.replied },
+      { key: 'warm_intro',  label: 'Warm intro',     n: byFlag.warm_intro,                   color: FLAG_COLORS.warm_intro },
+    ].filter(d => d.n > 0);
     const donutCard = document.getElementById('chart-donut').closest('.chart-card');
     donutCard.style.position = 'relative';
     const donutCenter  = document.getElementById('donut-center');
@@ -645,12 +583,12 @@
         const cx = (left + right) / 2, cy = (top + bottom) / 2;
         ctx.save();
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.font = '800 26px Plus Jakarta Sans, sans-serif';
-        ctx.fillStyle = '#1a1035';
+        ctx.font = "500 24px 'IBM Plex Mono', monospace";
+        ctx.fillStyle = '#15202E';
         ctx.fillText(total, cx, cy - 9);
-        ctx.font = '600 11px Plus Jakarta Sans, sans-serif';
-        ctx.fillStyle = '#9090aa';
-        ctx.fillText('Total', cx, cy + 13);
+        ctx.font = "400 12px 'IBM Plex Sans', sans-serif";
+        ctx.fillStyle = '#656F7B';
+        ctx.fillText('contacted', cx, cy + 14);
         ctx.restore();
       }
     };
@@ -672,8 +610,8 @@
           ctx.save();
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.font = '700 13px Plus Jakarta Sans, sans-serif';
-          ctx.fillStyle = '#fff';
+          ctx.font = "500 12px 'IBM Plex Mono', monospace";
+          ctx.fillStyle = DONUT[i].key === 'warm_intro' || DONUT[i].key === 'replied' ? '#FFFFFF' : '#15202E';
           ctx.fillText(pct.toFixed(1) + '%', x, y);
           ctx.restore();
         });
@@ -683,12 +621,12 @@
     new Chart(document.getElementById('chart-donut'), {
       type: 'doughnut',
       data: {
-        labels: funnelItems.map(s => FLAG_LABELS[s]),
+        labels: DONUT.map(d => d.label),
         datasets: [{
-          data: funnelItems.map(s => byFlag[s]),
-          backgroundColor: funnelItems.map(s => FLAG_COLORS[s]),
+          data: DONUT.map(d => d.n),
+          backgroundColor: DONUT.map(d => d.color),
           borderWidth: 2,
-          borderColor: '#fdf6f0',
+          borderColor: '#FFFFFF',
           hoverOffset: 8,
         }],
       },
@@ -701,7 +639,7 @@
               label(ctx) {
                 const n = ctx.parsed;
                 const pct = total > 0 ? (n / total * 100).toFixed(1) : 0;
-                return ` ${FLAG_LABELS[funnelItems[ctx.dataIndex]]}: ${pct}%`;
+                return ` ${DONUT[ctx.dataIndex].label}: ${n} (${pct}%)`;
               }
             }
           }
@@ -711,22 +649,21 @@
     });
 
     // Legend — just colour + label, larger text
-    document.getElementById('donut-legend').innerHTML = funnelItems.map(key => {
-      return `<div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600">
-        <span style="width:12px;height:12px;border-radius:3px;background:${FLAG_COLORS[key]};flex-shrink:0"></span>
-        <span style="color:var(--text)">${FLAG_LABELS[key]}</span>
-      </div>`;
-    }).join('');
+    document.getElementById('donut-legend').innerHTML = DONUT.map(d => `
+      <div class="legend-item">
+        <span class="legend-swatch" style="background:${d.color}"></span>
+        <span>${d.label}</span>
+      </div>`).join('');
 
     // 4. Company table
     const maxTotal = companiesSorted[0]?.[1].total || 1;
     document.getElementById('co-tbody').innerHTML = companiesSorted.slice(0, 12).map(([co, d]) => `
       <tr>
-        <td style="font-weight:600">${esc(co)}</td>
-        <td>${d.total}</td>
-        <td style="color:#7b6ef6">${d.accepted || 0}</td>
-        <td style="color:#c471ed">${d.replied  || 0}</td>
-        <td style="color:#ffb347">${d.warm_intro || 0}</td>
+        <td style="font-weight:500">${esc(co)}</td>
+        <td class="num">${d.total}</td>
+        <td class="num ${d.accepted ? '' : 'is-zero'}">${d.accepted || 0}</td>
+        <td class="num ${d.replied ? '' : 'is-zero'}">${d.replied  || 0}</td>
+        <td class="num ${d.warm_intro ? 'is-signal' : 'is-zero'}">${d.warm_intro || 0}</td>
         <td class="co-bar-cell">
           <span class="co-inline-track"><span class="co-inline-fill" style="width:${Math.round(d.total/maxTotal*100)}%"></span></span>
         </td>

@@ -5,415 +5,190 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Application Tracker · Job Search OS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/app.css" />
   <style>
-    :root {
-      --font: 'Plus Jakarta Sans', sans-serif;
-      --text: #1a1035;
-      --muted: #7a7a99;
-      --glass-blur: blur(18px);
-      --blue-dark: #2255aa;
-      --blue-mid:  #44aacc;
-      --blue-light: #a8d0f0;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: var(--font);
-      color: var(--text);
-      min-height: 100vh;
-      background: #d8e8f5;
-      background-image:
-        radial-gradient(ellipse 80% 70% at 0% 0%,   #a8d0f0 0%, transparent 55%),
-        radial-gradient(ellipse 65% 60% at 100% 100%, #2255aa 0%, transparent 55%),
-        radial-gradient(ellipse 55% 50% at 100% 0%,   #44aacc 0%, transparent 50%);
-    }
-
-    .page {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 36px 24px 60px;
-    }
-
-    /* ── header ── */
     .header {
       display: flex;
-      align-items: center;
+      align-items: baseline;
       justify-content: space-between;
-      margin-bottom: 32px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--blue-dark);
-      text-decoration: none;
-      opacity: 0.75;
-      transition: opacity 0.18s;
-    }
-    .back-link:hover { opacity: 1; }
-    .page-title {
-      font-size: 28px;
-      font-weight: 800;
-      background: linear-gradient(105deg, #2255aa 0%, #44aacc 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .sync-badge {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--muted);
-      background: rgba(255,255,255,0.55);
-      border: 1px solid rgba(255,255,255,0.75);
-      border-radius: 999px;
-      padding: 4px 12px;
-      backdrop-filter: blur(10px);
-    }
-    .sync-badge span { color: #2255aa; }
-
-    /* ── stat cards ── */
-    .stats {
-      display: flex;
-      gap: 14px;
-      margin-bottom: 24px;
+      gap: 16px;
       flex-wrap: wrap;
     }
-    .stat-card {
-      flex: 1;
-      min-width: 120px;
-      background: rgba(255,255,255,0.55);
-      border: 1px solid rgba(255,255,255,0.75);
-      border-radius: 18px;
-      padding: 18px 20px;
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      box-shadow: 0 4px 20px rgba(20,60,120,0.08);
-    }
-    .stat-card .val {
-      font-size: 30px;
-      font-weight: 800;
-      color: var(--text);
-      line-height: 1;
-      margin-bottom: 4px;
-    }
-    .stat-card .lbl {
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 500;
-    }
-    .stat-card.referral-card .val { color: #6b42c8; }
+    .sync-badge { font-family: var(--mono); font-size: 12px; }
 
-    /* ── filter bar ── */
+    /* ── filters ── */
     .filter-bar {
       display: flex;
-      gap: 8px;
-      margin-bottom: 18px;
       flex-wrap: wrap;
       align-items: center;
+      gap: 7px;
+      margin-bottom: 18px;
     }
-    .filter-btn {
-      font-family: var(--font);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 16px;
+    .filter-bar .dl-btn { margin-left: auto; }
+
+    /* ── table ── */
+    .table-card table { min-width: 880px; }
+    .table-card { overflow-x: auto; }
+    tbody td { vertical-align: middle; }
+
+    .company-name { font-weight: 600; font-size: 14px; }
+    .role-name { margin-top: 2px; font-size: 12.5px; color: var(--ink-soft); }
+    .contact-cell { font-size: 13px; color: var(--ink-mid); }
+
+    /* ── stage badges ───────────────────────────────────────────
+       Same ramp as the outreach funnel: the closer to an offer,
+       the deeper the green. A rejection stays neutral — it has
+       already cost enough without shouting in red.              */
+    .status-select {
+      font-family: var(--sans);
+      font-size: 12.5px;
+      font-weight: 500;
+      width: auto;
+      min-width: 118px;
+      padding: 5px 9px;
       border-radius: 999px;
-      border: 1px solid rgba(34,85,170,0.20);
-      background: rgba(255,255,255,0.45);
-      color: var(--muted);
       cursor: pointer;
-      transition: all 0.16s;
+      -webkit-appearance: none;
+      appearance: none;
+      text-align: center;
     }
-    .filter-btn:hover,
-    .filter-btn.active {
-      background: rgba(34,85,170,0.12);
-      border-color: rgba(34,85,170,0.35);
-      color: var(--blue-dark);
-    }
-    .filter-btn[data-status="referral"].active {
-      background: rgba(107,66,200,0.12);
-      border-color: rgba(107,66,200,0.35);
-      color: #6b42c8;
-    }
+    .status-select:focus { box-shadow: 0 0 0 3px rgba(21,32,46,.08); }
 
-    /* ── table card ── */
-    .table-card {
-      background: rgba(255,255,255,0.50);
-      border: 1px solid rgba(255,255,255,0.72);
-      border-radius: 22px;
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      box-shadow: 0 8px 32px rgba(20,60,120,0.10);
-      overflow: hidden;
-    }
+    .badge-applied      { background: var(--surface);     border: 1px solid var(--rule-strong) !important; color: var(--ink-mid); }
+    .badge-screening    { background: #EFF4F1;            border: 1px solid #C9DCD1 !important;            color: #3F7458; }
+    .badge-interviewing { background: var(--signal-tint); border: 1px solid var(--signal-rule) !important; color: #2C7555; }
+    .badge-offer        { background: var(--signal);      border: 1px solid var(--signal) !important;      color: #FFFFFF; }
+    .badge-rejected     { background: var(--closed-tint); border: 1px solid var(--rule-strong) !important; color: var(--closed); }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    /* ── interviewed chip ── */
+    .stage-chips { display: flex; gap: 6px; }
+    .chip { font-size: 12.5px; padding: 5px 11px; }
+    .chip.on {
+      background: var(--signal-tint);
+      border-color: var(--signal-rule);
+      color: var(--signal);
+      font-weight: 500;
     }
+    .chip.saving { opacity: .5; pointer-events: none; }
 
-    thead th {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted);
-      padding: 14px 18px;
-      text-align: left;
-      border-bottom: 1px solid rgba(255,255,255,0.6);
-      background: rgba(255,255,255,0.25);
-    }
-
-    tbody tr {
-      border-bottom: 1px solid rgba(200,220,240,0.35);
-      transition: background 0.14s;
-    }
-    tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: rgba(255,255,255,0.30); }
-
-    tbody td {
-      padding: 14px 18px;
-      font-size: 13.5px;
-      vertical-align: middle;
-    }
-
-    .company-name {
-      font-weight: 700;
-      color: var(--text);
-      font-size: 14px;
-    }
-    .role-name {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    /* status badges */
-    .badge {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 3px 10px;
-      border-radius: 999px;
-    }
-    .badge-applied      { background: rgba(100,100,140,0.12); color: #44446a; border: 1px solid rgba(100,100,140,0.20); }
-    .badge-screening    { background: rgba(34,85,170,0.12);   color: #2255aa; border: 1px solid rgba(34,85,170,0.22); }
-    .badge-interviewing { background: rgba(200,140,20,0.13);  color: #7a5500; border: 1px solid rgba(200,140,20,0.25); }
-    .badge-offer        { background: rgba(30,160,60,0.13);   color: #145520; border: 1px solid rgba(30,160,60,0.25); }
-    .badge-rejected     { background: rgba(200,50,50,0.10);   color: #8a1515; border: 1px solid rgba(200,50,50,0.20); }
-
-    /* referral toggle button */
+    /* ── referral ── */
     .referral-btn {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      font-family: var(--font);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      padding: 4px 10px;
+      gap: 6px;
+      padding: 5px 11px;
+      font-family: var(--sans);
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      background: var(--surface);
+      border: 1px solid var(--rule-strong);
       border-radius: 999px;
-      border: 1.5px solid rgba(107,66,200,0.25);
-      background: transparent;
-      color: rgba(107,66,200,0.45);
       cursor: pointer;
-      transition: all 0.16s;
-      white-space: nowrap;
+      transition: background .12s ease, color .12s ease, border-color .12s ease;
     }
-    .referral-btn:hover {
-      border-color: rgba(107,66,200,0.5);
-      color: #6b42c8;
-      background: rgba(107,66,200,0.06);
-    }
+    .referral-btn:hover { color: var(--ink); border-color: var(--ink-mid); }
     .referral-btn.on {
-      background: rgba(107,66,200,0.13);
-      border-color: rgba(107,66,200,0.40);
-      color: #6b42c8;
+      background: var(--signal-tint);
+      border-color: var(--signal-rule);
+      color: var(--signal);
+      font-weight: 500;
     }
-    .referral-btn.saving {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-    .referral-btn svg { flex-shrink: 0; }
 
-    /* inline status dropdown */
-    .status-select {
-      font-family: var(--font);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 4px 8px;
-      border-radius: 999px;
-      cursor: pointer;
-      appearance: none;
-      -webkit-appearance: none;
-      text-align: center;
-    }
-    .status-select.saving { opacity: 0.5; pointer-events: none; }
-    .status-select.badge-applied      { background: rgba(100,100,140,0.12); color: #44446a; border: 1px solid rgba(100,100,140,0.20); }
-    .status-select.badge-screening    { background: rgba(34,85,170,0.12);   color: #2255aa; border: 1px solid rgba(34,85,170,0.22); }
-    .status-select.badge-interviewing { background: rgba(200,140,20,0.13);  color: #7a5500; border: 1px solid rgba(200,140,20,0.25); }
-    .status-select.badge-offer        { background: rgba(30,160,60,0.13);   color: #145520; border: 1px solid rgba(30,160,60,0.25); }
-    .status-select.badge-rejected     { background: rgba(200,50,50,0.10);   color: #8a1515; border: 1px solid rgba(200,50,50,0.20); }
-
-    /* add button + modal */
-    .add-btn {
-      margin-left: auto;
-      font-family: var(--font);
-      font-size: 12px;
-      font-weight: 700;
-      padding: 7px 18px;
-      border-radius: 999px;
-      border: none;
-      background: linear-gradient(105deg, #2255aa 0%, #44aacc 100%);
-      color: #fff;
-      cursor: pointer;
-      box-shadow: 0 4px 14px rgba(34,85,170,0.25);
-    }
-    .add-btn:hover { filter: brightness(1.08); }
-    .dl-btn {
-      margin-left: auto;
-      font-family: var(--font);
-      font-size: 12px;
-      font-weight: 700;
-      padding: 6px 16px;
-      border-radius: 999px;
-      border: 1px solid rgba(34,85,170,0.30);
-      background: rgba(255,255,255,0.55);
-      color: var(--blue-dark);
-      cursor: pointer;
-    }
-    .dl-btn:hover { background: rgba(34,85,170,0.12); }
-    .dl-btn + .add-btn { margin-left: 0; }
-    .modal-backdrop {
-      position: fixed; inset: 0;
-      background: rgba(20,30,60,0.35);
-      backdrop-filter: blur(4px);
-      display: none;
-      align-items: center; justify-content: center;
-      z-index: 50; padding: 16px;
-    }
-    .modal-backdrop.open { display: flex; }
-    .modal {
-      width: 100%; max-width: 440px;
-      background: rgba(255,255,255,0.92);
-      border: 1px solid rgba(255,255,255,0.8);
-      border-radius: 22px;
-      padding: 26px;
-      box-shadow: 0 20px 60px rgba(20,60,120,0.25);
-    }
-    .modal h2 { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
-    .modal label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 12px 0 4px; }
-    .modal input, .modal select, .modal textarea {
-      width: 100%;
-      font-family: var(--font);
-      font-size: 13.5px;
-      padding: 9px 12px;
-      border-radius: 10px;
-      border: 1px solid rgba(34,85,170,0.22);
-      background: #fff;
-      color: var(--text);
-    }
-    .modal textarea { resize: vertical; min-height: 64px; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-    .modal-actions button {
-      font-family: var(--font); font-size: 13px; font-weight: 700;
-      padding: 8px 20px; border-radius: 999px; cursor: pointer;
-    }
-    .btn-cancel { background: transparent; border: 1px solid rgba(34,85,170,0.25); color: var(--muted); }
-    .btn-save { background: linear-gradient(105deg, #2255aa 0%, #44aacc 100%); border: none; color: #fff; }
-    .btn-save:disabled { opacity: 0.5; }
-
-    /* stage flag chips */
-    .stage-chips { display: flex; gap: 6px; }
-    .chip {
-      font-family: var(--font);
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1.5px solid rgba(34,85,170,0.22);
-      background: transparent;
-      color: rgba(34,85,170,0.40);
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.16s;
-    }
-    .chip:hover { border-color: rgba(34,85,170,0.5); color: var(--blue-dark); }
-    .chip.on { background: rgba(34,85,170,0.13); border-color: rgba(34,85,170,0.40); color: var(--blue-dark); }
-    .chip.on.iv { background: rgba(200,140,20,0.15); border-color: rgba(200,140,20,0.45); color: #7a5500; }
-    .chip.saving { opacity: 0.5; pointer-events: none; }
-    .modal .check-row { display: flex; gap: 18px; margin-top: 12px; }
-    .modal .check-row label { display: flex; align-items: center; gap: 6px; margin: 0; text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--text); }
-    .modal .check-row input { width: auto; }
-
-    .edit-btn {
-      font-family: var(--font);
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px 12px;
-      border-radius: 999px;
-      border: 1.5px solid rgba(34,85,170,0.25);
-      background: transparent;
-      color: var(--blue-dark);
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .edit-btn:hover { background: rgba(34,85,170,0.10); border-color: rgba(34,85,170,0.5); }
-
-    .date-cell { font-size: 12.5px; color: var(--muted); }
-    .contact-cell { font-size: 12.5px; color: var(--muted); }
-
-    /* empty / loading states */
+    /* ── empty + loading row ── */
     .state-row td {
+      padding: 40px 20px;
       text-align: center;
-      padding: 48px 18px;
-      color: var(--muted);
+      color: var(--ink-mid);
       font-size: 14px;
     }
     .spinner {
       display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 2px solid rgba(34,85,170,0.20);
-      border-top-color: var(--blue-dark);
+      width: 13px; height: 13px;
+      margin-right: 9px;
+      vertical-align: -2px;
+      border: 2px solid var(--rule);
+      border-top-color: var(--ink-mid);
       border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      vertical-align: middle;
-      margin-right: 8px;
+      animation: spin .7s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spin { to { transform: rotate(360deg) } }
 
-    /* ── footer ── */
-    .footer {
-      margin-top: 36px;
-      font-size: 11px;
-      color: rgba(100,100,140,0.45);
-      text-align: center;
-      letter-spacing: 0.04em;
+    /* ── modal ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      background: rgba(21,32,46,.38);
+      padding: 24px;
+      overflow-y: auto;
+    }
+    .modal-backdrop.open { display: flex; align-items: flex-start; justify-content: center; }
+
+    .modal {
+      width: 100%;
+      max-width: 450px;
+      margin: 40px auto;
+      padding: 26px;
+      background: var(--surface);
+      border: 1px solid var(--rule-strong);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 16px 44px rgba(21,32,46,.16);
+    }
+    .modal h2 { font-size: 18px; margin-bottom: 20px; }
+    .modal label {
+      display: block;
+      margin: 15px 0 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .modal textarea { min-height: 78px; resize: vertical; }
+
+    .check-row { margin-top: 16px; }
+    .check-row label {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0;
+      font-weight: 400;
+      color: var(--ink-mid);
+      cursor: pointer;
+    }
+    .check-row input { width: auto; accent-color: var(--signal); }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 9px;
+      margin-top: 26px;
+      padding-top: 18px;
+      border-top: 1px solid var(--rule);
+    }
+
+    @media (max-width: 720px) {
+      .filter-bar .dl-btn { margin-left: 0; }
+      .header { gap: 10px; }
     }
   </style>
 </head>
 <body>
+  <nav class="nav">
+    <div class="nav-capsule">
+      <a href="/" class="nav-pill">Home</a>
+      <a href="/tracker" class="nav-pill active">Applications</a>
+      <a href="/outreach" class="nav-pill">Outreach</a>
+      <a href="/dashboard" class="nav-pill">Dashboard</a>
+      <a href="/crm" class="nav-pill">Contacts</a>
+    </div>
+  </nav>
+
   <div class="page">
 
-    <!-- header -->
     <div class="header">
-      <a href="/" class="back-link">
-        <svg width="14" height="14" fill="none" viewBox="0 0 24 24">
-          <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Job Search OS
-      </a>
-      <h1 class="page-title">Application Tracker</h1>
+      <h1 class="page-title">Applications</h1>
       <div class="sync-badge" id="syncBadge">Synced <span>—</span></div>
     </div>
 
@@ -450,15 +225,15 @@
       <button class="filter-btn" data-status="interviewing">Interviewing</button>
       <button class="filter-btn" data-status="offer">Offer</button>
       <button class="filter-btn" data-status="rejected">Rejected</button>
-      <button class="filter-btn" data-status="referral">⭐ Referral</button>
-      <button class="dl-btn" id="dlBtn" onclick="downloadCsv()">⬇ Download CSV</button>
-      <button class="add-btn" id="addBtn" onclick="openAddModal()">+ Add</button>
+      <button class="filter-btn" data-status="referral">Referral</button>
+      <button class="dl-btn" id="dlBtn" onclick="downloadCsv()">Download CSV</button>
+      <button class="add-btn" id="addBtn" onclick="openAddModal()">Add application</button>
     </div>
 
     <!-- add modal -->
     <div class="modal-backdrop" id="addModal">
       <div class="modal">
-        <h2 id="modalTitle">Add application / interview</h2>
+        <h2 id="modalTitle">Add an application</h2>
         <label for="fCompany">Company *</label>
         <input id="fCompany" type="text" placeholder="e.g. Metaview" />
         <label for="fRole">Role</label>
@@ -496,12 +271,12 @@
       <table>
         <thead>
           <tr>
-            <th>Company / Role</th>
+            <th>Company and role</th>
             <th>Status</th>
             <th>Progress</th>
             <th>Referral</th>
             <th>Applied</th>
-            <th>Last Activity</th>
+            <th>Last activity</th>
             <th>Contact</th>
             <th></th>
           </tr>
@@ -514,7 +289,7 @@
       </table>
     </div>
 
-    <p class="footer">Refreshed daily at 11 am · Job Search OS · Amber Sahu · 2026</p>
+    <p class="footer">Gmail sync runs every morning at 11am.</p>
   </div>
 
   <script>
@@ -552,7 +327,7 @@
     function statusSelectHtml(a) {
       const cur = normStatus(a.status);
       const opts = STATUSES.map(s =>
-        `<option value="${s}"${s === cur ? ' selected' : ''}>${s}</option>`).join('');
+        `<option value="${s}"${s === cur ? ' selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`).join('');
       return `<select class="status-select ${BADGE[cur] || 'badge-applied'}" data-id="${a.id}" onchange="changeStatus(this)">${opts}</select>`;
     }
 
@@ -620,7 +395,7 @@
     let editingId = null;   // null = adding a new entry, otherwise the id being edited
 
     function setModalMode(editing) {
-      document.getElementById('modalTitle').textContent = editing ? 'Edit application' : 'Add application / interview';
+      document.getElementById('modalTitle').textContent = editing ? 'Edit application' : 'Add an application';
       document.getElementById('fDateLabel').textContent = editing ? 'Applied date' : 'Date';
       document.getElementById('fLastWrap').style.display = editing ? 'block' : 'none';
     }
@@ -713,7 +488,7 @@
     function renderTable(apps) {
       const tbody = document.getElementById('tableBody');
       if (!apps.length) {
-        tbody.innerHTML = `<tr class="state-row"><td colspan="8">No applications${currentFilter !== 'all' ? ' for this filter' : ''} yet.</td></tr>`;
+        tbody.innerHTML = `<tr class="state-row"><td colspan="8">${currentFilter !== 'all' ? 'No applications at this stage. Pick another filter to see the rest.' : 'No applications yet. The Gmail sync adds them each morning, or add one yourself.'}</td></tr>`;
         return;
       }
       tbody.innerHTML = apps.map(a => `

@@ -1,0 +1,541 @@
+/* ============================================================
+   Job Search OS — shared design system
+   A ledger, not a landing page.
+
+   Ground rules
+   1. No gradients, no backdrop blur, no decorative blobs.
+      Structure comes from hairline rules and alignment.
+   2. One accent (--signal, deep green) reserved for real
+      progress: accepted, replied, warm intro, interview, offer,
+      referral. Everything else stays neutral so the rare good
+      news is the thing that catches the eye.
+   3. Figures are the hero: mono, tabular, aligned in columns.
+   4. Sentence case. No all-caps labels, no middle-dot meta
+      strings, no arrows tacked onto link text.
+   5. Motion answers a click. Nothing animates on page load.
+   ============================================================ */
+
+:root {
+  /* ground */
+  --paper:        #F7F6F2;
+  --surface:      #FFFFFF;
+  --surface-2:    #FBFAF8;
+
+  /* ink */
+  --ink:          #15202E;
+  --ink-mid:      #55606E;
+  --ink-soft:     #656F7B;
+
+  /* structure */
+  --rule:         #E4E2DB;
+  --rule-strong:  #CFCCC3;
+
+  /* signal — the single accent */
+  --signal:       #1C6B4A;
+  --signal-tint:  #E9F0EC;
+  --signal-rule:  #B9D1C4;
+
+  /* quiet states */
+  --stall:        #8A6D1F;
+  --stall-tint:   #F6F0DD;
+  --closed:       #6E7884;
+  --closed-tint:  #EEEDE9;
+
+  --radius:       6px;
+  --radius-lg:    10px;
+
+  --sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--sans);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Figures line up in columns everywhere they appear. */
+.num, .kpi-val, .val, .value, td.num, .f-pct, .funnel-count {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+a { color: var(--ink); text-decoration-color: var(--rule-strong); text-underline-offset: 2px; }
+a:hover { text-decoration-color: currentColor; }
+
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+::selection { background: var(--signal-tint); }
+
+/* ── shell ───────────────────────────────────────────────── */
+
+.container, .page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 28px 72px;
+}
+
+/* ── navigation ──────────────────────────────────────────────
+   Plain text. The current page is marked by a rule beneath it,
+   not a colored pill.                                          */
+
+.nav {
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
+  margin-bottom: 40px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.nav-capsule {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 28px;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.nav-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 16px 12px;
+  font-size: 14px;
+  font-weight: 450;
+  color: var(--ink-mid);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color .12s ease, border-color .12s ease;
+  white-space: nowrap;
+}
+.nav-pill:hover { color: var(--ink); }
+.nav-pill.active {
+  color: var(--ink);
+  font-weight: 600;
+  border-bottom-color: var(--ink);
+}
+
+/* The divider was decorative; the rule under the bar does the job. */
+.nav-divider { display: none; }
+
+/* secondary toggle inside a nav bar (CRM: by company / by contact) */
+.nav-btn {
+  padding: 6px 12px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-mid);
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+}
+.nav-btn:first-of-type { border-radius: var(--radius) 0 0 var(--radius); }
+.nav-btn:last-of-type  { border-radius: 0 var(--radius) var(--radius) 0; margin-left: -1px; }
+.nav-btn:hover { color: var(--ink); background: var(--surface); }
+.nav-btn.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--surface);
+}
+
+/* ── page headers ────────────────────────────────────────── */
+
+.header, .page-header {
+  padding-bottom: 24px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--rule);
+}
+
+h1, .page-title {
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+h2 { font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+h3 { font-size: 15px; font-weight: 600; }
+
+.subtitle, .header p {
+  margin-top: 8px;
+  font-size: 15px;
+  color: var(--ink-mid);
+  max-width: 62ch;
+}
+
+/* Section heading: a label on a rule, in sentence case. */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--rule);
+}
+.section-head h2 { font-size: 16px; }
+
+/* ── figure row ──────────────────────────────────────────────
+   Replaces the grid of shadowed KPI cards. Figures sit in one
+   ruled band, divided by hairlines.                            */
+
+.stats, .kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 36px;
+}
+
+.stat-card, .kpi {
+  padding: 18px 20px;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  background: var(--surface);
+  min-width: 0;
+}
+.stat-card:last-child, .kpi:last-child { border-right: 0; }
+
+.kpi-val, .val, .value, .stat-val {
+  display: block;
+  font-size: 28px;
+  line-height: 1.1;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+
+.kpi-label, .lbl, .label, .stat-lbl {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 450;
+  color: var(--ink-mid);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.kpi-sub, .stat-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A figure only takes the accent when it represents progress. */
+.kpi.is-signal .kpi-val,
+.stat-card.is-signal .val,
+.stat-card.is-signal .value { color: var(--signal); }
+
+/* A zero is not news. */
+.kpi.is-zero .kpi-val, .kpi.is-quiet .kpi-val,
+.stat-card.is-zero .val, .stat-card.is-quiet .val,
+.stat-card.is-zero .value, .stat-card.is-quiet .value { color: var(--ink-soft); font-weight: 400; }
+
+/* ── surfaces ────────────────────────────────────────────── */
+
+.card, .table-card, .chart-card, .form-card, .co-card, .referral-card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+}
+
+.table-card, .chart-card { overflow: hidden; }
+
+.form-card, .chart-card, .co-card { padding: 24px; }
+
+/* ── tables ──────────────────────────────────────────────── */
+
+table { width: 100%; border-collapse: collapse; }
+
+thead th {
+  padding: 11px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-mid);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--rule-strong);
+  white-space: nowrap;
+}
+
+tbody td {
+  padding: 13px 16px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+  color: var(--ink);
+}
+
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:hover td { background: var(--surface-2); }
+
+td.date-cell, .date-cell {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--ink-mid);
+  white-space: nowrap;
+}
+
+/* ── buttons ─────────────────────────────────────────────── */
+
+button, .btn { font-family: var(--sans); }
+
+.btn-generate, .add-btn, .btn-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--surface);
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background .12s ease;
+}
+.btn-generate:hover, .add-btn:hover, .btn-save:hover { background: #0D1724; }
+.btn-generate:disabled, .add-btn:disabled, .btn-save:disabled {
+  background: var(--closed);
+  border-color: var(--closed);
+  cursor: not-allowed;
+}
+
+.dl-btn, .csv-btn, .edit-btn, .btn-copy, .btn-cancel, .co-expand-btn, .rct-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease;
+}
+.dl-btn:hover, .csv-btn:hover, .edit-btn:hover, .btn-copy:hover,
+.btn-cancel:hover, .co-expand-btn:hover, .rct-copy:hover {
+  background: var(--surface-2);
+  border-color: var(--ink-mid);
+}
+
+.btn-stop {
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+  padding: 11px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.btn-trash {
+  background: none;
+  border: 0;
+  color: var(--ink-soft);
+  cursor: pointer;
+  padding: 4px 6px;
+  font-size: 14px;
+  border-radius: var(--radius);
+}
+.btn-trash:hover { color: var(--ink); background: var(--closed-tint); }
+
+/* filter chips */
+.filter-btn, .chip, .stage-chips .chip {
+  padding: 7px 13px;
+  font-size: 13px;
+  font-weight: 450;
+  color: var(--ink-mid);
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease, border-color .12s ease;
+}
+.filter-btn:hover, .chip:hover { color: var(--ink); border-color: var(--ink-mid); }
+.filter-btn.active, .chip.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--surface);
+  font-weight: 500;
+}
+
+/* ── form fields ─────────────────────────────────────────── */
+
+.field-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 0;
+  text-transform: none;
+  margin-bottom: 7px;
+}
+
+input[type="text"], input[type="url"], input[type="date"],
+textarea, select, .company-input, .chip-textarea, .filter-input,
+.filter-select, .notes-input, .status-select {
+  width: 100%;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  transition: border-color .12s ease, box-shadow .12s ease;
+}
+input::placeholder, textarea::placeholder { color: var(--ink-soft); }
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(21,32,46,.08);
+}
+
+.url-hint, .url-count, .help {
+  margin-top: 7px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+/* ── status pills ────────────────────────────────────────────
+   Progress earns the accent. A stalled item gets a muted amber.
+   A closed one stays grey — a rejection does not need to shout. */
+
+.status-pill, .badge, .priority-badge, .pri-badge, .sync-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  border-radius: 999px;
+  border: 1px solid var(--rule-strong);
+  background: var(--surface);
+  color: var(--ink-mid);
+  white-space: nowrap;
+}
+
+.status-pill.is-signal, .badge.is-signal, .badge-live {
+  background: var(--signal-tint);
+  border-color: var(--signal-rule);
+  color: var(--signal);
+}
+.status-pill.is-stall, .badge.is-stall {
+  background: var(--stall-tint);
+  border-color: #E0D2A6;
+  color: var(--stall);
+}
+.status-pill.is-closed, .badge.is-closed {
+  background: var(--closed-tint);
+  border-color: var(--rule-strong);
+  color: var(--closed);
+}
+
+.pill-dot, .opt-dot, .ticker-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* ── empty, loading, error ───────────────────────────────────
+   An empty screen says what to do next; an error says what
+   broke and how to fix it.                                    */
+
+.empty, .empty-msg, .history-empty {
+  padding: 44px 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--ink-mid);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+}
+
+.loader, .history-loader, .spinner {
+  padding: 32px 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.error-box {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #7A2A1C;
+  background: #F8EDE9;
+  border: 1px solid #E3CBC2;
+  border-radius: var(--radius);
+}
+
+/* ── skeletons ───────────────────────────────────────────── */
+
+.skel {
+  background: var(--rule);
+  border-radius: var(--radius);
+  animation: skel-pulse 1.4s ease-in-out infinite;
+}
+@keyframes skel-pulse { 0%,100% { opacity: .55 } 50% { opacity: .9 } }
+
+/* ── footer ──────────────────────────────────────────────── */
+
+.footer {
+  margin-top: 56px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+/* ── motion ──────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* ── small screens ───────────────────────────────────────── */
+
+@media (max-width: 720px) {
+  .container, .page { padding: 0 18px 56px; }
+  .nav-capsule { padding: 0 18px; overflow-x: auto; }
+  h1, .page-title { font-size: 25px; }
+  .stats, .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .stat-card, .kpi { padding: 15px 16px; }
+  .kpi-val, .val, .value { font-size: 23px; }
+}
