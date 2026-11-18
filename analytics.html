@@ -90,11 +90,6 @@
   <div class="grid g2">
     <div class="card"><h2>Where applications end up</h2><div id="stageBreak"></div>
       <div class="sub">Rejected rows with no screening or interview flag count as "no response" (includes 21-day auto-rejects).</div></div>
-    <div class="card"><h2>By role category</h2><table><thead><tr><th>Category</th><th>Apps</th><th>Interviews</th><th>Rate</th></tr></thead><tbody id="roleBody"></tbody></table></div>
-  </div>
-
-  <div class="grid g2">
-    <div class="card"><h2>Applications by month</h2><div class="bars" id="monthBars"></div></div>
     <div class="card">
     <h2>Needs attention: applied, no reply in 14+ days</h2>
     <table><thead><tr><th>Company / role</th><th>Applied</th><th>Days waiting</th></tr></thead><tbody id="staleBody"></tbody></table>
@@ -112,17 +107,6 @@ const day = s => s ? new Date(s.slice(0,10) + 'T00:00:00') : null;
 const norm = s => { s = (s||'applied').toLowerCase(); return s === 'interview' ? 'interviewing' : s; };
 const reachedStage = a => !!(a.had_interview || a.had_screening || ['screening','interviewing','offer'].includes(norm(a.status)));
 const responded = a => reachedStage(a) || !!a.first_response_date;
-
-function category(role) {
-  const r = (role || '').toLowerCase();
-  if (/\badr\b|account development/.test(r)) return 'ADR';
-  if (/\bbdr\b|business development/.test(r)) return 'BDR';
-  if (/\bsdr\b|sales development/.test(r)) return 'SDR';
-  if (/account executive|\bae\b/.test(r)) return 'Account Executive';
-  if (/customer success|\bcsm\b/.test(r)) return 'Customer Success';
-  if (/revops|revenue operations|bizops|business operations|strategy|gtm/.test(r)) return 'Ops / Strategy';
-  return r ? 'Other' : 'No role listed';
-}
 
 function bars(el, items) {
   const max = Math.max(1, ...items.map(i => i.v));
@@ -187,19 +171,6 @@ function render(apps) {
   });
   $('gRate').textContent = pct(ghosted.length, total);
   $('gSub').textContent = `${ghosted.length} of ${total}. Includes email rejections, since rejection emails aren't separated from silence yet.`;
-
-  // role categories
-  const cats = {};
-  apps.forEach(a => { const c = category(a.role); (cats[c] = cats[c] || { n: 0, i: 0 }); cats[c].n++; if (reachedStage(a)) cats[c].i++; });
-  $('roleBody').innerHTML = Object.entries(cats).sort((a,b) => b[1].n - a[1].n)
-    .map(([c, v]) => `<tr><td>${c}</td><td>${v.n}</td><td>${v.i}</td><td><span class="pill">${pct(v.i, v.n)}</span></td></tr>`).join('');
-
-  // monthly
-  const mm = {};
-  apps.forEach(a => { if (a.applied_date) { const k = a.applied_date.slice(0,7); mm[k] = (mm[k]||0)+1; } });
-  const mk = Object.keys(mm).sort().slice(-8);
-  const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  bars($('monthBars'), mk.map(k => ({ v: mm[k], l: mn[+k.slice(5)-1] + " '" + k.slice(2,4) })));
 
   // stale
   const stale = apps.filter(a => norm(a.status) === 'applied' && a.applied_date && (today - day(a.applied_date)) / 864e5 >= 14)
