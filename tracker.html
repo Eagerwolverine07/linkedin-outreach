@@ -414,6 +414,7 @@
         Job Search OS
       </a>
       <h1 class="page-title">Application Tracker</h1>
+      <a href="/analytics" class="back-link" style="margin-left:auto;margin-right:12px">Analytics &rarr;</a>
       <div class="sync-badge" id="syncBadge">Synced <span>—</span></div>
     </div>
 
@@ -479,6 +480,8 @@
         <div id="fLastWrap" style="display:none">
           <label for="fLast">Last activity</label>
           <input id="fLast" type="date" />
+          <label for="fResp">First response from company</label>
+          <input id="fResp" type="date" />
         </div>
         <label for="fContact">Contact</label>
         <input id="fContact" type="text" placeholder="Recruiter / interviewer name" />
@@ -566,6 +569,8 @@
         const today = new Date().toISOString().slice(0, 10);
         // moving to a stage also records it permanently, so a later "rejected" keeps the history
         const patch = { status: newStatus, last_activity_date: today };
+        // first time it moves past "applied" to a real stage, stamp the response date
+        if (app && !app.first_response_date && ['screening', 'interviewing', 'offer'].includes(newStatus)) patch.first_response_date = today;
         if (['screening', 'interviewing', 'offer'].includes(newStatus)) patch.had_interview = true;
         const res = await fetch(`/applications/${appId}`, {
           method: 'PATCH',
@@ -636,6 +641,7 @@
       document.getElementById('fInterview').checked = !!a.had_interview;
       document.getElementById('fDate').value = (a.applied_date || '').slice(0, 10);
       document.getElementById('fLast').value = (a.last_activity_date || '').slice(0, 10);
+      document.getElementById('fResp').value = (a.first_response_date || '').slice(0, 10);
       document.getElementById('fContact').value = a.contact_name || '';
       document.getElementById('fNotes').value = a.notes || '';
       document.getElementById('addModal').classList.add('open');
@@ -682,7 +688,11 @@
             company, role, status, had_interview, contact_name, notes,
             applied_date: document.getElementById('fDate').value || null,
             last_activity_date: document.getElementById('fLast').value || null,
+            first_response_date: document.getElementById('fResp').value || null,
           };
+          if (!patch.first_response_date && old && !old.first_response_date && ['screening', 'interviewing', 'offer'].includes(status)) {
+            patch.first_response_date = new Date().toISOString().slice(0, 10);
+          }
           // moving to a new stage counts as activity today unless the date was edited by hand
           if (old && normStatus(old.status) !== status && patch.last_activity_date === (old.last_activity_date || null)) {
             patch.last_activity_date = new Date().toISOString().slice(0, 10);

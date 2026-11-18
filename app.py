@@ -1201,6 +1201,13 @@ async def _auto_reject_stale_applications():
         print(f"[Tracker] Auto-reject error: {e}")
 
 
+@app.get("/analytics", response_class=HTMLResponse)
+async def analytics():
+    """Application analytics: funnel, rates, referral comparison, ghosting."""
+    with open("analytics.html", "r") as f:
+        return HTMLResponse(content=f.read())
+
+
 @app.get("/applications")
 async def get_applications(status: str = None, limit: int = 500):
     """Returns job applications from Supabase, optionally filtered by status."""
@@ -1287,7 +1294,7 @@ async def update_application(app_id: int, request: Request):
     body = await request.json()
     allowed = {"status", "notes", "role", "contact_name", "contact_email", "referral",
                "last_activity_date", "had_screening", "had_interview",
-               "company", "applied_date"}
+               "company", "applied_date", "first_response_date"}
     patch = {k: v for k, v in body.items() if k in allowed}
     if not patch:
         return {"error": "No valid fields to update"}
@@ -1299,7 +1306,7 @@ async def update_application(app_id: int, request: Request):
     if "status" in patch and patch["status"] not in {"applied", "screening", "interviewing", "offer", "rejected"}:
         return {"error": f"Invalid status: {patch['status']}"}
     # blank text / date fields clear the value instead of saving an empty string
-    for k in ("role", "contact_name", "contact_email", "notes", "applied_date", "last_activity_date"):
+    for k in ("role", "contact_name", "contact_email", "notes", "applied_date", "last_activity_date", "first_response_date"):
         if k in patch and isinstance(patch[k], str) and not patch[k].strip():
             patch[k] = None
 

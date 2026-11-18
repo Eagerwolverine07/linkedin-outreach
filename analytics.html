@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Application Analytics · Job Search OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root { --font:'Plus Jakarta Sans',sans-serif; --text:#1a1035; --muted:#6c6c8a; --blue:#2255aa; --teal:#44aacc; --card:rgba(255,255,255,0.72); }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);color:var(--text);min-height:100vh;background:#d8e8f5;
+    background-image:radial-gradient(ellipse 80% 70% at 0% 0%,#a8d0f0 0%,transparent 55%),radial-gradient(ellipse 65% 60% at 100% 100%,#2255aa 0%,transparent 55%),radial-gradient(ellipse 55% 50% at 100% 0%,#44aacc 0%,transparent 50%);}
+  .page{max-width:1100px;margin:0 auto;padding:32px 20px 60px}
+  .header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+  .back{font-size:13px;font-weight:600;color:var(--blue);text-decoration:none}
+  h1{font-size:28px;font-weight:800}
+  h1 span{color:var(--blue)}
+  .card{background:var(--card);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);border-radius:18px;padding:18px 20px}
+  .grid{display:grid;gap:14px;margin-bottom:14px}
+  .g5{grid-template-columns:repeat(5,1fr)} .g4{grid-template-columns:repeat(4,1fr)} .g2{grid-template-columns:1fr 1fr} .g3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:860px){.g5,.g4,.g3,.g2{grid-template-columns:1fr 1fr}}
+  @media(max-width:520px){.g5,.g4,.g3,.g2{grid-template-columns:1fr}}
+  .big{font-size:30px;font-weight:800;line-height:1.1}
+  .lbl{font-size:12px;font-weight:600;color:var(--muted);margin-top:4px}
+  .sub{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}
+  h2{font-size:14px;font-weight:700;margin-bottom:12px}
+  .funnel{display:flex;gap:8px;align-items:stretch}
+  .fstep{flex:1;border-radius:12px;padding:12px 14px;background:rgba(68,170,204,.14)}
+  .fstep:nth-child(1){background:rgba(34,85,170,.14)} .fstep:nth-child(3){background:rgba(34,170,130,.16)}
+  .fstep .n{font-size:24px;font-weight:800}
+  .fstep .t{font-size:12px;font-weight:600;color:var(--muted)}
+  .fstep .p{font-size:11px;color:var(--muted);margin-top:2px}
+  .bars{display:flex;align-items:flex-end;gap:8px;height:130px}
+  .bcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px}
+  .bar{width:100%;max-width:38px;background:linear-gradient(#5b8de0,#2255aa);border-radius:6px 6px 2px 2px;min-height:2px}
+  .bv{font-size:11px;font-weight:700} .bl{font-size:10px;color:var(--muted);white-space:nowrap}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-size:11px;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid rgba(0,0,0,.08)}
+  td{padding:8px;border-bottom:1px solid rgba(0,0,0,.05)}
+  .hbar{height:8px;border-radius:4px;background:rgba(34,85,170,.12);overflow:hidden;min-width:60px}
+  .hbar i{display:block;height:100%;background:var(--blue)}
+  .cmp{display:flex;gap:14px}
+  .cmp>div{flex:1;border-radius:12px;padding:12px;background:rgba(255,255,255,.6)}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px;background:rgba(34,85,170,.1);color:var(--blue)}
+  a.lnk{color:var(--blue);font-weight:600;text-decoration:none;font-size:12px}
+  .note{font-size:11px;color:var(--muted);margin-top:14px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <a class="back" href="/tracker">&larr; Tracker</a>
+    <h1>Application <span>Analytics</span></h1>
+    <a class="lnk" href="/">Job Search OS</a>
+  </div>
+
+  <div class="grid g5">
+    <div class="card"><div class="big" id="kTotal">–</div><div class="lbl">Total applications</div></div>
+    <div class="card"><div class="big" id="kActive">–</div><div class="lbl">Active</div></div>
+    <div class="card"><div class="big" id="kInt">–</div><div class="lbl">Interviewing / screening</div></div>
+    <div class="card"><div class="big" id="kOffer">–</div><div class="lbl">Offers</div></div>
+    <div class="card"><div class="big" id="kRef">–</div><div class="lbl">Referrals</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <h2>Conversion funnel</h2>
+    <div class="funnel" id="funnel"></div>
+  </div>
+
+  <div class="grid g4">
+    <div class="card"><div class="big" id="mResp">–</div><div class="lbl">Response rate</div><div class="sub">Reached screening, interview or offer, or has a response date</div></div>
+    <div class="card"><div class="big" id="mInt">–</div><div class="lbl">Interview rate</div><div class="sub">Screened or interviewed ÷ applications</div></div>
+    <div class="card"><div class="big" id="mOffer">–</div><div class="lbl">Interview-to-offer rate</div><div class="sub" id="mOfferSub"></div></div>
+    <div class="card"><div class="big" id="mMed">–</div><div class="lbl">Median days to response</div><div class="sub" id="mMedSub"></div></div>
+  </div>
+
+  <div class="grid g2">
+    <div class="card"><h2>Applications per week</h2><div class="bars" id="weekBars"></div><div class="sub" id="weekSub"></div></div>
+    <div class="card"><h2>Referral vs cold interview rate</h2>
+      <div class="cmp" id="refCmp"></div><div class="sub" id="refSub"></div></div>
+  </div>
+
+  <div class="grid g2">
+    <div class="card"><h2>Where applications end up</h2><div id="stageBreak"></div>
+      <div class="sub">Rejected rows with no screening or interview flag count as "no response" (includes 21-day auto-rejects).</div></div>
+    <div class="card"><h2>Ghosting</h2><div class="big" id="gRate">–</div>
+      <div class="lbl">Never got a screening or interview</div>
+      <div class="sub" id="gSub"></div></div>
+  </div>
+
+  <div class="grid g2">
+    <div class="card"><h2>By role category</h2><table><thead><tr><th>Category</th><th>Apps</th><th>Interviews</th><th>Rate</th></tr></thead><tbody id="roleBody"></tbody></table></div>
+    <div class="card"><h2>Applications by month</h2><div class="bars" id="monthBars"></div></div>
+  </div>
+
+  <div class="card">
+    <h2>Needs attention: applied, no reply in 14+ days</h2>
+    <table><thead><tr><th>Company / role</th><th>Applied</th><th>Days waiting</th></tr></thead><tbody id="staleBody"></tbody></table>
+  </div>
+
+  <p class="note">Not tracked yet: follow-up completion rate (no follow-up dates are recorded) and average days per stage (status changes aren't timestamped). Median days to response uses the "first response" date, which is recorded from now on and can be edited per application in the tracker.</p>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const pct = (n, d) => d ? Math.round(100 * n / d) + '%' : '–';
+const day = s => s ? new Date(s.slice(0,10) + 'T00:00:00') : null;
+const norm = s => { s = (s||'applied').toLowerCase(); return s === 'interview' ? 'interviewing' : s; };
+const reachedStage = a => !!(a.had_interview || a.had_screening || ['screening','interviewing','offer'].includes(norm(a.status)));
+const responded = a => reachedStage(a) || !!a.first_response_date;
+
+function category(role) {
+  const r = (role || '').toLowerCase();
+  if (/\badr\b|account development/.test(r)) return 'ADR';
+  if (/\bbdr\b|business development/.test(r)) return 'BDR';
+  if (/\bsdr\b|sales development/.test(r)) return 'SDR';
+  if (/account executive|\bae\b/.test(r)) return 'Account Executive';
+  if (/customer success|\bcsm\b/.test(r)) return 'Customer Success';
+  if (/revops|revenue operations|bizops|business operations|strategy|gtm/.test(r)) return 'Ops / Strategy';
+  return r ? 'Other' : 'No role listed';
+}
+
+function bars(el, items) {
+  const max = Math.max(1, ...items.map(i => i.v));
+  el.innerHTML = items.map(i => `<div class="bcol"><div class="bv">${i.v}</div><div class="bar" style="height:${Math.round(100 * i.v / max)}%"></div><div class="bl">${i.l}</div></div>`).join('');
+}
+
+function mondayOf(d) { const x = new Date(d); const w = (x.getDay() + 6) % 7; x.setDate(x.getDate() - w); x.setHours(0,0,0,0); return x; }
+
+function render(apps) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const total = apps.length;
+  const interviewed = apps.filter(reachedStage);
+  const offers = apps.filter(a => norm(a.status) === 'offer');
+  const resp = apps.filter(responded);
+  $('kTotal').textContent = total;
+  $('kActive').textContent = apps.filter(a => !['rejected','offer'].includes(norm(a.status))).length;
+  $('kInt').textContent = apps.filter(a => ['screening','interviewing'].includes(norm(a.status))).length;
+  $('kOffer').textContent = offers.length;
+  $('kRef').textContent = apps.filter(a => a.referral).length;
+
+  $('funnel').innerHTML = [
+    ['Applications', total, '100%'],
+    ['Responses', resp.length, pct(resp.length, total) + ' of applications'],
+    ['Screen / interview', interviewed.length, pct(interviewed.length, total) + ' of applications'],
+    ['Offers', offers.length, pct(offers.length, interviewed.length) + ' of interviews'],
+  ].map(f => `<div class="fstep"><div class="n">${f[1]}</div><div class="t">${f[0]}</div><div class="p">${f[2]}</div></div>`).join('');
+
+  $('mResp').textContent = pct(resp.length, total);
+  $('mInt').textContent = pct(interviewed.length, total);
+  $('mOffer').textContent = interviewed.length ? pct(offers.length, interviewed.length) : '–';
+  $('mOfferSub').textContent = `${offers.length} offer(s) from ${interviewed.length} interviewed`;
+
+  const days = apps.filter(a => a.first_response_date && a.applied_date)
+    .map(a => Math.round((day(a.first_response_date) - day(a.applied_date)) / 864e5)).filter(n => n >= 0).sort((x,y) => x-y);
+  if (days.length) { const m = Math.floor(days.length/2); $('mMed').textContent = days.length % 2 ? days[m] : ((days[m-1]+days[m])/2).toFixed(1).replace('.0',''); }
+  $('mMedSub').textContent = days.length ? `Based on ${days.length} application(s) with a response date` : 'No response dates recorded yet. Set one in the tracker’s Edit form.';
+
+  // weekly
+  const weeks = []; let w = mondayOf(today);
+  for (let i = 0; i < 10; i++) { weeks.unshift(new Date(w)); w.setDate(w.getDate() - 7); }
+  const wc = weeks.map(ws => apps.filter(a => { const d = day(a.applied_date); return d && d >= ws && d < new Date(ws.getTime() + 7*864e5); }).length);
+  bars($('weekBars'), weeks.map((ws, i) => ({ v: wc[i], l: (ws.getMonth()+1) + '/' + ws.getDate() })));
+  const last4 = wc.slice(-4).reduce((a,b)=>a+b,0);
+  $('weekSub').textContent = `Weeks starting Monday. Last 4 weeks average ${(last4/4).toFixed(1)} per week.`;
+
+  // referral vs cold
+  const refs = apps.filter(a => a.referral), cold = apps.filter(a => !a.referral);
+  const rI = refs.filter(reachedStage).length, cI = cold.filter(reachedStage).length;
+  $('refCmp').innerHTML = `<div><div class="big">${pct(rI, refs.length)}</div><div class="lbl">Referral</div><div class="sub">${rI} of ${refs.length}</div></div>
+    <div><div class="big">${pct(cI, cold.length)}</div><div class="lbl">No referral</div><div class="sub">${cI} of ${cold.length}</div></div>`;
+  $('refSub').textContent = refs.length && cold.length && rI/refs.length > cI/cold.length ? 'Referrals are converting better than cold applications.' : '';
+
+  // stage breakdown
+  const rej = apps.filter(a => norm(a.status) === 'rejected');
+  const afterInt = rej.filter(a => a.had_interview).length;
+  const afterScr = rej.filter(a => !a.had_interview && a.had_screening).length;
+  const noResp = rej.length - afterInt - afterScr;
+  const stillOpen = total - rej.length;
+  const rows = [['No response / rejected at application', noResp], ['Rejected after screening', afterScr], ['Rejected after interview', afterInt], ['Still open (incl. offers)', stillOpen]];
+  $('stageBreak').innerHTML = rows.map(r => `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600"><span>${r[0]}</span><span>${r[1]} · ${pct(r[1], total)}</span></div><div class="hbar"><i style="width:${total ? 100*r[1]/total : 0}%"></i></div></div>`).join('');
+
+  // ghosting: never reached a stage and either rejected or open 14+ days
+  const ghosted = apps.filter(a => {
+    if (reachedStage(a) || a.first_response_date) return false;
+    if (norm(a.status) === 'rejected') return true;
+    const d = day(a.applied_date); return d && (today - d) / 864e5 >= 14;
+  });
+  $('gRate').textContent = pct(ghosted.length, total);
+  $('gSub').textContent = `${ghosted.length} of ${total}. Includes email rejections, since rejection emails aren't separated from silence yet.`;
+
+  // role categories
+  const cats = {};
+  apps.forEach(a => { const c = category(a.role); (cats[c] = cats[c] || { n: 0, i: 0 }); cats[c].n++; if (reachedStage(a)) cats[c].i++; });
+  $('roleBody').innerHTML = Object.entries(cats).sort((a,b) => b[1].n - a[1].n)
+    .map(([c, v]) => `<tr><td>${c}</td><td>${v.n}</td><td>${v.i}</td><td><span class="pill">${pct(v.i, v.n)}</span></td></tr>`).join('');
+
+  // monthly
+  const mm = {};
+  apps.forEach(a => { if (a.applied_date) { const k = a.applied_date.slice(0,7); mm[k] = (mm[k]||0)+1; } });
+  const mk = Object.keys(mm).sort().slice(-8);
+  const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  bars($('monthBars'), mk.map(k => ({ v: mm[k], l: mn[+k.slice(5)-1] + " '" + k.slice(2,4) })));
+
+  // stale
+  const stale = apps.filter(a => norm(a.status) === 'applied' && a.applied_date && (today - day(a.applied_date)) / 864e5 >= 14)
+    .sort((a,b) => day(a.applied_date) - day(b.applied_date));
+  $('staleBody').innerHTML = stale.length ? stale.map(a => `<tr><td>${esc(a.company)}${a.role ? ' <span style="color:var(--muted)">· ' + esc(a.role) + '</span>' : ''}</td><td>${a.applied_date.slice(0,10)}</td><td>${Math.round((today - day(a.applied_date))/864e5)}</td></tr>`).join('')
+    : '<tr><td colspan="3" style="color:var(--muted)">Nothing waiting 14+ days. Anything older than 21 days is auto-rejected.</td></tr>';
+}
+function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+fetch('/applications?limit=5000').then(r => r.json()).then(d => {
+  if (!Array.isArray(d)) throw new Error(d.error || 'bad response');
+  render(d);
+}).catch(e => { document.querySelector('.page').insertAdjacentHTML('beforeend', '<p class="note">Could not load: ' + esc(e.message) + '</p>'); });
+</script>
+</body>
+</html>
