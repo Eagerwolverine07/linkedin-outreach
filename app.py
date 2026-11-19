@@ -674,15 +674,33 @@ async def generate_message(session, profile, company_name):
 PRIORITY_SYSTEM = """You classify LinkedIn profiles into sales outreach priority tiers.
 Output exactly one word: high, medium, or low.
 
-HIGH: Account Executives (AE), Sales Development Reps (SDR/BDR), Sales Managers, VP/Director of Sales, Revenue/GTM roles that own quota or pipeline, Enterprise Sales, Regional Sales Manager, Inside Sales.
+HIGH: Account Executives (AE), Sales Development Reps (SDR/BDR/ADR, including Senior, Lead and Manager versions; "Business Development Representative" means BDR), Sales Managers, VP/Director of Sales, Revenue/GTM roles that own quota or pipeline, Enterprise Sales, Regional Sales Manager, Inside Sales.
 MEDIUM: Customer Success Managers (CSM), Sales Ops, Partnerships, Business Development (non-SDR), Enablement.
 LOW: Technical Account Managers (TAM), Solutions Engineers, Sales Engineers, Engineering, Product, Marketing, Finance, HR, Legal, Data Science, operations roles with no direct sales involvement, C-suite at small companies where sales title is unclear.
 
 Output only: high, medium, or low"""
 
 
+import re as _re
+# BDR / SDR / ADR style roles (incl. Senior, Lead, Manager variants) are always worth reaching out to.
+_PEER_SALES_RE = _re.compile(
+    r"\b(bdrs?|sdrs?|adrs?|"
+    r"business[\s-]+development[\s-]+(representative|rep|associate|specialist|manager|lead)s?|"
+    r"sales[\s-]+development[\s-]+(representative|rep|associate|specialist|manager|lead)s?|"
+    r"account[\s-]+development[\s-]+(representative|rep|associate|specialist|manager|lead)s?|"
+    r"(inside|outbound|enterprise|commercial|strategic|mid[\s-]?market)\s+sales|"
+    r"account[\s-]+executive|ae)\b", _re.I)
+
+
+def _is_core_sales_role(title: str, headline: str) -> bool:
+    return bool(_PEER_SALES_RE.search(f"{title or ''} | {headline or ''}"))
+
+
 async def classify_priority(session, title: str, headline: str) -> str:
     """Classify a contact's sales priority using Groq. Returns 'high', 'medium', or 'low'."""
+    # Deterministic rule first: BDR/SDR/ADR/AE titles (incl. "Senior BDR") are never left to the LLM.
+    if _is_core_sales_role(title, headline):
+        return "high"
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type":  "application/json",
@@ -975,8 +993,12 @@ async def _stream_pipeline(urls, company):
                     personalized = "Yes"
                     title        = ""
                     headline     = profile.get("headline", "")
-                    if not title and profile.get("experiences"):
-                        title = profile["experiences"][0].get("title", "")
+                    exps = profile.get("experiences") or []
+                    if exps:
+                        title = exps[0].get("title", "") or ""
+                        # also consider the next role: scrapers sometimes list a past job first
+                        if len(exps) > 1 and not title:
+                            title = exps[1].get("title", "") or ""
                 else:
                     name         = name_label
                     personalized = "No"
@@ -994,6 +1016,7 @@ async def _stream_pipeline(urls, company):
 
                 # ── Skip low-priority profiles entirely ──
                 if priority == "low":
+                    print(f"[Pipeline] skipped low priority: {name} | title={title!r} | headline={headline!r}")
                     yield sse({"event": "status", "message": f"Skipping {name} (low priority)"})
                     sr_no += 1
                     continue
