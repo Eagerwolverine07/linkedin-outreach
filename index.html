@@ -583,7 +583,7 @@
       background: rgba(239,68,68,0.06);
     }
 
-    .td-copy { width: 70px; text-align: center; }
+    .td-copy { width: 104px; min-width: 104px; text-align: center; }
 
     .btn-copy {
       background: transparent;
@@ -597,6 +597,9 @@
       cursor: pointer;
       transition: all 0.15s;
       white-space: nowrap;
+      display: inline-block;
+      width: 84px;          /* fixed so "Copy" -> "Copied" never changes the column width */
+      text-align: center;
     }
 
     .btn-copy:hover {
@@ -734,6 +737,9 @@
       cursor: pointer;
       white-space: nowrap;
       transition: all .15s;
+      display: inline-block;
+      width: 80px;
+      text-align: center;
     }
     .rct-copy:hover { border-color: #c471ed; color: #c471ed; }
     .rct-copy.copied { background: linear-gradient(135deg,rgba(255,179,71,.12),rgba(196,113,237,.12)); border-color:#c471ed; color:#9333ea; }
