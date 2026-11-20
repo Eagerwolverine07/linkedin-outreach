@@ -353,9 +353,15 @@ def normalize_first_penguin(raw):
     """first-penguin/linkedin-profile-scraper-monitor: one full 'name', jobTitle/currentCompany, positions have no titles."""
     if not raw or raw.get("status") in ("unavailable", "error", "failed"):
         return None
-    full = (raw.get("name") or "").strip()
+    def _clean(v):
+        v = (v or "").strip() if isinstance(v, str) else ""
+        return "" if (not v or set(v) <= set("* ")) else v   # penguin masks hidden fields as "*****"
+    full = _clean(raw.get("name"))
     if not full:
         return None
+    raw = {**raw, "jobTitle": _clean(raw.get("jobTitle")), "currentCompany": _clean(raw.get("currentCompany")),
+           "headline": _clean(raw.get("headline")), "about": _clean(raw.get("about")),
+           "education": [e for e in (raw.get("education") or []) if _clean(e.get("name"))]}
     parts = full.split()
     first, last = parts[0], " ".join(parts[1:])
     cur_co = raw.get("currentCompany") or ""
@@ -397,7 +403,7 @@ SCRAPERS = {
     },
     "harvestapi/linkedin-profile-scraper": {
         "normalize": normalize_harvestapi,
-                "input_fn":  lambda url: {"urls": [{"url": url}]},
+        "input_fn":  lambda url: {"urls": [url]},   # array of plain URL strings (not objects)
     },
     "datadoping/linkedin-profile-scraper": {
         "normalize": normalize_datadoping,
