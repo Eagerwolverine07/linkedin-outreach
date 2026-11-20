@@ -580,7 +580,26 @@ COMPANY NAME: Use the company name exactly as provided — same capitalization, 
 OUTPUT: Return ONLY the final message text. No explanation, no quotes around it, no label."""
 
 
-async def generate_message(session, profile, company_name):
+_SLUG_JUNK = {"ed","mba","phd","cpa","pmp","msc","ms","ma","mph","jd","csm","cfa","m","md","dr","sr","jr","ii","iii"}
+
+
+def name_from_slug(url):
+    """cody-williams-24316088 -> ('Cody Williams', 'Cody'). Returns (None, None) if it doesn't look like a name."""
+    slug = url.rstrip("/").split("/")[-1].split("?")[0]
+    parts = [p for p in slug.split("-") if p]
+    keep = []
+    for p in parts:
+        if any(ch.isdigit() for ch in p) or p.lower() in _SLUG_JUNK:
+            continue
+        if not p.isalpha():
+            continue
+        keep.append(p.capitalize())
+    if len(keep) < 2 or len(keep[0]) < 2 or slug.lower().startswith("aco"):
+        return None, None
+    return " ".join(keep[:3]), keep[0]
+
+
+async def generate_message(session, profile, company_name, name_hint=None):
     """
     Calls Groq once to write a LinkedIn message.
     profile=None → company-angle opener (no personalization).
@@ -616,12 +635,14 @@ async def generate_message(session, profile, company_name):
             f"Education:{edu_text or ' none provided'}"
         )
     else:
-        first_name   = "there"
+        first_name   = name_hint or "there"
+        greeting = (f'Address them as "Hey {name_hint}".' if name_hint
+                    else 'Address them as "Hey [First name]" — use that placeholder literally.')
         user_content = (
             f"Write a LinkedIn connection message with a company-angle opener for someone at {company_name}.\n"
             f"You have no profile data. Use a sharp observation about {company_name}'s sales motion, "
             f"market timing, customer target, growth/funding, or differentiation as the opener.\n"
-            f'Address them as "Hey [First name]" — use that placeholder literally.'
+            + greeting
         )
 
     headers = {
@@ -1025,7 +1046,8 @@ async def _stream_pipeline(urls, company):
                         if len(exps) > 1 and not title:
                             title = exps[1].get("title", "") or ""
                 else:
-                    name         = name_label
+                    nice, _first = name_from_slug(url)
+                    name         = nice or name_label
                     personalized = "No"
                     title        = ""
                     headline     = ""
@@ -1047,7 +1069,8 @@ async def _stream_pipeline(urls, company):
                     continue
 
                 yield sse({"event": "status", "message": f"Writing message for {name}..."})
-                message = await generate_message(session, profile, company)
+                message = await generate_message(session, profile, company,
+                                                 name_hint=(name_from_slug(url)[1] if not profile else None))
 
                 row = {
                     "event":        "result",
