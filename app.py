@@ -23,6 +23,7 @@ Why SSE (Server-Sent Events) instead of a regular response:
 import os
 import sys
 import json
+import re
 import asyncio
 import aiohttp
 from fastapi import FastAPI, Request
@@ -375,6 +376,7 @@ SCRAPERS = {
 
 # apimaestro daily cap — resets when the server restarts
 apimaestro_used_today = 0
+_apimaestro_day = None
 APIMAESTRO_DAILY_CAP  = 20
 
 
@@ -417,7 +419,10 @@ async def scrape_profile_tier2(session, url):
     Tries Tier 2 scrapers one at a time for a profile Tier 1 missed.
     Returns normalized data or None if all miss.
     """
-    global apimaestro_used_today
+    global apimaestro_used_today, _apimaestro_day
+    from datetime import date as _date
+    if _apimaestro_day != _date.today():
+        _apimaestro_day, apimaestro_used_today = _date.today(), 0   # cap is per day, not per restart
 
     tier2 = []
     if apimaestro_used_today < APIMAESTRO_DAILY_CAP:
@@ -901,8 +906,10 @@ async def generate(request: Request):
     seen, urls = set(), []
     for u in raw_urls:
         u = u.strip()
-        if u and u not in seen:
-            seen.add(u)
+        # compare on a normalized key so trailing slashes / query strings / www don't defeat dedupe
+        key = re.sub(r"^https?://(www\.)?", "", u.split("?")[0].split("#")[0]).rstrip("/").lower()
+        if u and key not in seen:
+            seen.add(key)
             urls.append(u)
 
     # StreamingResponse runs the generator and sends each yielded string to the browser
@@ -946,6 +953,7 @@ async def _stream_pipeline(urls, company):
     BATCH_SIZE   = 4
     batches      = [urls[i:i+BATCH_SIZE] for i in range(0, len(urls), BATCH_SIZE)]
     sr_no           = 1
+    seen_profiles   = {}   # profile fingerprint -> url, to catch one person returned for many URLs
     _run_results    = []   # collect every result row for Supabase logging
     _logged_results = []   # track which results have already been saved to Supabase
 
@@ -968,7 +976,23 @@ async def _stream_pipeline(urls, company):
             for url, profile in zip(batch, tier1_results):
                 batch_profiles[url] = profile  # None if missed
 
+            # ── Guard: the same person returned for different URLs means a scraper handed back
+            #    a wrong/cached profile. Treat those as misses instead of using wrong data. ──
+            def _pkey(p):
+                return f"{p.get('first_name','')}|{p.get('last_name','')}|{p.get('headline','')}".lower()
+            def _guard(profiles_by_url):
+                for u, p in list(profiles_by_url.items()):
+                    if not p:
+                        continue
+                    k = _pkey(p)
+                    if k in seen_profiles and seen_profiles[k] != u:
+                        print(f"[Pipeline] WARNING same profile '{p.get('first_name','')} {p.get('last_name','')}' returned for {u} and {seen_profiles[k]}; treating as miss")
+                        profiles_by_url[u] = None
+                    else:
+                        seen_profiles[k] = u
+
             # ── Tier 2: for any profile Tier 1 missed ──
+            _guard(batch_profiles)
             missed = [u for u, p in batch_profiles.items() if p is None]
             if missed:
                 yield sse({"event": "status", "message": f"Tier 1 missed {len(missed)} profile(s), trying Tier 2..."})
@@ -978,6 +1002,7 @@ async def _stream_pipeline(urls, company):
                     *[scrape_profile_tier2(session, u) for u in missed])
                 for url, profile in zip(missed, tier2_results):
                     batch_profiles[url] = profile  # stays None → company-angle opener
+                _guard(batch_profiles)
                 recovered = sum(1 for p in tier2_results if p)
                 print(f"[Pipeline] batch {batch_index+1}: Tier 1 missed {len(missed)}, Tier 2 recovered {recovered}")
 
@@ -1016,7 +1041,7 @@ async def _stream_pipeline(urls, company):
 
                 # ── Skip low-priority profiles entirely ──
                 if priority == "low":
-                    print(f"[Pipeline] skipped low priority: {name} | title={title!r} | headline={headline!r}")
+                    print(f"[Pipeline] skipped low priority: {name} | url={url} | title={title!r} | headline={headline!r}")
                     yield sse({"event": "status", "message": f"Skipping {name} (low priority)"})
                     sr_no += 1
                     continue
