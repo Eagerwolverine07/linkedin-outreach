@@ -83,17 +83,18 @@ async def debug():
 
 
 @app.get("/test-apify")
-async def test_apify():
+async def test_apify(actor: str = "first-penguin/linkedin-profile-scraper-monitor",
+                     url: str = "https://www.linkedin.com/in/amber-sahu/"):
     """Test Apify actor start + result fetch directly."""
     import traceback
     result = {"apify_token_set": bool(APIFY_TOKEN), "apify_token_prefix": (APIFY_TOKEN or "")[:12]}
-    actor = "supreme_coder/linkedin-profile-scraper"
-    url_to_scrape = "https://www.linkedin.com/in/amber-sahu/"
+    url_to_scrape = url
+    result["actor"] = actor
     try:
         async with aiohttp.ClientSession() as s:
             slug = actor.replace("/", "~")
             start_url = f"{APIFY_BASE}/acts/{slug}/runs?token={APIFY_TOKEN}"
-            payload = {"urls": [{"url": url_to_scrape}]}
+            payload = SCRAPERS[actor]["input_fn"](url_to_scrape) if actor in SCRAPERS else {"urls": [{"url": url_to_scrape}]}
             print(f"[test-apify] POST {start_url[:80]}")
             async with s.post(start_url, json=payload, timeout=aiohttp.ClientTimeout(total=30)) as r:
                 body = await r.text()
@@ -109,7 +110,14 @@ async def test_apify():
                             items_url = f"{APIFY_BASE}/actor-runs/{run_id}/dataset/items?token={APIFY_TOKEN}"
                             async with s.get(items_url, timeout=aiohttp.ClientTimeout(total=30)) as r2:
                                 result["items_status"] = r2.status
-                                result["items_body"] = (await r2.text())[:1000]
+                                items_text = await r2.text()
+                                result["items_body"] = items_text[:1000]
+                                try:
+                                    items = json.loads(items_text)
+                                    if items and actor in SCRAPERS:
+                                        result["normalized"] = SCRAPERS[actor]["normalize"](items[0])
+                                except Exception as ne:
+                                    result["normalize_error"] = str(ne)
     except Exception as e:
         result["error"] = str(e)
         result["traceback"] = traceback.format_exc()
@@ -341,8 +349,40 @@ def normalize_automation_lab(raw):
     }
 
 
+def normalize_first_penguin(raw):
+    """first-penguin/linkedin-profile-scraper-monitor: one full 'name', jobTitle/currentCompany, positions have no titles."""
+    if not raw or raw.get("status") in ("unavailable", "error", "failed"):
+        return None
+    full = (raw.get("name") or "").strip()
+    if not full:
+        return None
+    parts = full.split()
+    first, last = parts[0], " ".join(parts[1:])
+    cur_co = raw.get("currentCompany") or ""
+    exps = []
+    if raw.get("jobTitle") or cur_co:
+        exps.append({"title": raw.get("jobTitle") or "", "company": cur_co, "description": ""})
+    for p in (raw.get("positions") or []):
+        co = p.get("name") or ""
+        if co and not (exps and co == cur_co and len(exps) == 1 and not p.get("endYear")):
+            exps.append({"title": "", "company": co, "description": ""})
+    return {
+        "first_name":      first,
+        "last_name":       last,
+        "headline":        raw.get("headline", "") or "",
+        "summary":         raw.get("about", "") or "",
+        "experiences":     exps[:3],
+        "current_company": cur_co or (exps[0]["company"] if exps else ""),
+        "education":       [{"school": e.get("name", ""), "degree": ""} for e in (raw.get("education") or [])[:2]],
+    }
+
+
 # Scraper registry — maps actor slug to its normalizer and input format
 SCRAPERS = {
+    "first-penguin/linkedin-profile-scraper-monitor": {
+        "normalize": normalize_first_penguin,
+        "input_fn":  lambda url: {"profiles": [url]},
+    },
     "atomus/linkedin-profile-scraper": {
         "normalize": normalize_atomus,
         "input_fn":  lambda url: {"profileUrls": [url]},
@@ -389,7 +429,7 @@ async def scrape_profile_tier1(session, url):
     Fires Tier 1 scrapers for one URL.
     Returns normalized profile data from whichever returns data, or None.
     """
-    tier1 = ["supreme_coder/linkedin-profile-scraper"]
+    tier1 = ["first-penguin/linkedin-profile-scraper-monitor"]
     run_ids = {}
     for actor in tier1:
         run_id = await run_apify_actor(session, actor, SCRAPERS[actor]["input_fn"](url))
@@ -424,15 +464,16 @@ async def scrape_profile_tier2(session, url):
     if _apimaestro_day != _date.today():
         _apimaestro_day, apimaestro_used_today = _date.today(), 0   # cap is per day, not per restart
 
-    tier2 = []
-    if apimaestro_used_today < APIMAESTRO_DAILY_CAP:
-        tier2.append("apimaestro/linkedin-profile-detail")
+    # supreme_coder (former Tier 1) is now the first backup; apimaestro stays last-resort under its cap
+    tier2 = ["supreme_coder/linkedin-profile-scraper"]
     tier2 += [
         "harvestapi/linkedin-profile-scraper",
         "datadoping/linkedin-profile-scraper",
         "sabania/linkedin-scraper",
         "automation-lab/linkedin-profile-scraper",
     ]
+    if apimaestro_used_today < APIMAESTRO_DAILY_CAP:
+        tier2.append("apimaestro/linkedin-profile-detail")
 
     for actor in tier2:
         run_id = await run_apify_actor(session, actor, SCRAPERS[actor]["input_fn"](url))
